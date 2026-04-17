@@ -1,0 +1,37 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper to check for Admin status (Invisible to Client-Side Inspect)
+    function isAdmin() {
+      return request.auth != null && 
+        (request.auth.token.email == 'sutharamit344@gmail.com' || 
+         request.auth.token.email == 'webiestindiasolution@gmail.com');
+    }
+
+    match /shops/{shopId} {
+      // Allow public read only for approved shops
+      // Admins and Owners can always read
+      allow read: if resource.data.status == 'approved' || request.auth != null;
+      
+      // Allow authenticated users to create a shop
+      allow create: if request.auth != null;
+      
+      // Permission Fix: Allow Owner OR Admin to update/delete
+      allow update, delete: if request.auth != null && (request.auth.uid == resource.data.ownerId || isAdmin());
+    }
+
+    match /categories/{catId} {
+      allow read: if true;
+      // Allow authenticated users to propose new categories (must be pending)
+      allow create: if request.auth != null && request.resource.data.status == 'pending';
+      // Only admins can approve or modify categories
+      allow update, delete: if isAdmin();
+    }
+
+    // Canary Document for Client-Side Obfuscated Check
+    match /meta/adminCheck {
+      allow read: if isAdmin();
+    }
+  }
+}
