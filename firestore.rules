@@ -17,9 +17,27 @@ service cloud.firestore {
       // Allow authenticated users to create a shop
       allow create: if request.auth != null;
       
-      // Permission Fix: Allow Owner OR Admin to update/delete
-      allow update, delete: if request.auth != null && (request.auth.uid == resource.data.ownerId || isAdmin());
+      // Allow anyone to update aggregate rating counts ONLY
+      // This is a simplified rule for the current transaction-based rating system
+      // For higher security, Cloud Functions are recommended.
+      allow update: if (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['avgRating', 'totalRatings']))
+                   || (request.auth != null && (request.auth.uid == resource.data.ownerId || isAdmin()));
+
+      // Only Owner OR Admin can delete or perform other updates
+      allow delete: if request.auth != null && (request.auth.uid == resource.data.ownerId || isAdmin());
+
+      // Ratings Subcollection
+      match /ratings/{ratingId} {
+        // Allow public read for ratings
+        allow read: if true;
+        
+        // Allow public creation with basic validation
+        allow create: if request.resource.data.rating >= 1 
+                      && request.resource.data.rating <= 5;
+      }
+
     }
+
 
     match /categories/{catId} {
       allow read: if true;
@@ -33,5 +51,16 @@ service cloud.firestore {
     match /meta/adminCheck {
       allow read: if isAdmin();
     }
+
+    // Activity Logs System
+    match /activity_logs/{logId} {
+      // Only admins can view the logs
+      allow read: if isAdmin();
+      // Any authenticated user can create a log entry
+      allow create: if request.auth != null;
+      // Logs are immutable (no update or delete)
+      allow update, delete: if false;
+    }
   }
 }
+

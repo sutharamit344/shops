@@ -1,69 +1,130 @@
-import React from "react";
+import React, { useState } from "react";
 import Card from "@/components/UI/Card";
-import { UtensilsCrossed, Tag, Camera } from "lucide-react";
+import Button from "@/components/UI/Button";
+import { UtensilsCrossed, X, ShoppingBag, ServerIcon, Search } from "lucide-react";
+import IconButton from "../UI/IconButton";
+import SectionHeader from "../UI/SectionHeader";
 
-const ShopMenu = ({ menu }) => {
+const ShopMenu = ({ menu, businessType = "mixed", onItemClick }) => {
+  const [searchQuery, setSearchQuery] = useState("");
+  const [activeCategory, setActiveCategory] = useState("all");
+
   if (!menu || menu.length === 0) return null;
 
-  // Handle both legacy flat array and new categorized structure
+  const isServiceOnly = businessType === "service";
+
   const sections = Array.isArray(menu[0]?.items)
     ? menu
-    : [{ category: "Our Menu / Services", items: menu }];
+    : [{ category: isServiceOnly ? "Our Services" : "Catalog", items: menu }];
+
+  const categories = ["all", ...sections.map((s) => s.category)];
+
+  const filteredSections = sections
+    .map((section) => {
+      const catName = section.category || "";
+      if (activeCategory !== "all" && activeCategory !== catName) return null;
+
+      const filteredItems = section.items?.filter((item) => {
+        const query = searchQuery.toLowerCase();
+        return (
+          item.name?.toLowerCase().includes(query) ||
+          item.description?.toLowerCase().includes(query)
+        );
+      });
+
+      if (!filteredItems || filteredItems.length === 0) return null;
+      return { ...section, items: filteredItems };
+    })
+    .filter(Boolean);
 
   return (
-    <section className="mb-12">
-      <div className="flex items-center gap-3 mb-6 px-2">
-        <div className="bg-primary/20 text-primary p-2.5 rounded-xl md:rounded-2xl">
-          <UtensilsCrossed size={24} />
-        </div>
-        <div>
-          <h2 className="text-2xl md:text-3xl font-black text-navy uppercase tracking-tighter">Menu & <span className="text-primary italic">Services</span></h2>
-        </div>
+    <section className="py-0 space-y-4">
+      {/* Refined Search Pod */}
+      <div className="relative group">
+        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-navy/20 group-focus-within:text-primary transition-colors" size={16} />
+        <input
+          type="text"
+          placeholder="Search items..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="w-full pl-12 pr-4 py-3 bg-white border border-navy/10 rounded-md focus:border-primary/50 outline-none text-[13px] font-medium transition-all text-navy placeholder:text-navy/20 shadow-sm"
+        />
       </div>
 
-      <div className="space-y-10 md:space-y-12">
-        {sections.map((section, idx) => (
-          <div key={idx} className="space-y-4 md:space-y-6">
-            <h3 className="text-lg md:text-xl font-black text-navy flex items-center gap-2 px-2 uppercase tracking-tight">
-              <span className="w-1.5 h-1.5 bg-primary rounded-full"></span>
-              {section.category}
-            </h3>
+      {/* Modern Category Pills */}
+      {!searchQuery && categories.length > 2 && (
+        <div className="flex gap-2 overflow-x-auto pb-2 -mx-4 px-4 no-scrollbar">
+          {categories.map((cat, idx) => (
+            <button
+              key={idx}
+              onClick={() => setActiveCategory(cat)}
+              className={`
+                px-4 py-1.5 rounded-md text-[9px] font-black uppercase tracking-widest whitespace-nowrap transition-all border
+                ${activeCategory === cat
+                  ? "bg-navy text-white border-navy shadow-md scale-[1.02]"
+                  : "bg-white text-navy/40 border-navy/10 hover:border-navy/20 shadow-sm"}
+              `}
+            >
+              {cat === "all" ? "All" : cat}
+            </button>
+          ))}
+        </div>
+      )}
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-              {section.items?.map((item, i) => (
-                <Card key={i} className="hover:shadow-xl transition-all border-cream bg-white overflow-hidden p-0 group rounded-2xl md:rounded-3xl">
-                  <div className="flex">
-                    {item.image && (
-                      <div className="w-24 h-24 md:w-32 md:h-32 flex-shrink-0 relative overflow-hidden bg-cream/10">
-                        <img
-                          src={item.image}
-                          alt={item.name}
-                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-                        />
+      {/* High-End Item Grid */}
+      <div className="space-y-6">
+        {filteredSections.length === 0 ? (
+          <div className="text-center py-12 bg-navy/5 rounded-md border border-dashed border-navy/10">
+            <p className="text-navy/20 text-[10px] font-black uppercase tracking-widest">
+              No results found
+            </p>
+          </div>
+        ) : (
+          filteredSections.map((section, idx) => (
+            <div key={idx} className="space-y-4">
+              <div className="flex items-center gap-5 px-1">
+                <h3 className="text-[11px] font-black text-navy/40 uppercase tracking-[0.4em] italic">{section.category}</h3>
+                <div className="h-[1px] flex-1 bg-navy/5"></div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                {section.items.map((item, i) => (
+                  <div
+                    key={i}
+                    onClick={() => onItemClick(item)}
+                    className="cursor-pointer group bg-white p-2.5 rounded-md border border-navy/10 hover:border-primary/40 hover:bg-navy/[0.01] shadow-sm hover:shadow-md transition-all duration-300 flex items-center gap-4"
+                  >
+                    {item.image ? (
+                      <div className="w-12 h-12 rounded-md overflow-hidden flex-shrink-0">
+                        <img src={item.image} alt={item.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                      </div>
+                    ) : (
+                      <div className="w-12 h-12 rounded-md bg-navy/5 flex items-center justify-center text-navy/10 flex-shrink-0">
+                        <ShoppingBag size={20} />
                       </div>
                     )}
-                    <div className="flex-1 p-4 md:p-5 flex flex-col justify-center min-w-0">
-                      <div className="flex justify-between items-start gap-3 mb-1">
-                        <h4 className="font-extrabold text-navy text-base md:text-lg leading-tight truncate">{item.name}</h4>
+
+                    <div className="flex-1 min-w-0 pr-1">
+                      <div className="flex justify-between items-center gap-2">
+                        <h4 className="font-bold text-navy text-[12px] truncate uppercase tracking-tight italic">
+                          {item.name}
+                        </h4>
                         {item.price && (
-                          <span className="text-primary font-black whitespace-nowrap text-sm md:text-base">{item.price}</span>
+                          <span className="text-primary font-black text-[11px]">
+                            ₹{Number(item.price)}
+                          </span>
                         )}
                       </div>
-                      {item.description && (
-                        <p className="text-gray-500 text-[10px] md:text-xs font-semibold line-clamp-2 mt-1 mb-2">
-                          {item.description}
-                        </p>
-                      )}
-                      <div className="flex items-center gap-1 text-gray-400 text-[8px] md:text-[10px] uppercase font-black tracking-widest opacity-60">
-                        verified service
-                      </div>
+                      <p className="text-navy/30 text-[9px] font-medium line-clamp-1 italic">
+                        {item.description || "Premium selection"}
+                      </p>
                     </div>
                   </div>
-                </Card>
-              ))}
+                ))}
+              </div>
             </div>
-          </div>
-        ))}
+          ))
+        )}
       </div>
     </section>
   );

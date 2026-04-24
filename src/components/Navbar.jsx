@@ -1,13 +1,13 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
-import Button from "@/components/UI/Button";
-import { LogIn, LogOut, User as UserIcon, Shield, Menu as MenuIcon, X, User } from "lucide-react";
-
+import {
+  Store, ArrowRight, Menu as MenuIcon, X,
+  LayoutDashboard, Shield, LogOut
+} from "lucide-react";
 import { isUserAdmin } from "@/lib/db";
-import { useEffect } from "react";
 
 const Navbar = () => {
   const { user, loginWithGoogle, logout } = useAuth();
@@ -27,69 +27,69 @@ const Navbar = () => {
   }, [user]);
 
   return (
-    <nav className="bg-navy transition-all duration-300 w-full z-50 py-4 md:py-6 shadow-2xl">
-      <div className="max-w-7xl mx-auto px-4 md:px-8">
-        <div className="flex justify-between items-center h-16">
-          <Link href="/" className="flex items-center space-x-2 group">
-            <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center transform group-hover:rotate-12 transition-transform shadow-lg shadow-primary/20">
-              <span className="text-white font-black text-xl italic uppercase">S</span>
-            </div>
-            <span className="text-2xl font-black text-white hover:text-primary transition-colors tracking-tighter uppercase italic">Shop<span className="text-primary italic-none">Setu</span></span>
-          </Link>
-
-          <div className="hidden md:flex items-center space-x-1">
-            <Link href="/explore" className="text-cream/80 hover:text-primary px-4 py-2 text-sm font-black uppercase tracking-widest transition-all">Explore</Link>
-            <Link href="/create" className="text-cream/80 hover:text-primary px-4 py-2 text-sm font-black uppercase tracking-widest transition-all">Sell Online</Link>
-
-            <div className="h-6 w-[1px] bg-cream/10 mx-2"></div>
-
-            {user ? (
-              <div className="flex items-center gap-2">
-                <Link href="/dashboard" className="text-cream/80 hover:text-primary px-4 py-2 text-sm font-black uppercase tracking-widest transition-all">My Shops</Link>
-                {isAdmin && (
-                  <Link href="/admin" className="text-primary hover:text-white px-4 py-2 text-sm font-black uppercase tracking-widest bg-primary/10 rounded-xl transition-all">Admin</Link>
-                )}
-                <button onClick={logout} className="ml-2 text-cream/40 hover:text-red-400 p-2 transition-colors"><LogOut size={20} /></button>
-              </div>
-            ) : (
-              <Button onClick={loginWithGoogle} className="ml-4 shadow-xl shadow-primary/20">Sign In</Button>
-            )}
-          </div>
-
-          <div className="md:hidden flex items-center gap-4">
-            {user && (
-              <Link href="/dashboard" className="text-primary bg-primary/10 p-2.5 rounded-xl shadow-inner">
-                <User size={24} />
-              </Link>
-            )}
-            <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="text-white hover:text-primary transition-colors p-2">
-              {isMenuOpen ? <X size={28} /> : <MenuIcon size={28} />}
-            </button>
-          </div>
+    <nav className="fixed top-0 left-0 right-0 z-50 h-16 flex items-center px-6 md:px-12 bg-[#FAFAF8]/90 backdrop-blur-md border-b border-black/[0.06]">
+      {/* Logo */}
+      <Link href="/" className="flex items-center gap-2.5 mr-auto">
+        <div className="w-8 h-8 rounded-lg bg-[#FF6B35] flex items-center justify-center shadow-sm">
+          <Store size={16} className="text-white" />
         </div>
+        <span className="text-[15px] font-bold tracking-tight text-[#0F0F0F]">
+          Shop<span className="text-[#FF6B35]">Setu</span>
+        </span>
+      </Link>
+
+      {/* Desktop Links */}
+      <div className="hidden md:flex items-center gap-8 text-[13px] font-medium text-[#666]">
+        <Link href="/explore" className="hover:text-[#0F0F0F] transition-colors">Explore</Link>
       </div>
 
+      {/* Auth Actions */}
+      <div className="ml-8 flex items-center gap-3">
+        {user ? (
+          <div className="flex items-center gap-3">
+            <Link href="/dashboard" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+              <span className="hidden md:block text-[13px] font-bold text-[#0F0F0F]">
+                {user.displayName || "My Profile"}
+              </span>{user.photoURL ? (
+                <img src={user.photoURL} alt={user.displayName || "Profile"} className="w-8 h-8 rounded-full object-cover border border-black/10" />
+              ) : (
+                <div className="w-8 h-8 rounded-full bg-[#0F0F0F] text-white flex items-center justify-center text-[12px] font-bold">
+                  {(user.displayName || user.email || "U").charAt(0).toUpperCase()}
+                </div>
+              )}
+            </Link>
+          </div>
+        ) : (
+          <>
+            <Link
+              href="/create"
+              className="h-8 px-4 bg-[#0F0F0F] text-white text-[12px] font-semibold rounded-lg hover:bg-[#333] transition-colors flex items-center gap-1.5"
+            >
+              List your shop <ArrowRight size={13} />
+            </Link>
+          </>
+        )}
+
+        {/* Mobile Menu Toggle */}
+        <button
+          className="md:hidden text-[#0F0F0F] p-1"
+          onClick={() => setIsMenuOpen(!isMenuOpen)}
+        >
+          {isMenuOpen ? <X size={24} /> : <MenuIcon size={24} />}
+        </button>
+      </div>
+
+      {/* Mobile Menu Overlay */}
       {isMenuOpen && (
-        <div className="md:hidden bg-navy/95 backdrop-blur-xl border-t border-cream/5 animate-in slide-in-from-top duration-300">
-          <div className="px-4 pt-4 pb-8 space-y-2">
-            <Link href="/explore" className="block text-cream/90 hover:text-primary hover:bg-cream/5 px-4 py-4 rounded-2xl text-lg font-black uppercase tracking-widest transition-all">Explore Marketplace</Link>
-            <Link href="/create" className="block text-cream/90 hover:text-primary hover:bg-cream/5 px-4 py-4 rounded-2xl text-lg font-black uppercase tracking-widest transition-all">Start Selling</Link>
-
-            {user && (
-              <>
-                <div className="h-[1px] bg-cream/10 my-4 mx-4"></div>
-                <Link href="/dashboard" className="block text-cream/90 hover:text-primary hover:bg-cream/5 px-4 py-4 rounded-2xl text-lg font-black uppercase tracking-widest transition-all">My Business Dashboard</Link>
-                {isAdmin && (
-                  <Link href="/admin" className="block text-primary hover:bg-primary hover:text-white px-4 py-4 rounded-2xl text-lg font-black uppercase tracking-widest transition-all">Admin Panel</Link>
-                )}
-                <button onClick={logout} className="w-full text-left text-red-400 hover:bg-red-400/10 px-4 py-4 rounded-2xl text-lg font-black uppercase tracking-widest transition-all">Sign Out</button>
-              </>
-            )}
-
-            {!user && (
-              <div className="pt-4">
-                <Button onClick={loginWithGoogle} className="w-full py-6 text-xl rounded-2xl">Sign In with Google</Button>
-              </div>
+        <div className="absolute top-16 left-0 right-0 bg-[#FAFAF8] border-b border-black/[0.06] p-6 flex flex-col gap-4 md:hidden animate-in slide-in-from-top-2 duration-200">
+          <Link href="/explore" onClick={() => setIsMenuOpen(false)} className="text-[14px] font-medium text-[#666]">Explore</Link>
+          {isAdmin && <Link href="/admin" onClick={() => setIsMenuOpen(false)} className="text-[14px] font-medium text-[#FF6B35]">Admin Panel</Link>}
+          <Link href="/pricing" onClick={() => setIsMenuOpen(false)} className="text-[14px] font-medium text-[#666]">Pricing</Link>
+          <div className="pt-4 border-t border-black/[0.06] flex flex-col gap-3">
+            {!user ? (
+              <button onClick={() => { loginWithGoogle(); setIsMenuOpen(false); }} className="w-full h-10 border border-black/10 rounded-lg text-[13px] font-semibold">Sign In</button>
+            ) : (
+              <button onClick={() => { logout(); setIsMenuOpen(false); }} className="w-full h-10 border border-red-100 text-red-500 rounded-lg text-[13px] font-semibold">Logout</button>
             )}
           </div>
         </div>

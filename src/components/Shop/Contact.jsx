@@ -7,33 +7,36 @@ const ShopContact = ({ phone, area, city, name }) => {
   const whatsappUrl = `https://wa.me/91${phone}?text=Hi%20I%20found%20${name}%20on%20ShopSetu`;
 
   return (
-    <section className="py-8 mb-20">
-      <Card className="text-center space-y-6 py-8">
-        <h2 className="text-2xl font-bold text-navy">Get in touch</h2>
-        <div className="flex flex-col items-center gap-4">
-          <div className="flex items-center gap-2 text-gray-600">
-            <MapPin size={20} className="text-primary" />
+    <section className="py-0 h-full">
+      <div className="text-center space-y-6 flex flex-col justify-center h-full">
+        <h2 className="text-[9px] font-black text-white/20 uppercase tracking-widest italic">Connect</h2>
+
+        <div className="flex flex-col items-center gap-2">
+          <div className="flex items-center gap-2.5 text-white/40 text-[9px] font-black uppercase tracking-widest bg-white/5 px-4 py-1.5 rounded-lg border border-white/5 w-full justify-center">
+            <MapPin size={12} className="text-primary" />
             <span>{area}, {city}</span>
           </div>
-          <div className="flex items-center gap-2 text-gray-600">
-            <Phone size={20} className="text-primary" />
+
+          <div className="flex items-center gap-2.5 text-white/40 text-[9px] font-black uppercase tracking-widest bg-white/5 px-4 py-1.5 rounded-lg border border-white/5 w-full justify-center">
+            <Phone size={12} className="text-primary" />
             <span>+91 {phone}</span>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-2 pt-2">
           <a href={`tel:+91${phone}`} className="w-full">
-            <Button variant="dark" className="w-full py-4">
-              <Phone size={20} /> Call Now
+            <Button size="sm" className="w-full bg-primary text-white py-3 rounded-xl shadow-lg shadow-primary/10 transition-all text-[10px] font-black uppercase tracking-widest">
+              <Phone size={12} /> Call Now
             </Button>
           </a>
+
           <a href={whatsappUrl} target="_blank" rel="noopener noreferrer" className="w-full">
-            <Button variant="whatsapp" className="w-full py-4">
-              <MessageSquare size={20} /> WhatsApp
+            <Button size="sm" className="w-full bg-[#25D366] text-white py-3 rounded-xl shadow-lg shadow-[#25D366]/10 transition-all text-[10px] font-black uppercase tracking-widest">
+              <MessageSquare size={12} /> WhatsApp
             </Button>
           </a>
         </div>
-      </Card>
+      </div>
     </section>
   );
 };

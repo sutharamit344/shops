@@ -1,9 +1,9 @@
 import React from 'react';
 
-const Card = ({ children, className = '', ...props }) => {
+const Card = ({ children, className = '', hover = true, glass = false, ...props }) => {
   return (
     <div 
-      className={`bg-white rounded-2xl p-6 shadow-sm border border-cream hover:shadow-md transition-shadow ${className}`} 
+      className={`${glass ? 'glass' : 'bg-white'} rounded-md p-6 border border-navy/10 shadow-sm transition-all duration-300 ${hover ? 'hover:shadow-md' : ''} ${className}`} 
       {...props}
     >
       {children}

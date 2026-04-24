@@ -3,8 +3,9 @@
 import React, { useState, useEffect } from "react";
 import Card from "@/components/UI/Card";
 import Button from "@/components/UI/Button";
-import { Plus, Check, X, Tag, Loader2, AlertCircle, Trash2, Shuffle } from "lucide-react";
+import { Plus, Check, X, Tag, Loader2, AlertCircle, Trash2, Shuffle, ShieldAlert } from "lucide-react";
 import { getCategories, getPendingCategories, approveCategory, proposeCategory, addApprovedCategory, deleteAndReassignCategory } from "@/lib/db";
+import Dialog from "@/components/UI/Dialog";
 
 const CategoryManager = () => {
   const [categories, setCategories] = useState([]);
@@ -13,12 +14,15 @@ const CategoryManager = () => {
   const [successMsg, setSuccessMsg] = useState("");
   const [adding, setAdding] = useState(false);
   const [newCat, setNewCat] = useState("");
-  
+
   // Modal State
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [catToDelete, setCatToDelete] = useState(null);
   const [replacementName, setReplacementName] = useState("");
   const [isDeleting, setIsDeleting] = useState(false);
+
+  // Add Modal State
+  const [showAddModal, setShowAddModal] = useState(false);
 
   const fetchData = async () => {
     setLoading(true);
@@ -44,6 +48,7 @@ const CategoryManager = () => {
     const res = await addApprovedCategory(newCat.trim());
     if (res.success) {
       setNewCat("");
+      setShowAddModal(false);
       setSuccessMsg(`"${newCat}" added successfully!`);
       setTimeout(() => setSuccessMsg(""), 3000);
       fetchData();
@@ -82,153 +87,204 @@ const CategoryManager = () => {
   };
 
   if (loading) return (
-    <div className="flex flex-col items-center py-20 gap-4">
-      <Loader2 className="animate-spin text-primary" size={40} />
-      <p className="text-navy font-black uppercase tracking-widest text-xs">Loading Categories...</p>
+    <div className="flex flex-col items-center py-24 gap-4 text-center">
+      <Loader2 className="animate-spin text-[#FF6B35] w-10 h-10 mb-2" />
+      <p className="text-[11px] font-bold text-[#999] uppercase tracking-[0.2em]">Retrieving Taxonomy...</p>
     </div>
   );
 
   return (
-    <div className="space-y-12 max-w-4xl mx-auto">
+    <div className="space-y-12 max-w-5xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-700">
       {/* Pending Requests */}
       {pending.length > 0 && (
         <section className="space-y-6">
-          <div className="flex items-center gap-2 px-2">
-            <div className="w-1 h-8 bg-yellow-400 rounded-full"></div>
-            <h2 className="text-2xl font-black text-navy uppercase tracking-tight">Proposed Categories</h2>
+          <div className="flex items-center gap-4 px-2">
+            <div className="w-1.5 h-8 bg-yellow-400 rounded-full"></div>
+            <div>
+               <h2 className="text-xl font-bold text-[#0F0F0F] tracking-tight">Proposed Classifications</h2>
+               <p className="text-[12px] text-[#999] font-medium tracking-wide">Suggested by shop owners during registration</p>
+            </div>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {pending.map((cat) => (
-              <Card key={cat.id} className="p-4 flex items-center justify-between bg-white border-yellow-100 shadow-yellow-100/20">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-yellow-50 text-yellow-600 rounded-lg"><Tag size={18} /></div>
-                  <span className="font-bold text-navy">{cat.name}</span>
+              <div key={cat.id} className="p-5 flex items-center justify-between bg-white border border-black/[0.06] shadow-sm rounded-[24px] hover:border-yellow-400/30 transition-all group">
+                <div className="flex items-center gap-4">
+                  <div className="w-10 h-10 bg-gray-50 rounded-xl flex items-center justify-center text-[#999] group-hover:text-yellow-500 transition-colors">
+                    <Tag size={18} />
+                  </div>
+                  <span className="font-bold text-[#0F0F0F] text-[15px] tracking-tight">{cat.name}</span>
                 </div>
                 <div className="flex gap-2">
-                  <Button onClick={() => handleApprove(cat.id)} className="bg-whatsapp hover:bg-green-600 p-2 rounded-lg">
+                  <button onClick={() => handleApprove(cat.id)} className="w-10 h-10 bg-green-50 text-green-600 rounded-xl hover:bg-green-600 hover:text-white transition-all flex items-center justify-center border border-green-100">
                     <Check size={18} />
-                  </Button>
-                  <Button onClick={() => handleDeleteClick(cat)} className="bg-red-50 text-red-500 hover:bg-red-500 hover:text-white p-2 rounded-lg transition-colors border border-red-100">
+                  </button>
+                  <button onClick={() => handleDeleteClick(cat)} className="w-10 h-10 bg-red-50 text-red-500 rounded-xl hover:bg-red-500 hover:text-white transition-all flex items-center justify-center border border-red-100">
                     <Trash2 size={18} />
-                  </Button>
+                  </button>
                 </div>
-              </Card>
+              </div>
             ))}
           </div>
         </section>
       )}
 
-      {/* Add New */}
+      {/* Global Listing */}
       <section className="space-y-6">
-        <div className="flex items-center gap-2 px-2 justify-between">
-          <div className="flex items-center gap-2">
-            <div className="w-1 h-8 bg-primary rounded-full"></div>
-            <h2 className="text-2xl font-black text-navy uppercase tracking-tight">Add Category</h2>
-          </div>
-          {successMsg && (
-            <div className="flex items-center gap-2 text-whatsapp font-bold text-xs animate-bounce bg-green-50 px-4 py-2 rounded-full border border-green-100">
-               <Check size={14} /> {successMsg}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 px-2">
+          <div className="flex items-center gap-4">
+            <div className="w-1.5 h-10 bg-[#FF6B35] rounded-full shadow-lg shadow-[#FF6B35]/20"></div>
+            <div>
+              <h2 className="text-2xl font-bold text-[#0F0F0F] tracking-tight italic">Active Taxonomy</h2>
+              <p className="text-[#999] font-medium text-[12px] tracking-wide uppercase">Verified industry groupings</p>
             </div>
-          )}
+          </div>
+          <div className="flex items-center gap-4">
+            {successMsg && (
+              <div className="flex items-center gap-2 text-green-600 font-bold text-[11px] uppercase tracking-wider bg-white px-5 py-2.5 rounded-full border border-green-100 shadow-sm animate-in fade-in zoom-in">
+                <Check size={14} /> {successMsg}
+              </div>
+            )}
+            <button 
+              onClick={() => setShowAddModal(true)} 
+              className="flex items-center gap-2.5 px-7 py-3.5 bg-[#0F0F0F] text-white rounded-2xl font-bold text-[13px] shadow-xl hover:bg-[#333] transition-all active:scale-95 whitespace-nowrap"
+            >
+              <Plus size={18} /> Add Category
+            </button>
+          </div>
         </div>
-        <Card className="p-6 rounded-[32px] border-cream bg-white">
-          <form onSubmit={handleAdd} className="flex gap-4">
-            <input
-              value={newCat}
-              onChange={(e) => setNewCat(e.target.value)}
-              placeholder="Enter category name..."
-              className="flex-1 p-4 rounded-2xl bg-cream/20 border-none focus:ring-2 focus:ring-primary font-bold"
-            />
-            <Button type="submit" disabled={adding} className="px-8 rounded-2xl">
-              {adding ? <Loader2 className="animate-spin" size={20} /> : <Plus size={24} />}
-            </Button>
-          </form>
-        </Card>
-      </section>
 
-      {/* active List */}
-      <section className="space-y-6">
-        <div className="flex items-center gap-2 px-2">
-          <div className="w-1 h-8 bg-navy rounded-full"></div>
-          <h2 className="text-2xl font-black text-navy uppercase tracking-tight">Active Library</h2>
-        </div>
-        <div className="flex flex-wrap gap-3">
+        {/* Add Category Dialog */}
+        <Dialog
+          isOpen={showAddModal}
+          onClose={() => setShowAddModal(false)}
+          showHeader={false}
+          maxWidth="max-w-md"
+        >
+          <div className="p-8">
+             <div className="w-14 h-14 bg-[#FF6B35] rounded-2xl flex items-center justify-center mb-6 shadow-lg shadow-[#FF6B35]/20">
+                <Plus size={28} className="text-white" />
+             </div>
+             <h3 className="text-xl font-bold text-[#0F0F0F] mb-1">New Classification</h3>
+             <p className="text-[#666] text-[14px] mb-8">Define a new industry group for the platform ecosystem.</p>
+
+             <form onSubmit={handleAdd} className="space-y-6">
+                <div className="space-y-2">
+                   <label className="text-[11px] font-bold text-[#999] uppercase tracking-widest ml-1">Category Name</label>
+                   <input
+                      autoFocus
+                      value={newCat}
+                      onChange={(e) => setNewCat(e.target.value)}
+                      placeholder="e.g. Luxury Watches"
+                      className="w-full h-14 rounded-2xl bg-gray-50 border border-black/[0.06] px-6 font-bold text-[#0F0F0F] outline-none focus:border-[#FF6B35] transition-all"
+                   />
+                </div>
+                
+                <div className="flex gap-3 pt-2">
+                   <button 
+                    type="button" 
+                    onClick={() => setShowAddModal(false)} 
+                    className="flex-1 h-12 bg-white border border-black/[0.06] rounded-xl text-[#0F0F0F] font-bold text-[13px] hover:bg-gray-50 transition-all"
+                   >
+                      Cancel
+                   </button>
+                   <button 
+                    type="submit" 
+                    disabled={adding || !newCat.trim()} 
+                    className="flex-1 h-12 bg-[#FF6B35] text-white rounded-xl font-bold text-[13px] shadow-lg shadow-[#FF6B35]/20 hover:bg-[#E85C25] transition-all disabled:opacity-50"
+                   >
+                      {adding ? <Loader2 className="animate-spin mx-auto" size={20} /> : "Initialize"}
+                   </button>
+                </div>
+             </form>
+          </div>
+        </Dialog>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
           {categories.map((cat) => (
-            <div key={cat.id} className="group relative flex items-center gap-2 px-5 py-2.5 bg-white border border-cream rounded-full text-navy font-extrabold text-sm shadow-sm hover:shadow-md transition-all">
-              <Tag size={14} className="text-primary" />
-              {cat.name}
-              <button 
+            <div key={cat.id} className="group relative flex items-center justify-between gap-3 p-5 bg-white border border-black/[0.06] rounded-[24px] shadow-sm hover:border-[#FF6B35]/30 hover:shadow-xl hover:shadow-black/[0.02] transition-all">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 bg-gray-50 rounded-lg flex items-center justify-center text-[#FF6B35] group-hover:rotate-12 transition-transform">
+                  <Tag size={14} />
+                </div>
+                <span className="text-[14px] font-bold text-[#0F0F0F] tracking-tight">{cat.name}</span>
+              </div>
+              <button
                 onClick={() => handleDeleteClick(cat)}
-                className="ml-2 p-1 bg-red-50 text-red-500 rounded-full opacity-0 group-hover:opacity-100 transition-all hover:bg-red-500 hover:text-white"
+                className="w-8 h-8 bg-red-50 text-red-500 rounded-lg opacity-0 group-hover:opacity-100 transition-all hover:bg-red-500 hover:text-white flex items-center justify-center border border-red-100"
               >
                 <Trash2 size={12} />
               </button>
             </div>
           ))}
           {categories.length === 0 && (
-            <div className="w-full text-center py-20 bg-cream/10 rounded-[40px] border-2 border-dashed border-cream">
-              <AlertCircle className="mx-auto text-gray-300 mb-4" size={48} />
-              <h3 className="text-xl font-black text-navy mb-2">Category Library Empty</h3>
-              <p className="text-gray-400 font-bold uppercase tracking-widest text-[10px] mb-8">Initialize the system to enable shop submissions</p>
-              <Button onClick={seedDefaults} className="bg-navy hover:bg-black rounded-2xl px-10">
-                Seed Default Categories
-              </Button>
+            <div className="col-span-full text-center py-24 bg-white rounded-[40px] border border-dashed border-black/[0.08] shadow-sm">
+              <div className="w-20 h-20 bg-gray-50 text-[#ccc] rounded-3xl flex items-center justify-center mx-auto mb-6">
+                <AlertCircle size={40} />
+              </div>
+              <h3 className="text-xl font-bold text-[#0F0F0F] mb-2 tracking-tight">Taxonomy is Empty</h3>
+              <p className="text-[#666] text-[14px] mb-10 max-w-xs mx-auto">The system needs a basic industry set to enable shop submissions.</p>
+              <button 
+                onClick={seedDefaults} 
+                className="h-12 px-10 bg-[#0F0F0F] text-white rounded-xl font-bold text-[13px] hover:bg-[#333] transition-all shadow-xl"
+              >
+                Seed Defaults
+              </button>
             </div>
           )}
         </div>
       </section>
 
-      {/* Delete/Merge Modal */}
-      {showDeleteModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-navy/60 backdrop-blur-sm animate-in fade-in duration-300">
-          <Card className="w-full max-w-lg p-8 rounded-[40px] border-none shadow-2xl bg-white scale-in-center overflow-hidden relative">
-            <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-red-500 to-orange-500"></div>
-            
-            <div className="flex flex-col items-center text-center mb-8">
-              <div className="w-16 h-16 bg-red-50 text-red-500 rounded-3xl flex items-center justify-center mb-4">
-                <Trash2 size={32} />
-              </div>
-              <h3 className="text-2xl font-black text-navy uppercase tracking-tight">Delete Category</h3>
-              <p className="text-gray-500 font-medium">Removing <span className="text-red-500 font-bold">"{catToDelete?.name}"</span></p>
-            </div>
+      <Dialog
+        isOpen={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        showHeader={false}
+        maxWidth="max-w-md"
+      >
+        <div className="p-8">
+           <div className="w-14 h-14 bg-red-50 text-red-500 rounded-2xl flex items-center justify-center mb-6 shadow-lg shadow-red-500/5 border border-red-100">
+              <ShieldAlert size={28} />
+           </div>
+           <h3 className="text-xl font-bold text-[#0F0F0F] mb-1">Decommissioning Protocol</h3>
+           <p className="text-[#666] text-[14px] mb-8">You are removing <span className="font-bold text-[#0F0F0F]">"{catToDelete?.name}"</span>. Choose a replacement for existing shops.</p>
 
-            <div className="space-y-6">
-              <div className="bg-cream/30 p-6 rounded-3xl space-y-4 border border-cream">
-                <div className="flex items-center gap-3 text-sm font-black text-navy uppercase tracking-widest">
-                  <Shuffle size={18} className="text-primary" />
-                  Replace and Move Shops to:
+           <div className="space-y-6">
+              <div className="space-y-2">
+                <label className="text-[11px] font-bold text-[#999] uppercase tracking-widest ml-1">Migration Target</label>
+                <div className="relative">
+                  <select
+                    className="w-full h-14 rounded-2xl bg-gray-50 border border-black/[0.06] px-6 font-bold text-[#0F0F0F] outline-none focus:border-red-400 transition-all appearance-none cursor-pointer"
+                    value={replacementName}
+                    onChange={(e) => setReplacementName(e.target.value)}
+                  >
+                    <option value="">Destructive Delete (No Migration)</option>
+                    {categories.filter(c => c.id !== catToDelete?.id).map(c => (
+                      <option key={c.id} value={c.name}>{c.name}</option>
+                    ))}
+                  </select>
+                  <div className="absolute right-5 top-1/2 -translate-y-1/2 pointer-events-none text-[#999]">
+                    <Shuffle size={14} />
+                  </div>
                 </div>
-                <select 
-                  className="w-full p-4 rounded-2xl bg-white border-2 border-cream focus:ring-2 focus:ring-primary font-bold text-sm"
-                  value={replacementName}
-                  onChange={(e) => setReplacementName(e.target.value)}
-                >
-                  <option value="">Don't Replace (Dangerous)</option>
-                  {categories.filter(c => c.id !== catToDelete?.id).map(c => (
-                    <option key={c.id} value={c.name}>{c.name}</option>
-                  ))}
-                </select>
-                <p className="text-[10px] text-gray-400 font-bold uppercase tracking-tighter leading-relaxed">
-                  All shops currently in "{catToDelete?.name}" will be automatically migrated to the new category.
-                </p>
               </div>
 
-              <div className="flex gap-4 pt-4">
-                <Button variant="outline" className="flex-1 rounded-2xl" onClick={() => setShowDeleteModal(false)}>
-                  Cancel
-                </Button>
-                <Button 
-                  className="flex-1 rounded-2xl bg-red-500 hover:bg-red-600 shadow-xl shadow-red-500/20" 
+              <div className="flex gap-3 pt-2">
+                <button 
+                  onClick={() => setShowDeleteModal(false)} 
+                  className="flex-1 h-12 bg-white border border-black/[0.06] rounded-xl text-[#0F0F0F] font-bold text-[13px] hover:bg-gray-50 transition-all"
+                >
+                  Abort
+                </button>
+                <button
                   onClick={confirmDelete}
                   disabled={isDeleting}
+                  className="flex-1 h-12 bg-red-600 text-white rounded-xl font-bold text-[13px] shadow-lg shadow-red-600/20 hover:bg-red-700 transition-all disabled:opacity-50"
                 >
-                  {isDeleting ? <Loader2 className="animate-spin" size={20} /> : "Confirm Delete"}
-                </Button>
+                  {isDeleting ? <Loader2 className="animate-spin mx-auto" size={20} /> : "Decommission"}
+                </button>
               </div>
-            </div>
-          </Card>
+           </div>
         </div>
-      )}
+      </Dialog>
     </div>
   );
 };

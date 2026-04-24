@@ -5,7 +5,49 @@
   --color-navy: #1A1F36;
   --color-whatsapp: #25D366;
   --color-cream: #FFF8F3;
-  --font-sans: "Outfit", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+}
+
+@layer utilities {
+  .glass {
+    @apply bg-white/40 backdrop-blur-2xl border border-white/40 shadow-md rounded-md;
+  }
+  
+  .glass-dark {
+    @apply bg-navy/60 backdrop-blur-2xl border border-white/10 shadow-md rounded-md;
+  }
+
+  .mesh-gradient {
+    background-color: #FFF8F3;
+    background-image: 
+      radial-gradient(at 0% 0%, hsla(16,100%,96%,1) 0, transparent 50%), 
+      radial-gradient(at 50% 0%, hsla(16,100%,94%,1) 0, transparent 50%), 
+      radial-gradient(at 100% 0%, hsla(25,100%,96%,1) 0, transparent 50%);
+  }
+
+  .animate-float {
+    animation: float 6s ease-in-out infinite;
+  }
+
+  .animate-fade-in-up {
+    animation: fadeInUp 0.8s ease-out forwards;
+  }
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-20px); }
+  }
+
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
 }
 
 :root {
@@ -23,9 +65,9 @@ body {
 }
 
 .btn-primary {
-  @apply bg-primary text-white font-bold py-4 px-8 rounded-xl transition-all hover:scale-105 active:scale-95 shadow-lg;
+  @apply bg-primary text-white font-bold py-4 px-8 rounded-md transition-all hover:scale-105 active:scale-95 shadow-md;
 }
 
 .btn-whatsapp {
-  @apply bg-whatsapp text-white font-bold py-4 px-8 rounded-xl transition-all hover:scale-105 active:scale-95 shadow-lg flex items-center justify-center gap-2;
+  @apply bg-whatsapp text-white font-bold py-4 px-8 rounded-md transition-all hover:scale-105 active:scale-95 shadow-md flex items-center justify-center gap-2;
 }
