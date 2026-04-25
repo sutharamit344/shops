@@ -101,6 +101,30 @@ function ShopDashboardContent() {
     type: "info" // "info", "success", "error"
   });
 
+  const qrRef = useRef(null);
+  const [downloadingQR, setDownloadingQR] = useState(false);
+
+  const handleDownloadQR = async () => {
+    if (!qrRef.current) return;
+    setDownloadingQR(true);
+    try {
+      const { toPng } = await import("html-to-image");
+      const dataUrl = await toPng(qrRef.current, {
+        quality: 1,
+        pixelRatio: 4,
+        backgroundColor: "#ffffff",
+      });
+      const link = document.createElement("a");
+      link.download = `${shop.name?.replace(/\s+/g, "_")}_QRCode.png`;
+      link.href = dataUrl;
+      link.click();
+    } catch (err) {
+      console.error("QR Download failed:", err);
+    } finally {
+      setDownloadingQR(false);
+    }
+  };
+
   useEffect(() => {
     if (user && shopId) {
       const fetchShop = async () => {
@@ -458,14 +482,18 @@ function ShopDashboardContent() {
                   />
                 </div>
                 <div className="flex gap-2">
-                  <a
-                    href={`https://api.qrserver.com/v1/create-qr-code/?size=500x500&data=${encodeURIComponent(window.location.origin + "/" + shop.city?.toLowerCase() + "/" + shop.category?.toLowerCase() + "/" + shop.slug)}`}
-                    download="shop_qr.png"
-                    target="_blank"
-                    className="flex-1 py-2 bg-[#0F0F0F] text-white text-[11px] font-semibold rounded-lg flex items-center justify-center"
+                  <button
+                    onClick={handleDownloadQR}
+                    disabled={downloadingQR}
+                    className="flex-1 py-2 bg-[#0F0F0F] text-white text-[11px] font-semibold rounded-lg flex items-center justify-center gap-2 hover:bg-black/90 active:scale-95 transition-all disabled:opacity-50"
                   >
+                    {downloadingQR ? (
+                      <RefreshCw size={12} className="animate-spin" />
+                    ) : (
+                      <Upload size={12} className="rotate-180" />
+                    )}
                     Download QR
-                  </a>
+                  </button>
                   <button
                     onClick={() => {
                       const url = window.location.origin + "/" + shop.city?.toLowerCase() + "/" + shop.category?.toLowerCase() + "/" + shop.slug;
@@ -1172,6 +1200,36 @@ function ShopDashboardContent() {
       </Dialog>
 
       {/* Generic Message Modal */}
+      {/* ── Hidden Printable QR Card (for high-res download) ── */}
+      <div className="fixed -left-[9999px] top-0 pointer-events-none">
+        <div 
+          ref={qrRef}
+          className="w-[400px] bg-white p-10 flex flex-col items-center text-center"
+        >
+          <div className="w-16 h-16 bg-[#FF6B35]/10 rounded-2xl flex items-center justify-center mb-6">
+            <Store size={32} className="text-[#FF6B35]" />
+          </div>
+          <h2 className="text-3xl font-black text-[#0F0F0F] mb-1 tracking-tight">{shop?.name}</h2>
+          <div className="flex items-center gap-2 text-[14px] text-[#666] font-bold uppercase tracking-widest mb-8">
+            <MapPin size={14} className="text-[#FF6B35]" />
+            {shop?.city}
+          </div>
+          
+          <div className="p-6 bg-white border-4 border-[#0F0F0F] rounded-[40px] mb-8">
+            <img
+              src={`https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(window.location.origin + "/" + shop?.city?.toLowerCase() + "/" + shop?.category?.toLowerCase() + "/" + shop?.slug)}`}
+              alt="QR Code"
+              className="w-48 h-48"
+            />
+          </div>
+
+          <div className="space-y-1">
+            <p className="text-[16px] font-black text-[#0F0F0F] uppercase tracking-tighter">Scan to View Catalog</p>
+            <p className="text-[12px] text-[#999] font-medium">Powered by ShopSetu</p>
+          </div>
+        </div>
+      </div>
+
       <Dialog
         isOpen={messageModal.isOpen}
         onClose={() => setMessageModal({ ...messageModal, isOpen: false })}
