@@ -17,14 +17,6 @@ service cloud.firestore {
       // Allow authenticated users to create a shop
       allow create: if request.auth != null;
       
-      // Allow anyone to update aggregate rating counts ONLY
-      // This is a simplified rule for the current transaction-based rating system
-      // For higher security, Cloud Functions are recommended.
-      allow update: if (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['avgRating', 'totalRatings']))
-                   || (request.auth != null && (request.auth.uid == resource.data.ownerId || isAdmin()));
-
-      // Only Owner OR Admin can delete or perform other updates
-      allow delete: if request.auth != null && (request.auth.uid == resource.data.ownerId || isAdmin());
 
       // Ratings Subcollection
       match /ratings/{ratingId} {

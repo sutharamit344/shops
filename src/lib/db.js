@@ -98,7 +98,9 @@ export async function getShopBySlug(slug, allowHidden = false) {
 
     return shop;
   } catch (error) {
-    console.error("Error getting shop: ", error);
+    if (error.code !== "permission-denied") {
+      console.error("Error getting shop: ", error);
+    }
     return null;
   }
 }

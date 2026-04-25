@@ -22,7 +22,7 @@ export default async function ShopProfilePage({ params }) {
   const { city, category, slug } = await params;
   const decodedSlug = decodeURIComponent(slug);
 
-  const shop = await getShopBySlug(decodedSlug, true);
+  const shop = await getShopBySlug(decodedSlug);
 
   if (!shop) {
     notFound();
