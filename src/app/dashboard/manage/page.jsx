@@ -38,7 +38,8 @@ import {
   Info,
   Search,
   CalendarDays,
-  ChevronUp
+  ChevronUp,
+  RefreshCw
 } from "lucide-react";
 import Link from "next/link";
 import ShopHistoryDialog from "@/components/Shop/HistoryDialog";
@@ -298,7 +299,7 @@ function ShopDashboardContent() {
   const handleUpdateHours = async () => {
     setIsSaving(true);
     try {
-      const result = await updateShop(shopId, { 
+      const result = await updateShop(shopId, {
         openingHoursDetails: openingHours,
         holidays: holidays
       });
@@ -571,19 +572,16 @@ function ShopDashboardContent() {
                       <button
                         key={i}
                         onClick={() => !item.done && setActiveView(item.tab)}
-                        className={`w-full flex items-center gap-3 p-3 rounded-xl text-left transition-all ${
-                          item.done ? "opacity-60" : "hover:bg-gray-50 group cursor-pointer"
-                        }`}
+                        className={`w-full flex items-center gap-3 p-3 rounded-xl text-left transition-all ${item.done ? "opacity-60" : "hover:bg-gray-50 group cursor-pointer"
+                          }`}
                       >
-                        <div className={`w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 border-2 transition-all ${
-                          item.done ? "bg-[#FF6B35] border-[#FF6B35]" : "border-gray-200 group-hover:border-[#FF6B35]/50"
-                        }`}>
+                        <div className={`w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 border-2 transition-all ${item.done ? "bg-[#FF6B35] border-[#FF6B35]" : "border-gray-200 group-hover:border-[#FF6B35]/50"
+                          }`}>
                           {item.done && <CheckCircle2 size={12} className="text-white" />}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className={`text-[12px] font-semibold ${
-                            item.done ? "line-through text-[#999]" : "text-[#0F0F0F]"
-                          }`}>{item.label}</p>
+                          <p className={`text-[12px] font-semibold ${item.done ? "line-through text-[#999]" : "text-[#0F0F0F]"
+                            }`}>{item.label}</p>
                           {!item.done && (
                             <p className="text-[10px] text-[#999] truncate">{item.hint}</p>
                           )}
@@ -910,7 +908,7 @@ function ShopDashboardContent() {
                           </div>
                           <span className="text-[12px] font-semibold text-[#0F0F0F]">{holiday.title}</span>
                         </div>
-                        <button 
+                        <button
                           onClick={() => handleDeleteHoliday(idx)}
                           className="p-1.5 hover:bg-red-50 rounded-lg text-[#ccc] hover:text-red-500 transition-all"
                         >
@@ -1006,11 +1004,10 @@ function ShopDashboardContent() {
             <button
               key={tab.id}
               onClick={() => setActiveView(tab.id)}
-              className={`flex-1 flex flex-col items-center justify-center py-3 gap-1 text-[9px] font-bold uppercase tracking-wider transition-all ${
-                activeView === tab.id
+              className={`flex-1 flex flex-col items-center justify-center py-3 gap-1 text-[9px] font-bold uppercase tracking-wider transition-all ${activeView === tab.id
                   ? "text-[#FF6B35]"
                   : "text-[#999]"
-              }`}
+                }`}
             >
               <tab.icon size={18} className={activeView === tab.id ? "text-[#FF6B35]" : "text-[#ccc]"} />
               {tab.label}
@@ -1202,24 +1199,43 @@ function ShopDashboardContent() {
       {/* Generic Message Modal */}
       {/* ── Hidden Printable QR Card (for high-res download) ── */}
       <div className="fixed -left-[9999px] top-0 pointer-events-none">
-        <div 
+        <div
           ref={qrRef}
           className="w-[400px] bg-white p-10 flex flex-col items-center text-center"
         >
-          <div className="w-16 h-16 bg-[#FF6B35]/10 rounded-2xl flex items-center justify-center mb-6">
-            <Store size={32} className="text-[#FF6B35]" />
+          <div className="w-20 h-20 mb-6 flex items-center justify-center">
+            {shop?.logo ? (
+              <img 
+                src={shop.logo} 
+                alt="Logo" 
+                className="w-20 h-20 object-contain rounded-2xl"
+                crossOrigin="anonymous"
+              />
+            ) : (
+              <div className="w-20 h-20 bg-[#FF6B35]/10 rounded-2xl flex items-center justify-center">
+                <Store size={40} className="text-[#FF6B35]" />
+              </div>
+            )}
           </div>
           <h2 className="text-3xl font-black text-[#0F0F0F] mb-1 tracking-tight">{shop?.name}</h2>
-          <div className="flex items-center gap-2 text-[14px] text-[#666] font-bold uppercase tracking-widest mb-8">
-            <MapPin size={14} className="text-[#FF6B35]" />
-            {shop?.city}
+          <div className="flex flex-col items-center gap-1 text-[12px] text-[#666] font-bold uppercase tracking-widest mb-8">
+            <div className="flex items-center gap-1.5">
+              <MapPin size={12} className="text-[#FF6B35]" />
+              {shop?.city}
+            </div>
+            {(shop?.area || shop?.zone) && (
+              <div className="text-[10px] opacity-70">
+                {[shop?.area, shop?.zone].filter(Boolean).join(" • ")}
+              </div>
+            )}
           </div>
-          
+
           <div className="p-6 bg-white border-4 border-[#0F0F0F] rounded-[40px] mb-8">
             <img
               src={`https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(window.location.origin + "/" + shop?.city?.toLowerCase() + "/" + shop?.category?.toLowerCase() + "/" + shop?.slug)}`}
               alt="QR Code"
               className="w-48 h-48"
+              crossOrigin="anonymous"
             />
           </div>
 
