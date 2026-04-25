@@ -35,7 +35,12 @@ import {
   Calendar,
   Mail,
   User,
-  X
+  X,
+  ShoppingBag,
+  ListFilter,
+  Image as ImageIcon,
+  Share2,
+  ArrowLeft
 } from "lucide-react";
 
 import ShopHistoryDialog from "@/components/Shop/HistoryDialog";
@@ -124,22 +129,20 @@ const UserDashboard = () => {
   return (
     <div className="min-h-screen bg-[#FAFAF8] flex">
       {/* Mobile Sidebar/Drawer */}
-      <div 
-        className={`fixed inset-0 z-50 lg:hidden transition-opacity duration-300 ${
-          mobileMenuOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
-        }`}
+      <div
+        className={`fixed inset-0 z-50 lg:hidden transition-opacity duration-300 ${mobileMenuOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+          }`}
       >
         {/* Overlay */}
-        <div 
+        <div
           className="absolute inset-0 bg-black/40 backdrop-blur-sm"
           onClick={() => setMobileMenuOpen(false)}
         />
-        
+
         {/* Drawer Content */}
-        <aside 
-          className={`absolute inset-y-0 left-0 w-80 bg-white shadow-2xl transition-transform duration-300 transform ${
-            mobileMenuOpen ? "translate-x-0" : "-translate-x-full"
-          }`}
+        <aside
+          className={`absolute inset-y-0 left-0 w-80 bg-white shadow-2xl transition-transform duration-300 transform ${mobileMenuOpen ? "translate-x-0" : "-translate-x-full"
+            }`}
         >
           <div className="p-6 h-full flex flex-col">
             <div className="flex items-center justify-between mb-10">
@@ -151,7 +154,7 @@ const UserDashboard = () => {
                   Shop<span className="text-[#FF6B35]">Setu</span>
                 </span>
               </Link>
-              <button 
+              <button
                 onClick={() => setMobileMenuOpen(false)}
                 className="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center text-[#666]"
               >
@@ -167,20 +170,18 @@ const UserDashboard = () => {
                     setActiveTab(item.id);
                     setMobileMenuOpen(false);
                   }}
-                  className={`w-full flex items-center justify-between px-4 py-3 rounded-xl text-[13px] font-semibold transition-all ${
-                    activeTab === item.id
-                      ? "bg-[#0F0F0F] text-white"
-                      : "text-[#666] hover:bg-gray-50 hover:text-[#0F0F0F]"
-                  }`}
+                  className={`w-full flex items-center justify-between px-4 py-3 rounded-xl text-[13px] font-semibold transition-all ${activeTab === item.id
+                    ? "bg-[#0F0F0F] text-white"
+                    : "text-[#666] hover:bg-gray-50 hover:text-[#0F0F0F]"
+                    }`}
                 >
                   <div className="flex items-center gap-3">
                     <item.icon size={18} />
                     <span>{item.label}</span>
                   </div>
                   {item.count !== undefined && (
-                    <span className={`text-[10px] px-1.5 py-0.5 rounded-md ${
-                      activeTab === item.id ? "bg-white/20" : "bg-gray-100"
-                    }`}>
+                    <span className={`text-[10px] px-1.5 py-0.5 rounded-md ${activeTab === item.id ? "bg-white/20" : "bg-gray-100"
+                      }`}>
                       {item.count}
                     </span>
                   )}
@@ -297,8 +298,8 @@ const UserDashboard = () => {
         </header>
 
         <main className="flex-1 p-6 md:p-8 lg:p-10 overflow-y-auto">
-          {activeTab === "businesses" ? (
-            <div>
+          {activeTab === "businesses" && (
+            <div className="animate-in fade-in duration-500">
               {/* Header */}
               <div className="mb-10">
                 <div className="inline-flex items-center gap-2 px-3 py-1 bg-[#FF6B35]/10 rounded-full mb-4">
@@ -449,29 +450,17 @@ const UserDashboard = () => {
                             </div>
 
                             <p className="text-[12px] text-[#666] line-clamp-1">
-                              {shop.description || "No description"}
+                              {shop.description || "-"}
                             </p>
                           </div>
 
                           {/* Actions */}
-                          <div className="flex flex-wrap gap-2">
-                            <Link href={`/edit?id=${shop.id}`}>
-                              <button className="px-3 py-1.5 text-[11px] font-semibold border border-black/[0.06] rounded-lg hover:bg-gray-50 transition-all">
-                                Edit
-                              </button>
-                            </Link>
-                            <button
-                              onClick={() => setHistoryShop(shop)}
-                              className="px-3 py-1.5 text-[11px] font-semibold border border-black/[0.06] rounded-lg hover:bg-gray-50 transition-all"
-                            >
-                              History
-                            </button>
-                            <Link href={`/${shop.city?.toLowerCase()}/${shop.category?.toLowerCase()}/${shop.slug}`}>
-                              <button className={`px-3 py-1.5 text-[11px] font-semibold rounded-lg transition-all ${shop.status === 'approved'
-                                ? "bg-[#0F0F0F] text-white hover:bg-[#333]"
-                                : "border-2 border-[#FF6B35] text-[#FF6B35] hover:bg-[#FF6B35]/5"
-                                }`}>
-                                {shop.status === 'approved' ? 'View Live' : 'Preview'}
+                          <div className="flex items-center ml-auto">
+                            <Link href={`/dashboard/manage?id=${shop.id}`}>
+                              <button
+                                className="px-6 py-2.5 bg-[#0F0F0F] text-white text-[12px] font-bold rounded-xl hover:bg-black/90 transition-all flex items-center gap-2 shadow-lg shadow-black/10 active:scale-95"
+                              >
+                                Manage <ChevronRight size={14} />
                               </button>
                             </Link>
                           </div>
@@ -482,7 +471,9 @@ const UserDashboard = () => {
                 </div>
               )}
             </div>
-          ) : activeTab === "profile" ? (
+          )}
+
+          {activeTab === "profile" && (
             <div>
               <div className="mb-8">
                 <h1 className="text-3xl font-bold text-[#0F0F0F] tracking-tight mb-2">
@@ -500,49 +491,46 @@ const UserDashboard = () => {
                       user.displayName?.charAt(0) || user.email?.charAt(0).toUpperCase()
                     )}
                   </div>
-                  <div className="flex-1">
-                    <h2 className="text-xl font-bold text-[#0F0F0F] mb-1">{user.displayName || "Business Owner"}</h2>
-                    <p className="text-[13px] text-[#666] mb-4">{user.email}</p>
-
-                    <div className="flex flex-wrap gap-4">
-                      <div className="px-4 py-2 bg-gray-50 rounded-xl">
-                        <p className="text-[9px] text-[#999] uppercase tracking-wider">Member Since</p>
-                        <p className="text-[13px] font-semibold text-[#0F0F0F]">
-                          {new Date(user.metadata?.creationTime).toLocaleDateString()}
-                        </p>
+                  <div className="flex-1 space-y-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div>
+                        <label className="block text-[11px] font-bold text-[#999] uppercase tracking-wider mb-2">Display Name</label>
+                        <div className="px-4 py-3 bg-gray-50 border border-black/[0.04] rounded-xl text-[13px] font-medium text-[#0F0F0F]">
+                          {user.displayName || "Not set"}
+                        </div>
                       </div>
-                      <div className="px-4 py-2 bg-gray-50 rounded-xl">
-                        <p className="text-[9px] text-[#999] uppercase tracking-wider">Account Status</p>
-                        <p className="text-[13px] font-semibold text-green-600">Active Partner</p>
+                      <div>
+                        <label className="block text-[11px] font-bold text-[#999] uppercase tracking-wider mb-2">Email Address</label>
+                        <div className="px-4 py-3 bg-gray-50 border border-black/[0.04] rounded-xl text-[13px] font-medium text-[#0F0F0F]">
+                          {user.email}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </div>
 
-                <div className="mt-8 pt-8 border-t border-black/[0.06]">
-                  <h3 className="text-[13px] font-bold text-[#0F0F0F] mb-4">Business Performance</h3>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <div className="p-4 bg-gray-50 rounded-xl text-center">
-                      <div className="text-2xl font-bold text-[#0F0F0F]">{shops.length}</div>
-                      <div className="text-[10px] text-[#999]">Total Shops</div>
-                    </div>
-                    <div className="p-4 bg-gray-50 rounded-xl text-center">
-                      <div className="text-2xl font-bold text-[#0F0F0F]">{approvedShops}</div>
-                      <div className="text-[10px] text-[#999]">Live Shops</div>
-                    </div>
-                    <div className="p-4 bg-gray-50 rounded-xl text-center">
-                      <div className="text-2xl font-bold text-[#0F0F0F]">{totalViews.toLocaleString()}</div>
-                      <div className="text-[10px] text-[#999]">Total Views</div>
-                    </div>
-                    <div className="p-4 bg-gray-50 rounded-xl text-center">
-                      <div className="text-2xl font-bold text-[#0F0F0F]">{totalLeads.toLocaleString()}</div>
-                      <div className="text-[10px] text-[#999]">Total Leads</div>
+                    <div className="pt-6 border-t border-black/[0.04]">
+                      <h3 className="text-[13px] font-bold text-[#0F0F0F] mb-4">Account Statistics</h3>
+                      <div className="grid grid-cols-3 gap-4">
+                        <div className="p-4 bg-gray-50 rounded-xl text-center">
+                          <div className="text-2xl font-bold text-[#0F0F0F]">{shops.length}</div>
+                          <div className="text-[10px] text-[#999]">Businesses</div>
+                        </div>
+                        <div className="p-4 bg-gray-50 rounded-xl text-center">
+                          <div className="text-2xl font-bold text-[#0F0F0F]">{totalViews.toLocaleString()}</div>
+                          <div className="text-[10px] text-[#999]">Total Views</div>
+                        </div>
+                        <div className="p-4 bg-gray-50 rounded-xl text-center">
+                          <div className="text-2xl font-bold text-[#0F0F0F]">{totalLeads.toLocaleString()}</div>
+                          <div className="text-[10px] text-[#999]">Total Leads</div>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
             </div>
-          ) : activeTab === "admin" ? (
+          )}
+
+          {activeTab === "admin" && (
             <div>
               <div className="mb-8">
                 <h1 className="text-3xl font-bold text-[#0F0F0F] tracking-tight mb-2">
@@ -564,11 +552,10 @@ const UserDashboard = () => {
                 </Link>
               </div>
             </div>
-          ) : null}
+          )}
         </main>
       </div>
 
-      {/* History Dialog */}
       <ShopHistoryDialog
         shop={historyShop}
         isOpen={!!historyShop}

@@ -1,24 +1,10 @@
 {
   "hosting": {
-    "public": "out",
+    "source": ".",
     "ignore": [
       "firebase.json",
       "**/.*",
       "**/node_modules/**"
-    ],
-    "rewrites": [
-      {
-        "source": "/category/**",
-        "destination": "/404.html"
-      },
-      {
-        "source": "/:city/:category/:slug",
-        "destination": "/404.html"
-      },
-      {
-        "source": "**",
-        "destination": "/index.html"
-      }
     ]
   },
   "firestore": {

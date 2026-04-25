@@ -249,7 +249,7 @@ export default function Home() {
             ).map((cat) => (
               <Link
                 key={cat.id || cat.name}
-                href={`/category/${encodeURIComponent(cat.name)}`}
+                href={`/explore?category=${encodeURIComponent(cat.name)}&nearby=true`}
                 className="px-4 py-2 bg-gray-50 hover:bg-white rounded-xl text-[12px] font-medium text-[#666] hover:text-[#FF6B35] border border-black/[0.06] hover:border-[#FF6B35]/30 transition-all cursor-pointer"
               >
                 {cat.name}

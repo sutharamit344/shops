@@ -5,7 +5,7 @@ import { useAuth } from "@/context/AuthContext";
 import Button from "@/components/UI/Button";
 import Link from "next/link";
 import Navbar from "@/components/Navbar";
-import { getPendingShops, getUpdatedShops, getApprovedShops } from "@/lib/db";
+import { getPendingShops, getUpdatedShops, getApprovedShops, approveShop, rejectShop } from "@/lib/db";
 
 import AdminShopCard from "@/components/Admin/ShopCard";
 
@@ -32,6 +32,8 @@ const AdminDashboard = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [isUnlocked, setIsUnlocked] = useState(false);
   const [pin, setPin] = useState("");
+  const [selectedShops, setSelectedShops] = useState(new Set());
+  const [bulkLoading, setBulkLoading] = useState(false);
   const itemsPerPage = 8;
 
   const fetchShops = async () => {
@@ -68,6 +70,7 @@ const AdminDashboard = () => {
 
   useEffect(() => {
     setCurrentPage(1);
+    setSelectedShops(new Set());
   }, [activeMainTab, activeSubTab]);
 
   const handleUnlock = (e) => {
@@ -78,6 +81,35 @@ const AdminDashboard = () => {
       alert("Invalid Security PIN");
       setPin("");
     }
+  };
+
+  const toggleSelectShop = (id) => {
+    setSelectedShops(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  };
+
+  const handleBulkApprove = async () => {
+    if (!selectedShops.size) return;
+    if (!confirm(`Approve ${selectedShops.size} selected shop(s)?`)) return;
+    setBulkLoading(true);
+    await Promise.all([...selectedShops].map(id => approveShop(id, user?.email)));
+    setSelectedShops(new Set());
+    fetchShops();
+    setBulkLoading(false);
+  };
+
+  const handleBulkReject = async () => {
+    if (!selectedShops.size) return;
+    const reason = window.prompt(`Rejection reason for ${selectedShops.size} shop(s):`);
+    if (!reason?.trim()) return;
+    setBulkLoading(true);
+    await Promise.all([...selectedShops].map(id => rejectShop(id, reason, user?.email)));
+    setSelectedShops(new Set());
+    fetchShops();
+    setBulkLoading(false);
   };
 
   if (authLoading || isAdmin === null) {
@@ -371,9 +403,55 @@ const AdminDashboard = () => {
 
                   return (
                     <div className="space-y-6">
+                      {/* Bulk Actions Bar */}
+                      {(activeSubTab === 'pending' || activeSubTab === 'rejected') && (
+                        <div className="flex items-center gap-3 p-3 bg-white rounded-2xl border border-black/[0.06] shadow-sm flex-wrap">
+                          <button
+                            onClick={() => {
+                              const allSelected = paginated.every(s => selectedShops.has(s.id));
+                              if (allSelected) {
+                                setSelectedShops(prev => { const next = new Set(prev); paginated.forEach(s => next.delete(s.id)); return next; });
+                              } else {
+                                setSelectedShops(prev => { const next = new Set(prev); paginated.forEach(s => next.add(s.id)); return next; });
+                              }
+                            }}
+                            className="px-3 py-1.5 bg-gray-50 border border-black/[0.06] rounded-xl text-[10px] font-bold uppercase tracking-wider text-[#666] hover:text-[#0F0F0F] transition-all"
+                          >
+                            {paginated.every(s => selectedShops.has(s.id)) ? "Deselect All" : "Select All"}
+                          </button>
+                          {selectedShops.size > 0 && (
+                            <>
+                              <span className="text-[10px] font-bold text-[#999] uppercase tracking-wider">{selectedShops.size} selected</span>
+                              <div className="flex items-center gap-2 ml-auto">
+                                <button
+                                  onClick={handleBulkApprove}
+                                  disabled={bulkLoading}
+                                  className="px-4 py-1.5 bg-green-600 text-white rounded-xl text-[10px] font-bold uppercase tracking-wider hover:bg-green-700 transition-all disabled:opacity-50"
+                                >
+                                  ✓ Approve All
+                                </button>
+                                <button
+                                  onClick={handleBulkReject}
+                                  disabled={bulkLoading}
+                                  className="px-4 py-1.5 bg-red-500 text-white rounded-xl text-[10px] font-bold uppercase tracking-wider hover:bg-red-600 transition-all disabled:opacity-50"
+                                >
+                                  ✕ Reject All
+                                </button>
+                              </div>
+                            </>
+                          )}
+                        </div>
+                      )}
+
                       <div className="grid grid-cols-1 gap-5">
                         {paginated.map((shop) => (
-                          <AdminShopCard key={shop.id} shop={shop} onRefresh={fetchShops} />
+                          <AdminShopCard
+                            key={shop.id}
+                            shop={shop}
+                            onRefresh={fetchShops}
+                            isSelected={selectedShops.has(shop.id)}
+                            onToggleSelect={(activeSubTab === 'pending' || activeSubTab === 'rejected') ? toggleSelectShop : undefined}
+                          />
                         ))}
                       </div>
 

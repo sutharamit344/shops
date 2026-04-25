@@ -3,28 +3,12 @@ import { getShopBySlug, getShopRatings, getApprovedShops } from "@/lib/db";
 import { notFound } from "next/navigation";
 import ShopProfileClient from "@/components/Shop/ShopProfileClient";
 
-export const dynamicParams = false;
-
-export async function generateStaticParams() {
-  try {
-    const shops = await getApprovedShops();
-    return shops
-      .filter(s => s.city && s.category && s.slug && s.category.toLowerCase() !== "area")
-      .map(s => ({
-        city: s.city?.toString() || "",
-        category: s.category?.toString() || "",
-        slug: s.slug?.toString() || ""
-      }));
-  } catch (error) {
-    console.error("Error generating static params for shop profiles:", error);
-    return [];
-  }
-}
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }) {
   const { slug } = await params;
   const decodedSlug = decodeURIComponent(slug);
-  const shop = await getShopBySlug(decodedSlug, true);
+  const shop = await getShopBySlug(decodedSlug);
 
   if (!shop) return { title: "Not Found | ShopSetu" };
 

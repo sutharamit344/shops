@@ -9,7 +9,7 @@ import { useAuth } from "@/context/AuthContext";
 import Link from "next/link";
 import { AlertCircle, Check, History, Mail, MapPin, RefreshCw, ShieldCheck, Store, X, ExternalLink, CheckCircle2, Clock } from "lucide-react";
 
-const AdminShopCard = ({ shop, onRefresh }) => {
+const AdminShopCard = ({ shop, onRefresh, isSelected = false, onToggleSelect }) => {
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [showRejectForm, setShowRejectForm] = useState(false);
@@ -61,8 +61,24 @@ const AdminShopCard = ({ shop, onRefresh }) => {
   const isPending = shop.status === 'pending';
 
   return (
-    <div className="bg-white rounded-2xl border border-black/[0.06] hover:border-[#FF6B35]/30 hover:shadow-xl hover:shadow-black/[0.02] transition-all p-5 group relative overflow-hidden">
-      <div className="absolute top-0 left-0 w-1.5 h-full bg-[#0F0F0F]/5 group-hover:bg-[#FF6B35] transition-colors"></div>
+    <div className={`bg-white rounded-2xl border hover:shadow-xl hover:shadow-black/[0.02] transition-all p-5 group relative overflow-hidden ${
+      isSelected
+        ? "border-[#FF6B35]/60 shadow-md shadow-[#FF6B35]/10"
+        : "border-black/[0.06] hover:border-[#FF6B35]/30"
+    }`}>
+      <div className="absolute top-0 left-0 w-1.5 h-full bg-[#0F0F0F]/5 group-hover:bg-[#FF6B35] transition-colors" />
+
+      {/* Checkbox */}
+      {onToggleSelect && (
+        <button
+          onClick={(e) => { e.stopPropagation(); onToggleSelect(shop.id); }}
+          className={`absolute top-4 right-4 w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all z-10 ${
+            isSelected ? "bg-[#FF6B35] border-[#FF6B35]" : "bg-white border-gray-200 hover:border-[#FF6B35]/50"
+          }`}
+        >
+          {isSelected && <Check size={12} className="text-white" />}
+        </button>
+      )}
 
       <div className="flex flex-col lg:flex-row justify-between lg:items-center gap-6">
         <div className="flex-1 flex items-center gap-5 min-w-0">
@@ -113,7 +129,7 @@ const AdminShopCard = ({ shop, onRefresh }) => {
         <div className="flex flex-wrap lg:flex-nowrap items-center gap-2 lg:min-w-fit">
           {isApproved && (
             <Link
-              href={`/${shop.city?.toLowerCase()}/${shop.category?.toLowerCase()}/${shop.slug}`}
+              href={`/${encodeURIComponent(shop.city)}/${encodeURIComponent(shop.category)}/${shop.slug}`}
               target="_blank"
               className="px-4 py-2 bg-white border border-black/[0.06] hover:border-[#0F0F0F] rounded-xl text-[11px] font-bold uppercase tracking-wider text-[#0F0F0F] transition-all flex items-center gap-2 shadow-sm"
             >

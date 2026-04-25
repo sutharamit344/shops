@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import { Upload, X, ImageIcon, Loader2, Plus } from "lucide-react";
+import { uploadImage } from "@/lib/storage";
 
 const ImageUpload = ({
   onUpload,
@@ -14,6 +15,10 @@ const ImageUpload = ({
 }) => {
   const [uploading, setUploading] = useState(false);
   const [preview, setPreview] = useState(currentImage);
+
+  React.useEffect(() => {
+    setPreview(currentImage);
+  }, [currentImage]);
 
   const handleFileChange = async (e) => {
     const files = Array.from(e.target.files);
@@ -45,6 +50,8 @@ const ImageUpload = ({
       const path = `uploads/${folder}/${fileName}`;
       const url = await uploadImage(file, path);
       onUpload(url);
+      // Reset preview so the widget returns to the "+" placeholder after upload
+      setPreview(null);
     } catch (error) {
       console.error(error);
       alert("Upload failed. Please try again.");

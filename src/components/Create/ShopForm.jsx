@@ -4,10 +4,6 @@ import React, { useState, useEffect } from "react";
 import { slugify } from "@/lib/slugify";
 import { uploadImage } from "@/lib/storage";
 import { proposeCategory, getCategories } from "@/lib/db";
-
-// UI Components
-import Button from "@/components/UI/Button";
-import Card from "@/components/UI/Card";
 import ImageUpload from "@/components/UI/ImageUpload";
 import Input from "@/components/UI/Input";
 import Select from "@/components/UI/Select";
@@ -39,9 +35,17 @@ const ShopForm = ({ initialData, onSubmit, isEdit = false, isLoading = false, er
     logo: "",
     businessType: "mixed",
     socialLinks: [],
+    openingHoursDetails: {
+      monday: { open: "09:00", close: "21:00", isClosed: false },
+      tuesday: { open: "09:00", close: "21:00", isClosed: false },
+      wednesday: { open: "09:00", close: "21:00", isClosed: false },
+      thursday: { open: "09:00", close: "21:00", isClosed: false },
+      friday: { open: "09:00", close: "21:00", isClosed: false },
+      saturday: { open: "09:00", close: "21:00", isClosed: false },
+      sunday: { open: "09:00", close: "21:00", isClosed: true },
+    },
   });
 
-  const [galleryFiles, setGalleryFiles] = useState([]);
   const [logoFile, setLogoFile] = useState(null);
   const [logoPreview, setLogoPreview] = useState("");
   const [dbCategories, setDbCategories] = useState([]);
@@ -63,7 +67,6 @@ const ShopForm = ({ initialData, onSubmit, isEdit = false, isLoading = false, er
       if (initialData) {
         setFormData(prev => ({ ...prev, ...initialData }));
         setLogoPreview(initialData.logo || "");
-        setGalleryFiles(initialData.gallery?.map(url => ({ type: 'existing', url, preview: url })) || []);
 
         if (initialData.category && !catNames.includes(initialData.category)) {
           setFormData(prev => ({ ...prev, category: "OTHER_PROPOSE" }));
@@ -81,27 +84,20 @@ const ShopForm = ({ initialData, onSubmit, isEdit = false, isLoading = false, er
     setFormData({ ...formData, [name]: value });
   };
 
-  const handleGallerySelect = (files) => {
-    if (files && files.length > 0) {
-      const remainingSlots = 5 - galleryFiles.length;
-      if (remainingSlots <= 0) {
-        setLocalError("Maximum 5 gallery images allowed.");
-        return;
+  const handleHoursChange = (day, field, value) => {
+    setFormData(prev => ({
+      ...prev,
+      openingHoursDetails: {
+        ...prev.openingHoursDetails,
+        [day]: {
+          ...(prev.openingHoursDetails?.[day] || { open: "09:00", close: "21:00", isClosed: false }),
+          [field]: value
+        }
       }
-
-      const filesToProcess = Array.from(files).slice(0, remainingSlots);
-      const newEntries = filesToProcess.map(file => ({
-        type: 'new',
-        file,
-        preview: URL.createObjectURL(file)
-      }));
-      setGalleryFiles(prev => [...prev, ...newEntries]);
-    }
+    }));
   };
 
-  const removeGalleryImage = (index) => {
-    setGalleryFiles(prev => prev.filter((_, i) => i !== index));
-  };
+
 
   const nextStep = () => {
     if (currentStep === 1 && (!formData.name || !formData.category)) {
@@ -141,17 +137,7 @@ const ShopForm = ({ initialData, onSubmit, isEdit = false, isLoading = false, er
         logoUrl = await uploadImage(logoFile, path);
       }
 
-      setUploadStatus("Uploading gallery...");
-      const galleryUrls = [];
-      for (let i = 0; i < galleryFiles.length; i++) {
-        const item = galleryFiles[i];
-        if (item.type === 'existing') galleryUrls.push(item.url);
-        else {
-          const path = `shops/${slug}/gallery/${timestamp}_${i}.jpg`;
-          const url = await uploadImage(item.file, path);
-          galleryUrls.push(url);
-        }
-      }
+
 
       const finalMenu = [];
 
@@ -172,7 +158,6 @@ const ShopForm = ({ initialData, onSubmit, isEdit = false, isLoading = false, er
         mapEmbed: cleanMapEmbed,
         category: finalCategory,
         menu: finalMenu,
-        gallery: galleryUrls,
         logo: logoUrl,
         slug,
         proposedCategory: formData.category === "OTHER_PROPOSE"
@@ -242,7 +227,10 @@ const ShopForm = ({ initialData, onSubmit, isEdit = false, isLoading = false, er
               <div className="flex flex-col sm:flex-row gap-6 items-start">
                 <div className="flex-shrink-0">
                   <ImageUpload
-                    onSelect={(file) => { setLogoFile(file); setLogoPreview(URL.createObjectURL(file)); }}
+                    onSelect={(file) => { 
+                      setLogoFile(file); 
+                      setLogoPreview(file ? URL.createObjectURL(file) : ""); 
+                    }}
                     currentImage={logoPreview}
                     compact
                     label="Logo"
@@ -382,6 +370,49 @@ const ShopForm = ({ initialData, onSubmit, isEdit = false, isLoading = false, er
                 />
                 <p className="text-[10px] text-[#999] mt-1">Paste the iframe code from Google Maps sharing option</p>
               </div>
+
+              <div className="pt-4">
+                <div className="flex items-center gap-2 mb-4">
+                  <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center text-blue-500">
+                    <Loader2 className="animate-spin-slow" size={14} />
+                  </div>
+                  <h3 className="text-[15px] font-bold text-[#0F0F0F]">Business Hours</h3>
+                </div>
+
+                <div className="space-y-3 bg-gray-50/50 p-4 rounded-2xl border border-black/[0.04]">
+                  {['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'].map(day => (
+                    <div key={day} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 py-2 border-b border-black/[0.04] last:border-0">
+                      <span className="text-[12px] font-bold text-[#0F0F0F] capitalize w-24">{day}</span>
+                      <div className="flex items-center gap-3 flex-1">
+                        <input
+                          type="time"
+                          disabled={formData.openingHoursDetails?.[day]?.isClosed}
+                          value={formData.openingHoursDetails?.[day]?.open || "09:00"}
+                          onChange={(e) => handleHoursChange(day, "open", e.target.value)}
+                          className="flex-1 h-9 px-3 bg-white border border-black/[0.08] rounded-xl text-[12px] font-medium text-[#0F0F0F] outline-none focus:border-[#FF6B35]/50 disabled:opacity-30"
+                        />
+                        <span className="text-[10px] text-[#999] font-bold">to</span>
+                        <input
+                          type="time"
+                          disabled={formData.openingHoursDetails?.[day]?.isClosed}
+                          value={formData.openingHoursDetails?.[day]?.close || "21:00"}
+                          onChange={(e) => handleHoursChange(day, "close", e.target.value)}
+                          className="flex-1 h-9 px-3 bg-white border border-black/[0.08] rounded-xl text-[12px] font-medium text-[#0F0F0F] outline-none focus:border-[#FF6B35]/50 disabled:opacity-30"
+                        />
+                      </div>
+                      <label className="flex items-center gap-2 cursor-pointer group">
+                        <input
+                          type="checkbox"
+                          checked={formData.openingHoursDetails?.[day]?.isClosed}
+                          onChange={(e) => handleHoursChange(day, "isClosed", e.target.checked)}
+                          className="w-4 h-4 rounded border-black/[0.08] text-[#FF6B35] focus:ring-[#FF6B35]/20"
+                        />
+                        <span className="text-[10px] font-bold text-[#999] group-hover:text-red-500 transition-colors uppercase tracking-wider">Closed</span>
+                      </label>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
         )}
@@ -449,34 +480,6 @@ const ShopForm = ({ initialData, onSubmit, isEdit = false, isLoading = false, er
                 ]}
               />
               <p className="text-[10px] text-[#999] mt-1">Shown as a trust badge on your shop page</p>
-            </div>
-
-            <div className="pt-6 border-t border-black/[0.06] space-y-6">
-              <div>
-                <h3 className="text-sm font-bold text-[#0F0F0F] uppercase tracking-wider mb-4">Shop Gallery</h3>
-                <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3">
-                  {galleryFiles.map((item, i) => (
-                    <div key={i} className="relative aspect-square rounded-xl overflow-hidden border border-black/[0.06] group">
-                      <img src={item.preview} alt="Gallery" className="w-full h-full object-cover" />
-                      <button
-                        type="button"
-                        onClick={() => removeGalleryImage(i)}
-                        className="absolute top-1 right-1 w-6 h-6 bg-black/50 rounded-lg flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity"
-                      >
-                        <X size={12} />
-                      </button>
-                    </div>
-                  ))}
-                  {galleryFiles.length < 5 && (
-                    <div className="aspect-square">
-                      <ImageUpload multiple onSelect={handleGallerySelect} compact label="Add" />
-                    </div>
-                  )}
-                </div>
-                <p className="text-[10px] text-[#999] mt-3">
-                  Upload high-quality photos of your shop or products (Max 5 images. {5 - galleryFiles.length} slots remaining)
-                </p>
-              </div>
             </div>
           </div>
         )}

@@ -41,6 +41,11 @@ export default function CategoryListingClient({ shops, title, subtitle, view }) 
                         </div>
                       )}
                       <div className="min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="text-[9px] font-bold uppercase tracking-wider text-[#FF6B35] bg-[#FF6B35]/10 px-2 py-0.5 rounded-md">
+                            {s.category}
+                          </span>
+                        </div>
                         <h3 className="text-xl font-black text-navy truncate group-hover:text-[#FF6B35] transition-colors uppercase tracking-tight">
                           {s.name}
                         </h3>

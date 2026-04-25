@@ -2,33 +2,7 @@ import React from "react";
 import { getShopsByCityAndCategory, getApprovedShops, getCategories } from "@/lib/db";
 import ListingLayout from "@/components/Shop/ListingLayout";
 
-export const dynamicParams = false;
-
-export async function generateStaticParams() {
-  try {
-    const [shops, categories] = await Promise.all([
-      getApprovedShops(),
-      getCategories()
-    ]);
-
-    const cities = [...new Set(shops.map(s => s.city).filter(Boolean))];
-    const categoryNames = categories
-      .map(c => c.name)
-      .filter(name => name && name.toLowerCase() !== "area");
-
-    const params = [];
-    cities.forEach(city => {
-      categoryNames.forEach(cat => {
-        params.push({ city: city?.toString() || "", category: cat?.toString() || "" });
-      });
-    });
-
-    return params;
-  } catch (error) {
-    console.error("Error generating static params for city categories:", error);
-    return [];
-  }
-}
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }) {
   const { city, category } = await params;

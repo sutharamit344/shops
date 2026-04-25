@@ -2,20 +2,7 @@ import React from "react";
 import { getShopsByCity, getApprovedShops } from "@/lib/db";
 import ListingLayout from "@/components/Shop/ListingLayout";
 
-export const dynamicParams = false;
-
-export async function generateStaticParams() {
-  try {
-    const shops = await getApprovedShops();
-    const cities = [...new Set(shops.map(s => s.city).filter(Boolean))];
-    return cities.map(city => ({
-      city: city?.toString() || ""
-    }));
-  } catch (error) {
-    console.error("Error generating static params for cities:", error);
-    return [];
-  }
-}
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }) {
   const { city } = await params;

@@ -68,20 +68,24 @@ export async function saveShop(shopData) {
 export async function getShopBySlug(slug, allowHidden = false) {
   try {
     // 1. Try exact match
-    let q = query(
-      collection(db, COLLECTION_NAME),
-      where("slug", "==", slug),
-      limit(1),
-    );
+    const constraints = [where("slug", "==", slug), limit(1)];
+    if (!allowHidden) {
+      constraints.push(where("status", "==", "approved"));
+    }
+
+    let q = query(collection(db, COLLECTION_NAME), ...constraints);
     let snap = await getDocs(q);
 
     // 2. If no match and slug has spaces/caps, try matching by name or lowercase
     if (snap.empty) {
-      q = query(
-        collection(db, COLLECTION_NAME),
+      const fallbackConstraints = [
         where("slug", "==", slug.toLowerCase()),
         limit(1),
-      );
+      ];
+      if (!allowHidden) {
+        fallbackConstraints.push(where("status", "==", "approved"));
+      }
+      q = query(collection(db, COLLECTION_NAME), ...fallbackConstraints);
       snap = await getDocs(q);
     }
 
@@ -89,7 +93,7 @@ export async function getShopBySlug(slug, allowHidden = false) {
 
     const shop = { id: snap.docs[0].id, ...snap.docs[0].data() };
 
-    // Status check
+    // Status check (extra safety)
     if (!allowHidden && shop.status !== "approved") return null;
 
     return shop;
@@ -155,6 +159,7 @@ export async function getShopsByCity(city) {
  */
 export async function getShopsByCityAndCategory(city, category) {
   try {
+    // 1. Try exact match
     const q = query(
       collection(db, COLLECTION_NAME),
       where("city", "==", city),
@@ -162,10 +167,39 @@ export async function getShopsByCityAndCategory(city, category) {
       where("status", "==", "approved"),
     );
     const querySnapshot = await getDocs(q);
-    return querySnapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-    }));
+    
+    if (!querySnapshot.empty) {
+      return querySnapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+    }
+
+    // 2. Fallback: Try common casing patterns if no exact match
+    // This is useful because URLs are often lowercased by users or browsers
+    const capitalize = (s) => s.charAt(0).toUpperCase() + s.slice(1).toLowerCase();
+    
+    // Try capitalized city/category (e.g., "Ahmedabad", "IT Company")
+    const capCity = capitalize(city);
+    const capCategory = category.split(' ').map(capitalize).join(' ');
+
+    if (capCity !== city || capCategory !== category) {
+      const qFallback = query(
+        collection(db, COLLECTION_NAME),
+        where("city", "==", capCity),
+        where("category", "==", capCategory),
+        where("status", "==", "approved"),
+      );
+      const snapFallback = await getDocs(qFallback);
+      if (!snapFallback.empty) {
+        return snapFallback.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+      }
+    }
+
+    return [];
   } catch (error) {
     console.error("Error getting shops by city and category: ", error);
     return [];

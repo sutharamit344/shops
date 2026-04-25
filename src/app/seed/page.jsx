@@ -20,6 +20,15 @@ const PROPER_SHOPS = [
     totalRatings: 15,
     primaryColor: "#0F0F0F",
     logo: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=200&h=200&fit=crop",
+    openingHoursDetails: {
+      monday: { open: "09:00", close: "19:00", isClosed: false },
+      tuesday: { open: "09:00", close: "19:00", isClosed: false },
+      wednesday: { open: "09:00", close: "19:00", isClosed: false },
+      thursday: { open: "09:00", close: "19:00", isClosed: false },
+      friday: { open: "09:00", close: "19:00", isClosed: false },
+      saturday: { open: "10:00", close: "16:00", isClosed: false },
+      sunday: { open: "00:00", close: "00:00", isClosed: true },
+    }
   },
   {
     name: "The Sourdough Studio",
@@ -33,6 +42,15 @@ const PROPER_SHOPS = [
     totalRatings: 84,
     primaryColor: "#795548",
     logo: "https://images.unsplash.com/photo-1509440159596-0249088772ff?w=200&h=200&fit=crop",
+    openingHoursDetails: {
+      monday: { open: "07:00", close: "21:00", isClosed: false },
+      tuesday: { open: "07:00", close: "21:00", isClosed: false },
+      wednesday: { open: "07:00", close: "21:00", isClosed: false },
+      thursday: { open: "07:00", close: "21:00", isClosed: false },
+      friday: { open: "07:00", close: "21:00", isClosed: false },
+      saturday: { open: "07:00", close: "22:00", isClosed: false },
+      sunday: { open: "08:00", close: "20:00", isClosed: false },
+    }
   },
   {
     name: "Luxe Aesthetics",
@@ -46,6 +64,15 @@ const PROPER_SHOPS = [
     totalRatings: 42,
     primaryColor: "#E91E63",
     logo: "https://images.unsplash.com/photo-1560066984-138dadb4c035?w=200&h=200&fit=crop",
+    openingHoursDetails: {
+      monday: { open: "10:00", close: "20:00", isClosed: false },
+      tuesday: { open: "10:00", close: "20:00", isClosed: false },
+      wednesday: { open: "10:00", close: "20:00", isClosed: false },
+      thursday: { open: "10:00", close: "20:00", isClosed: false },
+      friday: { open: "10:00", close: "20:00", isClosed: false },
+      saturday: { open: "10:00", close: "21:00", isClosed: false },
+      sunday: { open: "10:00", close: "21:00", isClosed: false },
+    }
   },
   {
     name: "Blue Tokai Coffee Roasters",
@@ -59,6 +86,15 @@ const PROPER_SHOPS = [
     totalRatings: 156,
     primaryColor: "#1A237E",
     logo: "https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?w=200&h=200&fit=crop",
+    openingHoursDetails: {
+      monday: { open: "08:30", close: "23:00", isClosed: false },
+      tuesday: { open: "08:30", close: "23:00", isClosed: false },
+      wednesday: { open: "08:30", close: "23:00", isClosed: false },
+      thursday: { open: "08:30", close: "23:00", isClosed: false },
+      friday: { open: "08:30", close: "23:00", isClosed: false },
+      saturday: { open: "09:00", close: "00:00", isClosed: false },
+      sunday: { open: "09:00", close: "23:00", isClosed: false },
+    }
   },
   {
     name: "Urban Green Pharmacy",
@@ -72,6 +108,15 @@ const PROPER_SHOPS = [
     totalRatings: 210,
     primaryColor: "#2E7D32",
     logo: "https://images.unsplash.com/photo-1587854692152-cbe660dbbb88?w=200&h=200&fit=crop",
+    openingHoursDetails: {
+      monday: { open: "09:00", close: "22:00", isClosed: false },
+      tuesday: { open: "09:00", close: "22:00", isClosed: false },
+      wednesday: { open: "09:00", close: "22:00", isClosed: false },
+      thursday: { open: "09:00", close: "22:00", isClosed: false },
+      friday: { open: "09:00", close: "22:00", isClosed: false },
+      saturday: { open: "09:00", close: "22:00", isClosed: false },
+      sunday: { open: "09:00", close: "18:00", isClosed: false },
+    }
   }
 ];
 

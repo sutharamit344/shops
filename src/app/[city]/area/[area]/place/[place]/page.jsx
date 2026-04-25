@@ -2,23 +2,7 @@ import React from "react";
 import { getShopsByZoneInArea, getApprovedShops } from "@/lib/db";
 import ListingLayout from "@/components/Shop/ListingLayout";
 
-export const dynamicParams = false;
-
-export async function generateStaticParams() {
-  try {
-    const shops = await getApprovedShops();
-    return shops
-      .filter(s => s.city && s.area && s.zone)
-      .map(s => ({
-        city: s.city.toString().trim(),
-        area: s.area.toString().trim(),
-        place: s.zone.toString().trim() // We use 'zone' from DB but call it 'place' in URL
-      }));
-  } catch (error) {
-    console.error("Error generating static params for places:", error);
-    return [];
-  }
-}
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }) {
   const { city, area, place } = await params;

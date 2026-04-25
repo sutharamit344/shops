@@ -1,15 +1,18 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
   Star, MapPin, MessageSquare, Phone, Share2, Heart,
   Clock, Award, Users, CheckCircle2, Globe, ChevronRight,
   ShoppingBag, Search, X, ExternalLink, Truck, Shield, DollarSign,
   Mail, Clock as ClockIcon, Calendar, Navigation, Info,
-  Store
+  Store,
+  Plus
 } from "lucide-react";
 import Dialog from "../UI/Dialog";
+import Link from "next/link";
+import { incrementViews } from "@/lib/shopUtils";
 
 // Robust Social Icon Mapper with SVG Fallbacks
 const SocialIcon = ({ name, size = 18, className = "" }) => {
@@ -48,6 +51,11 @@ const ShopProfileClient = ({ shop }) => {
   const [selectedItem, setSelectedItem] = useState(null);
   const [showShareTooltip, setShowShareTooltip] = useState(false);
 
+  // Increment view counter once per browser session
+  useEffect(() => {
+    if (shop?.id) incrementViews(shop.id);
+  }, [shop?.id]);
+
   const brandColor = shop.primaryColor || "#FF6B35";
   const avgRating = shop.rating || "5.0";
   const totalReviews = shop.reviewCount || 0;
@@ -61,8 +69,8 @@ const ShopProfileClient = ({ shop }) => {
 
   const filteredItems = searchQuery
     ? allItems.filter(item =>
-      item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.description.toLowerCase().includes(searchQuery.toLowerCase())
+      item.name?.toLowerCase().includes(searchQuery?.toLowerCase()) ||
+      item.description?.toLowerCase().includes(searchQuery?.toLowerCase())
     )
     : [];
 
@@ -99,6 +107,33 @@ const ShopProfileClient = ({ shop }) => {
     window.open(whatsappUrl, '_blank');
   };
 
+  const getBusinessStatus = () => {
+    if (!shop.openingHoursDetails) return null;
+
+    const now = new Date();
+    const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+    const today = days[now.getDay()];
+    const hours = shop.openingHoursDetails[today];
+
+    if (!hours || hours.isClosed) return { status: 'Closed', color: 'text-red-500' };
+
+    const [openH, openM] = hours.open.split(':').map(Number);
+    const [closeH, closeM] = hours.close.split(':').map(Number);
+
+    const openTime = new Date(now);
+    openTime.setHours(openH, openM, 0);
+
+    const closeTime = new Date(now);
+    closeTime.setHours(closeH, closeM, 0);
+
+    if (now >= openTime && now <= closeTime) {
+      return { status: 'Open Now', color: 'text-green-500' };
+    }
+    return { status: 'Closed', color: 'text-red-500' };
+  };
+
+  const businessStatus = getBusinessStatus();
+
   return (
     <div className="min-h-screen bg-[#FFF8F3] text-[#1A1F36]" style={{ "--brand-color": brandColor }}>
       {/* Header Banner */}
@@ -107,12 +142,12 @@ const ShopProfileClient = ({ shop }) => {
           <img src={shop.coverImage} alt={shop.name} className="w-full h-full object-cover" />
         ) : (
           <div className="w-full h-full bg-[#1A1F36] flex items-center justify-center opacity-90">
-             <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]" />
-             <Store size={80} className="text-white/10" />
+            <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]" />
+            <Store size={80} className="text-white/10" />
           </div>
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-[#FFF8F3] via-transparent to-black/20" />
-        
+
         <button
           onClick={() => router.back()}
           className="absolute top-6 left-6 w-10 h-10 rounded-xl bg-white/90 backdrop-blur-md flex items-center justify-center text-[#1A1F36] hover:bg-white transition-all shadow-lg active:scale-95 z-10"
@@ -125,10 +160,10 @@ const ShopProfileClient = ({ shop }) => {
         {/* Profile Card */}
         <div className="bg-white rounded-3xl border border-black/[0.06] shadow-xl shadow-black/[0.02] p-6 md:p-8 mb-8 text-center md:text-left">
           <div className="flex flex-col md:flex-row items-center md:items-end gap-6 md:gap-8 -mt-16 md:-mt-20 mb-6">
-            <div className="w-32 h-32 md:w-36 md:h-36 rounded-[28px] bg-white p-1.5 shadow-2xl border border-black/[0.04]">
+            <div className="w-32 h-32 md:w-36 md:h-36 rounded-[28px] bg-white p-1.5 shadow-lg border border-black/[0.04]">
               <div className="w-full h-full rounded-[22px] bg-gray-50 flex items-center justify-center text-4xl font-bold text-[#1A1F36] overflow-hidden">
                 {shop.logo ? (
-                  <img src={shop.logo} alt={shop.name} className="w-full h-full object-cover" />
+                  <img src={shop.logo} alt={shop.name} className="w-full h-full object-cover" loading="lazy" />
                 ) : (
                   <span className="text-[#FF6B35]">{shop.name?.charAt(0)}</span>
                 )}
@@ -139,23 +174,27 @@ const ShopProfileClient = ({ shop }) => {
                 <h1 className="text-3xl md:text-4xl font-bold text-[#1A1F36] tracking-tight">
                   {shop.name}
                 </h1>
-                {shop.verified && (
-                  <div className="flex items-center gap-1.5 px-3 py-1 bg-[#25D36615] text-[#25D366] rounded-full border border-[#25D36620]">
-                    <ShieldCheck size={12} />
-                    <span className="text-[10px] font-bold uppercase tracking-wider">Verified</span>
-                  </div>
-                )}
               </div>
               <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 text-[#888] text-sm">
-                 <div className="flex items-center gap-1.5">
-                    <MapPin size={14} className="text-[#FF6B35]" />
-                    <span className="font-medium">{shop.area}, {shop.city}</span>
-                 </div>
-                 <div className="flex items-center gap-1.5">
-                    <Star size={14} className="text-yellow-400 fill-yellow-400" />
-                    <span className="font-bold text-[#1A1F36]">{avgRating}</span>
-                    <span className="opacity-60">({totalReviews})</span>
-                 </div>
+                <Link
+                  href={`/explore?category=${encodeURIComponent(shop.category)}&nearby=true`}
+                  className="flex items-center gap-1.5 hover:text-[#FF6B35] transition-colors"
+                >
+                  <Store size={14} className="text-[#FF6B35]" />
+                  <span className="font-medium">{shop.category}</span>
+                </Link>
+                <Link 
+                  href={`/explore?city=${encodeURIComponent(shop.city)}`}
+                  className="flex items-center gap-1.5 hover:text-[#FF6B35] transition-colors"
+                >
+                  <MapPin size={14} className="text-[#FF6B35]" />
+                  <span className="font-medium">{shop.area}, {shop.city}</span>
+                </Link>
+                <div className="flex items-center gap-1.5">
+                  <Star size={14} className="text-yellow-400 fill-yellow-400" />
+                  <span className="font-bold text-[#1A1F36]">{avgRating}</span>
+                  <span className="opacity-60">({totalReviews})</span>
+                </div>
               </div>
             </div>
           </div>
@@ -165,33 +204,39 @@ const ShopProfileClient = ({ shop }) => {
           </p>
 
           <div className="flex flex-col sm:flex-row items-center gap-3">
-             <button 
-              onClick={handleGeneralWhatsApp}
-              className="w-full sm:flex-1 h-12 bg-[#25D366] hover:bg-[#1EB855] text-white rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all shadow-lg shadow-green-500/20 active:scale-95"
-             >
-                <MessageSquare size={18} fill="currentColor" /> Chat on WhatsApp
-             </button>
-             <div className="flex items-center gap-3 w-full sm:w-auto">
-               <a 
+            {businessStatus && (
+              <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full border border-black/[0.04] bg-white shadow-sm`}>
+                <div className={`w-1.5 h-1.5 rounded-full ${businessStatus.color.replace('text', 'bg')} animate-pulse`} />
+                <span className={`text-[10px] font-bold uppercase tracking-wider ${businessStatus.color}`}>{businessStatus.status}</span>
+              </div>
+            )}
+            <div className="flex items-center gap-3 w-full sm:w-auto">
+              <button
+                onClick={handleGeneralWhatsApp}
+                className="flex-1 sm:w-12 h-12 bg-[#25D366] hover:bg-[#1EB855] text-white rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all shadow-lg shadow-green-500/20 active:scale-95"
+              >
+                <MessageSquare size={18} fill="currentColor" />
+              </button>
+              {shop.phone && <a
                 href={`tel:${shop.phone}`}
                 className="flex-1 sm:w-12 h-12 bg-[#1A1F36] text-white rounded-xl flex items-center justify-center hover:bg-black transition-all active:scale-95 shadow-lg shadow-black/10"
-               >
-                  <Phone size={18} fill="currentColor" />
-               </a>
-               <div className="relative flex-1 sm:w-12">
-                 <button 
+              >
+                <Phone size={18} fill="currentColor" />
+              </a>}
+              <div className="relative flex-1 sm:w-12">
+                <button
                   onClick={handleShare}
                   className="w-full sm:w-12 h-12 bg-white border border-black/[0.08] text-[#1A1F36] rounded-xl flex items-center justify-center hover:bg-gray-50 transition-all active:scale-95"
-                 >
-                    <Share2 size={18} />
-                 </button>
-                 {showShareTooltip && (
-                   <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 px-4 py-2 bg-[#1A1F36] text-white text-[10px] font-bold rounded-xl whitespace-nowrap animate-in fade-in slide-in-from-bottom-2">
-                     Copied to clipboard!
-                   </div>
-                 )}
-               </div>
-             </div>
+                >
+                  <Share2 size={18} />
+                </button>
+                {showShareTooltip && (
+                  <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 px-4 py-2 bg-[#1A1F36] text-white text-[10px] font-bold rounded-xl whitespace-nowrap animate-in fade-in slide-in-from-bottom-2">
+                    Copied to clipboard!
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         </div>
 
@@ -246,15 +291,15 @@ const ShopProfileClient = ({ shop }) => {
                     >
                       <div className="w-16 h-16 rounded-xl bg-gray-50 flex items-center justify-center flex-shrink-0 overflow-hidden border border-black/[0.04]">
                         {item.image ? (
-                          <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+                          <img src={item.image} alt={item.name} className="w-full h-full object-cover" loading="lazy" />
                         ) : (
                           <ShoppingBag size={24} className="text-[#ccc] group-hover:text-[#FF6B35] transition-colors" />
                         )}
                       </div>
                       <div className="flex-1 min-w-0">
-                         <h3 className="text-[15px] font-bold text-[#1A1F36] group-hover:text-[#FF6B35] transition-colors truncate">{item.name}</h3>
-                         <p className="text-[11px] font-bold text-[#888] uppercase tracking-wider mb-1">{item.category}</p>
-                         <p className="text-[13px] text-[#666] line-clamp-1">{item.description}</p>
+                        <h3 className="text-[15px] font-bold text-[#1A1F36] group-hover:text-[#FF6B35] transition-colors truncate">{item.name}</h3>
+                        <p className="text-[11px] font-bold text-[#888] uppercase tracking-wider mb-1">{item.name}</p>
+                        <p className="text-[13px] text-[#666] line-clamp-1">{item.description}</p>
                       </div>
                       <ChevronRight size={18} className="text-[#ccc] group-hover:text-[#1A1F36] group-hover:translate-x-1 transition-all" />
                     </div>
@@ -266,7 +311,7 @@ const ShopProfileClient = ({ shop }) => {
                     <div key={idx} className="space-y-5">
                       <div className="flex items-center gap-4">
                         <div className="w-1.5 h-6 bg-[#FF6B35] rounded-full" />
-                        <h3 className="text-[17px] font-bold text-[#1A1F36] tracking-tight">{section.category}</h3>
+                        <h3 className="text-[17px] font-bold text-[#1A1F36] tracking-tight">{section.name}</h3>
                         <div className="flex-1 h-px bg-black/[0.06]" />
                         <span className="text-[10px] font-bold text-[#888] uppercase tracking-[0.1em]">{section.items?.length || 0} items</span>
                       </div>
@@ -280,7 +325,7 @@ const ShopProfileClient = ({ shop }) => {
                             <div className="flex items-center gap-4">
                               <div className="w-14 h-14 rounded-xl flex items-center justify-center flex-shrink-0 overflow-hidden border border-black/[0.04] bg-gray-50">
                                 {item.image ? (
-                                  <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+                                  <img src={item.image} alt={item.name} className="w-full h-full object-cover" loading="lazy" />
                                 ) : (
                                   <div className="w-full h-full flex items-center justify-center bg-[#FF6B35]/5">
                                     <ShoppingBag size={20} className="text-[#FF6B35]" />
@@ -294,6 +339,7 @@ const ShopProfileClient = ({ shop }) => {
                                     <span className="text-[8px] font-bold px-1.5 py-0.5 rounded-full bg-orange-100 text-[#FF6B35] uppercase">Hot</span>
                                   )}
                                 </div>
+                                <p className="text-[10px] font-bold text-[#888] uppercase tracking-wider mb-1">{section.name}</p>
                                 <p className="text-[12px] text-[#666] line-clamp-1">{item.description}</p>
                               </div>
                               <div className="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center text-[#1A1F36] opacity-0 group-hover:opacity-100 transition-all group-hover:bg-[#FF6B35] group-hover:text-white">
@@ -319,79 +365,136 @@ const ShopProfileClient = ({ shop }) => {
           ) : activeTab === "about" ? (
             <div className="space-y-6">
               <div className="bg-white rounded-3xl border border-black/[0.06] p-8 space-y-8 shadow-sm">
-                <div>
-                  <h3 className="text-[11px] font-bold text-[#FF6B35] uppercase tracking-[0.2em] mb-4">Our Story</h3>
-                  <p className="text-[15px] text-[#444] leading-relaxed whitespace-pre-wrap">
-                    {shop.longDescription || shop.description}
-                  </p>
-                </div>
-
-                <div className="grid grid-cols-2 gap-8 pt-8 border-t border-black/[0.06]">
-                   <div>
-                      <span className="block text-[10px] font-bold text-[#888] uppercase tracking-widest mb-1.5">Category</span>
-                      <span className="text-[14px] font-bold text-[#1A1F36]">{shop.category}</span>
-                   </div>
-                   <div>
-                      <span className="block text-[10px] font-bold text-[#888] uppercase tracking-widest mb-1.5">Business Type</span>
-                      <span className="text-[14px] font-bold text-[#1A1F36] capitalize">{shop.businessType || 'Local Store'}</span>
-                   </div>
-                   <div>
-                      <span className="block text-[10px] font-bold text-[#888] uppercase tracking-widest mb-1.5">Established</span>
-                      <span className="text-[14px] font-bold text-[#1A1F36]">{shop.establishedYear || "2024"}</span>
-                   </div>
-                   <div>
-                      <span className="block text-[10px] font-bold text-[#888] uppercase tracking-widest mb-1.5">City</span>
-                      <span className="text-[14px] font-bold text-[#1A1F36] capitalize">{shop.city}</span>
-                   </div>
+                <div className="grid grid-cols-2 gap-8">
+                  <Link
+                    href={`/explore?category=${encodeURIComponent(shop.category)}&nearby=true`}
+                    className="block group/cat"
+                  >
+                    <span className="block text-[10px] font-bold text-[#888] uppercase tracking-widest mb-1.5 group-hover/cat:text-[#FF6B35] transition-colors">Category</span>
+                    <span className="text-[14px] font-bold text-[#1A1F36] group-hover:text-[#FF6B35] transition-colors">{shop.category}</span>
+                  </Link>
+                  <div>
+                    <span className="block text-[10px] font-bold text-[#888] uppercase tracking-widest mb-1.5">Business Type</span>
+                    <span className="text-[14px] font-bold text-[#1A1F36] capitalize">{shop.businessType || 'Local Store'}</span>
+                  </div>
+                  <div>
+                    <span className="block text-[10px] font-bold text-[#888] uppercase tracking-widest mb-1.5">Established</span>
+                    <span className="text-[14px] font-bold text-[#1A1F36]">{shop.establishedYear || "2024"}</span>
+                  </div>
+                  <Link 
+                    href={`/explore?city=${encodeURIComponent(shop.city)}`}
+                    className="block group/city"
+                  >
+                    <span className="block text-[10px] font-bold text-[#888] uppercase tracking-widest mb-1.5 group-hover/city:text-[#FF6B35] transition-colors">City</span>
+                    <span className="text-[14px] font-bold text-[#1A1F36] group-hover:text-[#FF6B35] transition-colors capitalize">{shop.city}</span>
+                  </Link>
+                  <div>
+                    <span className="block text-[10px] font-bold text-[#888] uppercase tracking-widest mb-1.5">Opening Hours</span>
+                    <span className="text-[14px] font-bold text-[#1A1F36]">{shop.openingHours || "9:00 AM - 9:00 PM"}</span>
+                  </div>
                 </div>
               </div>
 
               <div className="bg-white rounded-3xl border border-black/[0.06] p-8 shadow-sm">
                 <h3 className="text-[11px] font-bold text-[#FF6B35] uppercase tracking-[0.2em] mb-6">Contact & Location</h3>
                 <div className="space-y-6">
-                   <div className="flex items-start gap-4">
-                      <div className="w-10 h-10 bg-[#FF6B35]/5 rounded-xl flex items-center justify-center text-[#FF6B35] shrink-0">
-                         <Phone size={18} />
+                  <div className="flex items-start gap-4">
+                    <div className="w-10 h-10 bg-[#FF6B35]/5 rounded-xl flex items-center justify-center text-[#FF6B35] shrink-0">
+                      <Phone size={18} />
+                    </div>
+                    <div>
+                      <span className="block text-[10px] font-bold text-[#888] uppercase tracking-widest mb-0.5">Call Directly</span>
+                      <a href={`tel:${shop.phone}`} className="text-[15px] font-bold text-[#1A1F36] hover:text-[#FF6B35] transition-colors">+91 {shop.phone}</a>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-4">
+                    <div className="w-10 h-10 bg-[#FF6B35]/5 rounded-xl flex items-center justify-center text-[#FF6B35] shrink-0">
+                      <MapPin size={18} />
+                    </div>
+                    <div>
+                      <span className="block text-[10px] font-bold text-[#888] uppercase tracking-widest mb-0.5">Location</span>
+                      <p className="text-[15px] font-bold text-[#1A1F36] leading-snug">{shop.address || `${shop.area}, ${shop.city}`}</p>
+                    </div>
+                  </div>
+
+                  {(shop.openingHoursDetails || shop.openingHours) && (
+                    <div className="flex items-start gap-4">
+                      <div className="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center text-blue-500 shrink-0">
+                        <Clock size={18} />
                       </div>
-                      <div>
-                         <span className="block text-[10px] font-bold text-[#888] uppercase tracking-widest mb-0.5">Call Directly</span>
-                         <a href={`tel:${shop.phone}`} className="text-[15px] font-bold text-[#1A1F36] hover:text-[#FF6B35] transition-colors">+91 {shop.phone}</a>
+                      <div className="flex-1">
+                        <span className="block text-[10px] font-bold text-[#888] uppercase tracking-widest mb-2">Opening Hours</span>
+                        {shop.openingHoursDetails ? (
+                          <div className="grid grid-cols-1 gap-2">
+                            {['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'].map(day => {
+                              const hours = shop.openingHoursDetails[day];
+                              if (!hours) return null;
+                              return (
+                                <div key={day} className="flex justify-between items-center py-1 border-b border-black/[0.02] last:border-0">
+                                  <span className="text-[12px] font-medium text-[#666] capitalize">{day}</span>
+                                  <span className="text-[12px] font-bold text-[#1A1F36]">
+                                    {hours.isClosed ? (
+                                      <span className="text-red-400">Closed</span>
+                                    ) : (
+                                      `${hours.open} - ${hours.close}`
+                                    )}
+                                  </span>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        ) : (
+                          <p className="text-[14px] font-bold text-[#1A1F36]">{shop.openingHours}</p>
+                        )}
                       </div>
-                   </div>
-                   <div className="flex items-start gap-4">
-                      <div className="w-10 h-10 bg-[#FF6B35]/5 rounded-xl flex items-center justify-center text-[#FF6B35] shrink-0">
-                         <MapPin size={18} />
+                    </div>
+                  )}
+
+                  {shop.holidays?.length > 0 && (
+                    <div className="flex items-start gap-4">
+                      <div className="w-10 h-10 bg-purple-50 rounded-xl flex items-center justify-center text-purple-500 shrink-0">
+                        <Calendar size={18} />
                       </div>
-                      <div>
-                         <span className="block text-[10px] font-bold text-[#888] uppercase tracking-widest mb-0.5">Location</span>
-                         <p className="text-[15px] font-bold text-[#1A1F36] leading-snug">{shop.address || `${shop.area}, ${shop.city}`}</p>
+                      <div className="flex-1">
+                        <span className="block text-[10px] font-bold text-[#888] uppercase tracking-widest mb-2">Upcoming Holidays</span>
+                        <div className="space-y-2">
+                          {shop.holidays.map((h, i) => (
+                            <div key={i} className="flex items-center justify-between p-2 rounded-lg bg-gray-50/50">
+                              <span className="text-[12px] font-bold text-[#1A1F36]">{h.title}</span>
+                              <span className="text-[11px] font-medium text-[#888]">
+                                {new Date(h.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
                       </div>
-                   </div>
+                    </div>
+                  )}
                 </div>
-                <button 
+                <button
                   className="w-full mt-10 h-14 bg-[#1A1F36] text-white rounded-2xl font-bold text-sm shadow-xl active:scale-[0.98] transition-all flex items-center justify-center gap-2"
                 >
-                   <Navigation size={18} /> Get Directions
+                  <Navigation size={18} /> Get Directions
                 </button>
               </div>
 
               <div className="bg-[#1A1F36] rounded-3xl p-8 text-white relative overflow-hidden shadow-xl">
-                 <div className="absolute top-0 right-0 p-6 opacity-10">
-                    <Shield size={120} />
-                 </div>
-                 <div className="relative z-10">
-                    <h3 className="text-[11px] font-bold text-[#FF6B35] uppercase tracking-[0.2em] mb-4">Trust & Safety</h3>
-                    <div className="space-y-4">
-                       <div className="flex items-center gap-3">
-                          <CheckCircle2 size={16} className="text-[#25D366]" />
-                          <span className="text-[13px] font-medium opacity-80">Verified by ShopSetu Authority</span>
-                       </div>
-                       <div className="flex items-center gap-3">
-                          <Truck size={16} className="text-[#FF6B35]" />
-                          <span className="text-[13px] font-medium opacity-80">Local Store Pickup Available</span>
-                       </div>
+                <div className="absolute top-0 right-0 p-6 opacity-10">
+                  <Shield size={120} />
+                </div>
+                <div className="relative z-10">
+                  <h3 className="text-[11px] font-bold text-[#FF6B35] uppercase tracking-[0.2em] mb-4">Trust & Safety</h3>
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-3">
+                      <CheckCircle2 size={16} className="text-[#25D366]" />
+                      <span className="text-[13px] font-medium opacity-80">Verified by ShopSetu Authority</span>
                     </div>
-                 </div>
+                    <div className="flex items-center gap-3">
+                      <Truck size={16} className="text-[#FF6B35]" />
+                      <span className="text-[13px] font-medium opacity-80">Local Store Pickup Available</span>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           ) : (
@@ -415,7 +518,7 @@ const ShopProfileClient = ({ shop }) => {
       >
         <MessageSquare size={28} fill="currentColor" />
         <div className="absolute right-full mr-4 px-4 py-2 bg-[#1A1F36] text-white text-[11px] font-bold rounded-xl whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none shadow-xl">
-           Chat with Shop
+          Chat with Shop
         </div>
       </a>
 
@@ -435,68 +538,69 @@ const ShopProfileClient = ({ shop }) => {
                   src={selectedItem.image}
                   alt={selectedItem.name}
                   className="w-full h-full object-cover"
+                  loading="lazy"
                 />
               ) : (
                 <div className="w-full h-full flex flex-col items-center justify-center opacity-20">
                   <ShoppingBag size={64} className="text-[#1A1F36]" />
                 </div>
               )}
-              <button 
+              <button
                 onClick={() => setSelectedItem(null)}
                 className="absolute top-4 right-4 w-10 h-10 rounded-xl bg-black/20 backdrop-blur-md text-white flex items-center justify-center hover:bg-black/40 transition-all"
               >
-                 <X size={20} />
+                <X size={20} />
               </button>
             </div>
 
             <div className="p-8">
               <div className="mb-8">
-                 <div className="flex items-center gap-2 mb-2">
-                    <span className="px-2 py-0.5 rounded-md bg-[#FF6B3515] text-[#FF6B35] text-[9px] font-bold uppercase tracking-wider">
-                       {selectedItem.category || shop.category}
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="px-2 py-0.5 rounded-md bg-[#FF6B3515] text-[#FF6B35] text-[9px] font-bold uppercase tracking-wider">
+                    {selectedItem.category || shop.category}
+                  </span>
+                  {selectedItem.popular && (
+                    <span className="px-2 py-0.5 rounded-md bg-orange-500 text-white text-[9px] font-bold uppercase tracking-wider">
+                      Top Choice
                     </span>
-                    {selectedItem.popular && (
-                      <span className="px-2 py-0.5 rounded-md bg-orange-500 text-white text-[9px] font-bold uppercase tracking-wider">
-                         Top Choice
-                      </span>
-                    )}
-                 </div>
-                 <h2 className="text-2xl font-bold text-[#1A1F36] tracking-tight leading-tight mb-2">
-                   {selectedItem.name}
-                 </h2>
-                 <p className="text-[15px] text-[#666] leading-relaxed">
-                   {selectedItem.description}
-                 </p>
+                  )}
+                </div>
+                <h2 className="text-2xl font-bold text-[#1A1F36] tracking-tight leading-tight mb-2">
+                  {selectedItem.name}
+                </h2>
+                <p className="text-[15px] text-[#666] leading-relaxed">
+                  {selectedItem.description}
+                </p>
               </div>
 
               <div className="space-y-4">
-                 <button
-                   onClick={() => handleWhatsAppOrder(selectedItem)}
-                   className="w-full h-14 bg-[#25D366] hover:bg-[#1EB855] text-white rounded-2xl font-bold text-sm shadow-xl shadow-green-500/20 transition-all flex items-center justify-center gap-2 active:scale-[0.98]"
-                 >
-                   <MessageSquare size={20} fill="currentColor" />
-                   Order on WhatsApp
-                 </button>
-                 <button
-                   onClick={() => setSelectedItem(null)}
-                   className="w-full h-14 bg-white border border-black/[0.06] text-[#1A1F36] rounded-2xl font-bold text-sm hover:bg-gray-50 transition-all active:scale-[0.98]"
-                 >
-                   Back to Gallery
-                 </button>
+                <button
+                  onClick={() => handleWhatsAppOrder(selectedItem)}
+                  className="w-full h-14 bg-[#25D366] hover:bg-[#1EB855] text-white rounded-2xl font-bold text-sm shadow-xl shadow-green-500/20 transition-all flex items-center justify-center gap-2 active:scale-[0.98]"
+                >
+                  <MessageSquare size={20} fill="currentColor" />
+                  Order on WhatsApp
+                </button>
+                <button
+                  onClick={() => setSelectedItem(null)}
+                  className="w-full h-14 bg-white border border-black/[0.06] text-[#1A1F36] rounded-2xl font-bold text-sm hover:bg-gray-50 transition-all active:scale-[0.98]"
+                >
+                  Back to Gallery
+                </button>
               </div>
 
               <div className="mt-8 pt-8 border-t border-black/[0.06]">
-                 <div className="flex items-center gap-4 text-[#888]">
-                    <div className="flex-1 text-center">
-                       <div className="text-[10px] font-bold uppercase tracking-widest mb-1 opacity-50">Delivery</div>
-                       <div className="text-[12px] font-bold text-[#1A1F36]">Available</div>
-                    </div>
-                    <div className="w-px h-8 bg-black/[0.06]" />
-                    <div className="flex-1 text-center">
-                       <div className="text-[10px] font-bold uppercase tracking-widest mb-1 opacity-50">Payment</div>
-                       <div className="text-[12px] font-bold text-[#1A1F36]">COD / UPI</div>
-                    </div>
-                 </div>
+                <div className="flex items-center gap-4 text-[#888]">
+                  <div className="flex-1 text-center">
+                    <div className="text-[10px] font-bold uppercase tracking-widest mb-1 opacity-50">Delivery</div>
+                    <div className="text-[12px] font-bold text-[#1A1F36]">Available</div>
+                  </div>
+                  <div className="w-px h-8 bg-black/[0.06]" />
+                  <div className="flex-1 text-center">
+                    <div className="text-[10px] font-bold uppercase tracking-widest mb-1 opacity-50">Payment</div>
+                    <div className="text-[12px] font-bold text-[#1A1F36]">COD / UPI</div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
