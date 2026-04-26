@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { Upload, X, ImageIcon, Loader2, Plus } from "lucide-react";
 import { uploadImage } from "@/lib/storage";
+import { useModal } from "@/hooks/useModal";
 
 const ImageUpload = ({
   onUpload,
@@ -13,6 +14,7 @@ const ImageUpload = ({
   compact = false,
   multiple = false
 }) => {
+  const { showAlert } = useModal();
   const [uploading, setUploading] = useState(false);
   const [preview, setPreview] = useState(currentImage);
 
@@ -54,7 +56,11 @@ const ImageUpload = ({
       setPreview(null);
     } catch (error) {
       console.error(error);
-      alert("Upload failed. Please try again.");
+      showAlert({ 
+        title: "Upload Failed", 
+        message: "We encountered an issue while uploading your image. Please try again.", 
+        type: "error" 
+      });
       setPreview(currentImage);
     } finally {
       setUploading(false);

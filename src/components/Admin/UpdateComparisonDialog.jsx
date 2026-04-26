@@ -55,12 +55,12 @@ const UpdateComparisonDialog = ({ shop, isOpen, onClose }) => {
   };
 
   const ChangeRecord = ({ label, oldVal, newVal, type }) => (
-    <div className="flex items-start gap-4 p-4 bg-white rounded-2xl border border-orange-100 shadow-sm animate-in slide-in-from-left duration-300">
+    <div className="flex items-start gap-4 p-4 bg-white rounded-2xl border border-[#1A1F36]/[0.07] shadow-md animate-in slide-in-from-left duration-300">
       <div className="w-8 h-8 rounded-full bg-orange-100 flex items-center justify-center shrink-0">
-        <RefreshCw size={14} className="text-orange-600" />
+        <RefreshCw size={14} className="text-[#FF6B35]" />
       </div>
       <div className="flex-1 space-y-2">
-        <p className="text-[10px] font-black text-orange-500 uppercase tracking-widest">{label} Updated</p>
+        <p className="text-[10px] font-black text-[#FF6B35] uppercase tracking-widest">{label} Updated</p>
         
         {type === 'image' ? (
           <div className="flex items-center gap-4">
@@ -71,14 +71,14 @@ const UpdateComparisonDialog = ({ shop, isOpen, onClose }) => {
             <ArrowRight size={16} className="text-gray-300 mt-4" />
             <div className="space-y-1">
               <span className="text-[9px] font-bold text-primary uppercase block">To</span>
-              {newVal ? <img src={newVal} className="h-12 w-12 object-cover rounded-lg border-2 border-primary shadow-md" /> : <ImageIcon size={20} className="text-gray-200" />}
+              {newVal ? <img src={newVal} className="h-12 w-12 object-cover rounded-lg border-2 border-[#FF6B35] shadow-md" /> : <ImageIcon size={20} className="text-gray-200" />}
             </div>
           </div>
         ) : (
           <div className="space-y-1">
              <div className="text-sm font-medium text-gray-400 line-through decoration-red-300 underline-offset-4">{oldVal || "—"}</div>
              <div className="text-sm font-black text-navy flex items-center gap-2">
-                <ArrowRight size={14} className="text-primary" /> {newVal || "—"}
+                 <ArrowRight size={14} className="text-[#FF6B35]" /> {newVal || "—"}
              </div>
           </div>
         )}
@@ -115,7 +115,7 @@ const UpdateComparisonDialog = ({ shop, isOpen, onClose }) => {
               </div>
               
               {changes.length === 0 ? (
-                <div className="p-12 text-center bg-navy/[0.02] rounded-md border border-navy/5">
+                <div className="p-12 text-center bg-[#1A1F36]/[0.02] rounded-xl border border-[#1A1F36]/[0.07]">
                   <Check className="mx-auto text-whatsapp mb-3" size={32} />
                   <p className="text-[10px] font-black text-navy/40 uppercase tracking-widest">No primary identity changes detected.</p>
                 </div>
@@ -130,7 +130,7 @@ const UpdateComparisonDialog = ({ shop, isOpen, onClose }) => {
             </div>
 
             {/* Verified Activity Section */}
-            <div className="space-y-6 pt-10 border-t border-navy/5">
+             <div className="space-y-6 pt-10 border-t border-[#1A1F36]/[0.07]">
               <div className="flex items-center gap-3">
                 <Clock size={16} className="text-navy/40" />
                 <h3 className="text-[10px] font-black text-navy uppercase tracking-[0.2em]">Action Activity Log</h3>
@@ -141,14 +141,14 @@ const UpdateComparisonDialog = ({ shop, isOpen, onClose }) => {
                   <p className="text-[9px] text-navy/20 italic font-black uppercase tracking-widest text-center py-6">No audit history recorded yet.</p>
                 ) : (
                   history.map(log => (
-                    <div key={log.id} className="flex items-start gap-4 p-4 bg-navy/[0.02] rounded-md border border-navy/5 text-[10px]">
-                      <div className="p-2 bg-white rounded-md text-navy/20 shadow-sm shrink-0 border border-navy/5">
+                     <div key={log.id} className="flex items-start gap-4 p-4 bg-[#1A1F36]/[0.02] rounded-xl border border-[#1A1F36]/[0.07] text-[10px]">
+                       <div className="p-2 bg-white rounded-lg text-[#1A1F36]/20 shadow-md shrink-0 border border-[#1A1F36]/[0.07]">
                         <Clock size={14} />
                       </div>
                       <div className="flex-1 min-w-0 space-y-2">
                         <p className="font-bold text-navy leading-relaxed">{log.details}</p>
                         <div className="flex justify-between items-center text-[9px] font-black uppercase tracking-widest text-navy/30">
-                           <span className="flex items-center gap-2"><div className="w-1 h-1 rounded-full bg-navy/20" /> {log.performedBy}</span>
+                            <span className="flex items-center gap-2"><div className="w-1 h-1 rounded-full bg-[#1A1F36]/20" /> {log.performedBy}</span>
                            <span>{log.timestamp ? new Date(log.timestamp).toLocaleDateString() : 'Just now'}</span>
                         </div>
                       </div>
@@ -164,7 +164,7 @@ const UpdateComparisonDialog = ({ shop, isOpen, onClose }) => {
           <Button variant="outline" className="flex-1 py-4 rounded-md border-navy/10 text-[10px] font-black uppercase tracking-widest" onClick={onClose}>
             Dismiss Review
           </Button>
-          <Button className="flex-1 py-4 rounded-md shadow-lg shadow-primary/20 text-[10px] font-black uppercase tracking-widest" onClick={onClose}>
+           <Button className="flex-1 py-4 rounded-md shadow-md shadow-[#FF6B35]/20 text-[10px] font-black uppercase tracking-widest" onClick={onClose}>
             Close Summary
           </Button>
         </div>

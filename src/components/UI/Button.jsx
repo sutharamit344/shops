@@ -1,31 +1,37 @@
 import React from 'react';
 
-const Button = ({ children, variant = 'primary', size = 'md', className = '', ...props }) => {
-  const baseStyles = 'font-black uppercase tracking-tighter transition-all hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-2 group';
+const Button = ({ children, variant = 'primary', size = 'md', className = '', loading = false, disabled = false, icon: Icon, iconPosition = 'left', ...props }) => {
+  const baseStyles = 'inline-flex items-center justify-center gap-2 font-semibold transition-all active:scale-95 shadow-md disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100';
 
   const sizes = {
-    sm: 'py-2 px-4 text-[10px] font-black uppercase tracking-[0.2em] rounded-md',
-    md: 'py-3 px-6 text-[11px] font-black uppercase tracking-[0.2em] rounded-md shadow-md',
-    lg: 'py-4 px-10 text-xs font-black uppercase tracking-[0.3em] rounded-md shadow-md',
-    xl: 'py-5 px-12 text-sm font-black uppercase tracking-[0.4em] rounded-md shadow-md',
+    sm: 'h-8 px-4 text-xs rounded-lg',
+    md: 'h-10 px-5 text-[13px] rounded-xl',
+    lg: 'h-12 px-7 text-[15px] rounded-xl',
+    xl: 'h-14 px-8 text-base rounded-2xl',
   };
 
   const variants = {
-    primary: 'bg-primary text-white shadow-primary/20 hover:shadow-primary/30',
-    secondary: 'bg-cream text-navy border border-primary/10 shadow-cream/20',
-    whatsapp: 'bg-whatsapp text-white shadow-whatsapp/20 hover:shadow-whatsapp/30',
-    outline: 'bg-white border-2 border-primary text-navy hover:bg-primary hover:text-white shadow-cream/20',
-    dark: 'bg-navy text-white shadow-navy/20 hover:bg-black',
-    glass: 'glass text-navy hover:bg-white/20 border-white/40 shadow-xl',
-    ghost: 'bg-transparent text-navy/20 hover:text-navy hover:bg-navy/5 shadow-none border-none',
+    primary: 'bg-[#FF6B35] text-white hover:bg-[#E85C25]',
+    outline: 'bg-white border-2 border-[#FF6B35] text-[#FF6B35] hover:bg-[#FF6B35] hover:text-white',
+    whatsapp: 'bg-[#25D366] text-white hover:bg-[#1EB855]',
+    dark: 'bg-[#1A1F36] text-white hover:bg-slate-800',
+    ghost: 'bg-transparent text-[#1A1F36]/60 hover:text-[#1A1F36] hover:bg-[#1A1F36]/[0.06]',
   };
 
   return (
     <button
       className={`${baseStyles} ${sizes[size] || sizes.md} ${variants[variant] || variants.primary} ${className}`}
+      disabled={loading || disabled}
       {...props}
     >
+      {loading && (
+        <svg className="animate-spin" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+          <path d="M21 12a9 9 0 11-6.219-8.56" />
+        </svg>
+      )}
+      {!loading && Icon && iconPosition === 'left' && <Icon size={size === 'sm' ? 14 : 16} />}
       {children}
+      {!loading && Icon && iconPosition === 'right' && <Icon size={size === 'sm' ? 14 : 16} />}
     </button>
   );
 };

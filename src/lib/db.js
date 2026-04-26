@@ -15,9 +15,72 @@ import {
 } from "firebase/firestore";
 import { db } from "./firebase";
 import { unstable_cache } from "next/cache";
+import { slugify } from "./slugify";
 
 const COLLECTION_NAME = "shops";
 const LOGS_COLLECTION = "activity_logs";
+
+/**
+ * HELPER: Resolves a slugified parameter to its original DB value.
+ */
+async function resolveParameter(slug, type) {
+  try {
+    if (!slug) return slug;
+    
+    // For categories, check the categories collection first
+    if (type === 'category') {
+      const cats = await getCategories();
+      const match = cats.find(c => slugify(c.name) === slug.toLowerCase());
+      if (match) return match.name;
+    }
+
+    // For others, check approved shops
+    const shops = await getApprovedShops();
+    const field = type === 'city' ? 'city' : type === 'area' ? 'area' : type === 'zone' ? 'zone' : 'category';
+    
+    const match = shops.find(s => s[field] && slugify(s[field]) === slug.toLowerCase());
+    return match ? match[field] : slug;
+  } catch (error) {
+    console.error(`Error resolving ${type} slug:`, error);
+    return slug;
+  }
+}
+
+/**
+ * Recursively converts Firestore Timestamps to ISO strings to ensure
+ * serializability for Next.js Client Components.
+ */
+function serializeTimestamps(obj) {
+  if (!obj || typeof obj !== "object") return obj;
+
+  // Handle arrays
+  if (Array.isArray(obj)) {
+    return obj.map((item) => serializeTimestamps(item));
+  }
+
+  // Handle Firebase Timestamps
+  if (typeof obj.toDate === "function") {
+    return obj.toDate().toISOString();
+  }
+
+  // Handle objects recursively
+  const serialized = {};
+  for (const [key, value] of Object.entries(obj)) {
+    serialized[key] = serializeTimestamps(value);
+  }
+  return serialized;
+}
+
+/**
+ * Standardizes document data with ID and serialized timestamps.
+ */
+function standardizeData(docSnap) {
+  if (!docSnap.exists || !docSnap.exists()) return null;
+  return {
+    id: docSnap.id,
+    ...serializeTimestamps(docSnap.data()),
+  };
+}
 
 /**
  * Checks if current user is an admin via a 'canary' read.
@@ -91,7 +154,7 @@ export async function getShopBySlug(slug, allowHidden = false) {
 
     if (snap.empty) return null;
 
-    const shop = { id: snap.docs[0].id, ...snap.docs[0].data() };
+    const shop = standardizeData(snap.docs[0]);
 
     // Status check (extra safety)
     if (!allowHidden && shop.status !== "approved") return null;
@@ -108,24 +171,16 @@ export async function getShopBySlug(slug, allowHidden = false) {
 /**
  * Gets all approved shops by category.
  */
-export async function getShopsByCategory(category) {
+export async function getShopsByCategory(categorySlug) {
   try {
+    const category = await resolveParameter(categorySlug, 'category');
     const q = query(
       collection(db, COLLECTION_NAME),
       where("category", "==", category),
       where("status", "==", "approved"),
     );
     const querySnapshot = await getDocs(q);
-    const results = querySnapshot.docs.map((doc) => {
-      const data = doc.data();
-      return {
-        id: doc.id,
-        ...data,
-        createdAt: data.createdAt?.toDate?.()
-          ? data.createdAt.toDate().toISOString()
-          : null,
-      };
-    });
+    const results = querySnapshot.docs.map(standardizeData);
     return results.sort(
       (a, b) => new Date(b.createdAt) - new Date(a.createdAt),
     );
@@ -138,18 +193,16 @@ export async function getShopsByCategory(category) {
 /**
  * Gets all approved shops by city.
  */
-export async function getShopsByCity(city) {
+export async function getShopsByCity(citySlug) {
   try {
+    const city = await resolveParameter(citySlug, 'city');
     const q = query(
       collection(db, COLLECTION_NAME),
       where("city", "==", city),
       where("status", "==", "approved"),
     );
     const querySnapshot = await getDocs(q);
-    return querySnapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-    }));
+    return querySnapshot.docs.map(standardizeData);
   } catch (error) {
     console.error("Error getting shops by city: ", error);
     return [];
@@ -159,8 +212,10 @@ export async function getShopsByCity(city) {
 /**
  * Gets all approved shops by city and category.
  */
-export async function getShopsByCityAndCategory(city, category) {
+export async function getShopsByCityAndCategory(citySlug, categorySlug) {
   try {
+    const city = await resolveParameter(citySlug, 'city');
+    const category = await resolveParameter(categorySlug, 'category');
     // 1. Try exact match
     const q = query(
       collection(db, COLLECTION_NAME),
@@ -169,21 +224,19 @@ export async function getShopsByCityAndCategory(city, category) {
       where("status", "==", "approved"),
     );
     const querySnapshot = await getDocs(q);
-    
+
     if (!querySnapshot.empty) {
-      return querySnapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
+      return querySnapshot.docs.map(standardizeData);
     }
 
     // 2. Fallback: Try common casing patterns if no exact match
     // This is useful because URLs are often lowercased by users or browsers
-    const capitalize = (s) => s.charAt(0).toUpperCase() + s.slice(1).toLowerCase();
-    
+    const capitalize = (s) =>
+      s.charAt(0).toUpperCase() + s.slice(1).toLowerCase();
+
     // Try capitalized city/category (e.g., "Ahmedabad", "IT Company")
     const capCity = capitalize(city);
-    const capCategory = category.split(' ').map(capitalize).join(' ');
+    const capCategory = category.split(" ").map(capitalize).join(" ");
 
     if (capCity !== city || capCategory !== category) {
       const qFallback = query(
@@ -194,10 +247,7 @@ export async function getShopsByCityAndCategory(city, category) {
       );
       const snapFallback = await getDocs(qFallback);
       if (!snapFallback.empty) {
-        return snapFallback.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        }));
+        return snapFallback.docs.map(standardizeData);
       }
     }
 
@@ -211,8 +261,10 @@ export async function getShopsByCityAndCategory(city, category) {
 /**
  * Gets all approved shops by city and area.
  */
-export async function getShopsByCityAndArea(city, area) {
+export async function getShopsByCityAndArea(citySlug, areaSlug) {
   try {
+    const city = await resolveParameter(citySlug, 'city');
+    const area = await resolveParameter(areaSlug, 'area');
     const q = query(
       collection(db, COLLECTION_NAME),
       where("city", "==", city),
@@ -220,10 +272,7 @@ export async function getShopsByCityAndArea(city, area) {
       where("status", "==", "approved"),
     );
     const querySnapshot = await getDocs(q);
-    return querySnapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-    }));
+    return querySnapshot.docs.map(standardizeData);
   } catch (error) {
     console.error("Error getting shops by city and area: ", error);
     return [];
@@ -233,8 +282,11 @@ export async function getShopsByCityAndArea(city, area) {
 /**
  * Gets all approved shops by city, area and zone.
  */
-export async function getShopsByZoneInArea(city, area, zone) {
+export async function getShopsByZoneInArea(citySlug, areaSlug, zoneSlug) {
   try {
+    const city = await resolveParameter(citySlug, 'city');
+    const area = await resolveParameter(areaSlug, 'area');
+    const zone = await resolveParameter(zoneSlug, 'zone');
     const q = query(
       collection(db, COLLECTION_NAME),
       where("city", "==", city),
@@ -243,10 +295,7 @@ export async function getShopsByZoneInArea(city, area, zone) {
       where("status", "==", "approved"),
     );
     const querySnapshot = await getDocs(q);
-    return querySnapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-    }));
+    return querySnapshot.docs.map(standardizeData);
   } catch (error) {
     console.error("Error getting shops by zone in area: ", error);
     return [];
@@ -264,16 +313,7 @@ export async function getShopsByZone(zone) {
       where("status", "==", "approved"),
     );
     const querySnapshot = await getDocs(q);
-    const results = querySnapshot.docs.map((doc) => {
-      const data = doc.data();
-      return {
-        id: doc.id,
-        ...data,
-        createdAt: data.createdAt?.toDate?.()
-          ? data.createdAt.toDate().toISOString()
-          : null,
-      };
-    });
+    const results = querySnapshot.docs.map(standardizeData);
     return results.sort(
       (a, b) => new Date(b.createdAt) - new Date(a.createdAt),
     );
@@ -317,31 +357,29 @@ export async function getPendingShops() {
 /**
  * Gets all approved shops.
  */
-export async function getApprovedShops() {
-  try {
-    const q = query(
-      collection(db, COLLECTION_NAME),
-      where("status", "==", "approved"),
-    );
+export const getApprovedShops = unstable_cache(
+  async () => {
+    try {
+      const q = query(
+        collection(db, COLLECTION_NAME),
+        where("status", "==", "approved"),
+      );
 
-    const querySnapshot = await getDocs(q);
-    const results = querySnapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-      approvedAt: doc.data().approvedAt?.toDate?.()
-        ? doc.data().approvedAt.toDate().toISOString()
-        : null,
-    }));
-    return results.sort(
-      (a, b) =>
-        new Date(b.approvedAt || b.updatedAt) -
-        new Date(a.approvedAt || a.updatedAt),
-    );
-  } catch (error) {
-    console.error("Error getting approved shops: ", error);
-    return [];
-  }
-}
+      const querySnapshot = await getDocs(q);
+      const results = querySnapshot.docs.map(standardizeData);
+      return results.sort(
+        (a, b) =>
+          new Date(b.approvedAt || b.updatedAt) -
+          new Date(a.approvedAt || a.updatedAt),
+      );
+    } catch (error) {
+      console.error("Error getting approved shops: ", error);
+      return [];
+    }
+  },
+  ['approved-shops'],
+  { revalidate: 3600, tags: ['shops'] }
+);
 
 export async function getUpdatedShops() {
   try {
@@ -352,13 +390,7 @@ export async function getUpdatedShops() {
     );
 
     const querySnapshot = await getDocs(q);
-    const results = querySnapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-      updatedAt: doc.data().updatedAt?.toDate?.()
-        ? doc.data().updatedAt.toDate().toISOString()
-        : null,
-    }));
+    const results = querySnapshot.docs.map(standardizeData);
     return results.sort(
       (a, b) => new Date(b.updatedAt) - new Date(a.updatedAt),
     );
@@ -460,24 +492,25 @@ export async function rejectShop(id, reason, adminEmail = "Admin") {
 /**
  * Gets active categories.
  */
-export async function getCategories() {
-  try {
-    const q = query(
-      collection(db, "categories"),
-      where("status", "==", "approved"),
-    );
-    const querySnapshot = await getDocs(q);
-    const results = querySnapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-    }));
-    // Sort in memory to avoid index requirements
-    return results.sort((a, b) => (a.name || "").localeCompare(b.name || ""));
-  } catch (error) {
-    console.error("Error getting categories: ", error);
-    return [];
-  }
-}
+export const getCategories = unstable_cache(
+  async () => {
+    try {
+      const q = query(
+        collection(db, "categories"),
+        where("status", "==", "approved"),
+      );
+      const querySnapshot = await getDocs(q);
+      const results = querySnapshot.docs.map(standardizeData);
+      // Sort in memory to avoid index requirements
+      return results.sort((a, b) => (a.name || "").localeCompare(b.name || ""));
+    } catch (error) {
+      console.error("Error getting categories: ", error);
+      return [];
+    }
+  },
+  ['categories'],
+  { revalidate: 3600, tags: ['categories'] }
+);
 
 /**
  * Gets pending categories for admin.
@@ -489,10 +522,7 @@ export async function getPendingCategories() {
       where("status", "==", "pending"),
     );
     const querySnapshot = await getDocs(q);
-    const results = querySnapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-    }));
+    const results = querySnapshot.docs.map(standardizeData);
     // Sort in memory to avoid index requirements
     return results.sort(
       (a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0),
@@ -620,6 +650,96 @@ export async function approveCategory(id) {
 }
 
 /**
+ * Gets active clusters.
+ */
+export const getClusters = unstable_cache(
+  async () => {
+    try {
+      const q = query(
+        collection(db, "clusters"),
+        where("status", "==", "approved"),
+      );
+      const querySnapshot = await getDocs(q);
+      const results = querySnapshot.docs.map(standardizeData);
+      return results.sort((a, b) => (a.name || "").localeCompare(b.name || ""));
+    } catch (error) {
+      console.error("Error getting clusters: ", error);
+      return [];
+    }
+  },
+  ['clusters'],
+  { revalidate: 3600, tags: ['clusters'] }
+);
+
+/**
+ * Gets pending clusters for admin.
+ */
+export async function getPendingClusters() {
+  try {
+    const q = query(
+      collection(db, "clusters"),
+      where("status", "==", "pending"),
+    );
+    const querySnapshot = await getDocs(q);
+    const results = querySnapshot.docs.map(standardizeData);
+    return results.sort(
+      (a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0),
+    );
+  } catch (error) {
+    console.error("Error getting pending clusters: ", error);
+    return [];
+  }
+}
+
+/**
+ * Proposes a new cluster.
+ */
+export async function proposeCluster(name, category) {
+  try {
+    const q = query(
+      collection(db, "clusters"), 
+      where("name", "==", name),
+      where("category", "==", category)
+    );
+    const snap = await getDocs(q);
+    if (!snap.empty) return { success: true, id: snap.docs[0].id };
+
+    const docRef = await addDoc(collection(db, "clusters"), {
+      name,
+      category,
+      status: "pending",
+      createdAt: serverTimestamp(),
+    });
+
+    await logActivity(
+      "CLUSTER_PROPOSE",
+      `Proposed new cluster: ${name} for ${category}`,
+      docRef.id,
+      "cluster",
+      "User",
+    );
+    return { success: true, id: docRef.id };
+  } catch (error) {
+    console.error("Error proposing cluster: ", error);
+    return { success: false, error };
+  }
+}
+
+/**
+ * Approves a cluster.
+ */
+export async function approveCluster(id) {
+  try {
+    const docRef = doc(db, "clusters", id);
+    await updateDoc(docRef, { status: "approved" });
+    return { success: true };
+  } catch (error) {
+    console.error("Error approving cluster: ", error);
+    return { success: false, error };
+  }
+}
+
+/**
  * Deletes a shop.
  */
 export async function deleteShop(id, adminEmail = "Admin") {
@@ -649,8 +769,7 @@ export async function getShopById(id) {
   try {
     const docRef = doc(db, COLLECTION_NAME, id);
     const docSnap = await getDoc(docRef);
-    if (!docSnap.exists()) return null;
-    return { id: docSnap.id, ...docSnap.data() };
+    return standardizeData(docSnap);
   } catch (error) {
     console.error("Error getting shop by ID: ", error);
     return null;
@@ -801,6 +920,61 @@ export async function submitShopRating(
 }
 
 /**
+ * Deletes a rating and updates the aggregate average.
+ */
+export async function deleteShopRating(shopId, ratingId) {
+  try {
+    const shopRef = doc(db, COLLECTION_NAME, shopId);
+    const ratingRef = doc(db, COLLECTION_NAME, shopId, "ratings", ratingId);
+
+    await runTransaction(db, async (transaction) => {
+      const shopSnap = await transaction.get(shopRef);
+      const ratingSnap = await transaction.get(ratingRef);
+
+      if (!shopSnap.exists()) throw new Error("Shop not found");
+      if (!ratingSnap.exists()) throw new Error("Rating not found");
+
+      const shopData = shopSnap.data();
+      const ratingData = ratingSnap.data();
+
+      const currentAvg = shopData.avgRating || 0;
+      const currentTotal = shopData.totalRatings || 0;
+      const deletedRating = ratingData.rating;
+
+      let newTotal = currentTotal - 1;
+      let newAvg = 0;
+
+      if (newTotal > 0) {
+        newAvg = (currentAvg * currentTotal - deletedRating) / newTotal;
+      }
+
+      // 1. Delete the rating document
+      transaction.delete(ratingRef);
+
+      // 2. Update the shop's aggregate rating metadata
+      transaction.update(shopRef, {
+        avgRating: parseFloat(newAvg.toFixed(1)),
+        totalRatings: Math.max(0, newTotal),
+      });
+
+      // 3. Log the deletion
+      logActivity(
+        "RATING_DELETE",
+        `Admin/Owner deleted a review from ${ratingData.userName}`,
+        shopId,
+        "shop",
+        "System/Owner"
+      );
+    });
+
+    return { success: true };
+  } catch (error) {
+    console.error("Error deleting rating: ", error);
+    return { success: false, error };
+  }
+}
+
+/**
  * Gets recent ratings for a shop.
  */
 export async function getShopRatings(shopId, limitCount = 10) {
@@ -811,16 +985,7 @@ export async function getShopRatings(shopId, limitCount = 10) {
       limit(limitCount),
     );
     const querySnapshot = await getDocs(q);
-    return querySnapshot.docs.map((doc) => {
-      const data = doc.data();
-      return {
-        id: doc.id,
-        ...data,
-        createdAt: data.createdAt?.toDate?.()
-          ? data.createdAt.toDate().toISOString()
-          : null,
-      };
-    });
+    return querySnapshot.docs.map(standardizeData);
   } catch (error) {
     console.error("Error getting shop ratings: ", error);
     return [];
@@ -859,13 +1024,7 @@ export async function getGlobalLogs(limitCount = 50) {
       limit(limitCount),
     );
     const snap = await getDocs(q);
-    return snap.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-      timestamp: doc.data().timestamp?.toDate?.()
-        ? doc.data().timestamp.toDate().toISOString()
-        : null,
-    }));
+    return snap.docs.map(standardizeData);
   } catch (error) {
     console.error("Error fetching logs:", error);
     return [];
@@ -881,13 +1040,7 @@ export async function getEntityLogs(entityId, limitCount = 5) {
       limit(limitCount),
     );
     const snap = await getDocs(q);
-    return snap.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-      timestamp: doc.data().timestamp?.toDate?.()
-        ? doc.data().timestamp.toDate().toISOString()
-        : null,
-    }));
+    return snap.docs.map(standardizeData);
   } catch (error) {
     console.error("Error fetching entity logs:", error);
     return [];

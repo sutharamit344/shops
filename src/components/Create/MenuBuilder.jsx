@@ -3,6 +3,7 @@
 import React from "react";
 import Button from "@/components/UI/Button";
 import ImageUpload from "@/components/UI/ImageUpload";
+import { useModal } from "@/hooks/useModal";
 import { Plus, Trash2, LayoutGrid, PlusCircle } from "lucide-react";
 
 const UNIT_OPTIONS = [
@@ -15,6 +16,7 @@ const UNIT_OPTIONS = [
  * Advanced Menu Builder: Redesigned for Proper Alignment and Field Structure
  */
 const MenuBuilder = ({ menuData, onChange, businessType = "mixed" }) => {
+  const { showConfirm } = useModal();
   const isService = businessType === "service";
 
   const addCategory = () => {
@@ -26,10 +28,16 @@ const MenuBuilder = ({ menuData, onChange, businessType = "mixed" }) => {
   };
 
   const removeCategory = (catIndex) => {
-    if (window.confirm("Are you sure?")) {
-      const updated = (menuData || []).filter((_, i) => i !== catIndex);
-      onChange(updated);
-    }
+    showConfirm({
+      title: "Remove Category",
+      message: `Are you sure you want to remove the "${menuData[catIndex].category}" category? All items inside will be deleted from your draft.`,
+      confirmText: "Remove Category",
+      type: "error",
+      onConfirm: () => {
+        const updated = (menuData || []).filter((_, i) => i !== catIndex);
+        onChange(updated);
+      }
+    });
   };
 
   const updateCategoryName = (catIndex, name) => {

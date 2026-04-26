@@ -2,8 +2,9 @@
 
 import React, { useEffect, useState, Suspense, useRef, useCallback } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { useAuth } from "@/context/AuthContext";
-import { getShopById, updateShop } from "@/lib/db";
+import { useAuth } from "@/hooks/useAuth";
+import { getShopById, updateShop, getShopRatings, deleteShopRating } from "@/lib/db";
+import { useModal } from "@/hooks/useModal";
 import { getProfileCompletion } from "@/lib/shopUtils";
 import Navbar from "@/components/Navbar";
 import ImageUpload from "@/components/UI/ImageUpload";
@@ -39,14 +40,19 @@ import {
   Search,
   CalendarDays,
   ChevronUp,
-  RefreshCw
+  RefreshCw,
+  Trash2,
+  ThumbsUp as ThumbsUpIcon,
+  User as UserIcon
 } from "lucide-react";
 import Link from "next/link";
 import ShopHistoryDialog from "@/components/Shop/HistoryDialog";
 import ShopForm from "@/components/Create/ShopForm";
 import Dialog from "@/components/UI/Dialog";
 import Input from "@/components/UI/Input";
+import Textarea from "@/components/UI/Textarea";
 import Button from "@/components/UI/Button";
+import { slugify } from "@/lib/slugify";
 
 function ShopDashboardContent() {
   const searchParams = useSearchParams();
@@ -58,6 +64,8 @@ function ShopDashboardContent() {
   const [historyShop, setHistoryShop] = useState(null);
   const [activeView, setActiveView] = useState("overview");
   const [isSaving, setIsSaving] = useState(false);
+  const [reviews, setReviews] = useState([]);
+  const [loadingReviews, setLoadingReviews] = useState(false);
 
   // Modal States
   const [showCategoryModal, setShowCategoryModal] = useState(false);
@@ -70,6 +78,7 @@ function ShopDashboardContent() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [itemName, setItemName] = useState("");
   const [itemPrice, setItemPrice] = useState("");
+  const [itemDescription, setItemDescription] = useState("");
   const [itemImage, setItemImage] = useState("");
   const [collapsedCategories, setCollapsedCategories] = useState(new Set());
   const [searchQuery, setSearchQuery] = useState("");
@@ -94,13 +103,8 @@ function ShopDashboardContent() {
   const [holidays, setHolidays] = useState([]);
   const [newHoliday, setNewHoliday] = useState({ date: "", title: "" });
 
-  // Feedback State
-  const [messageModal, setMessageModal] = useState({
-    isOpen: false,
-    title: "",
-    message: "",
-    type: "info" // "info", "success", "error"
-  });
+  // Global Modal System
+  const { showAlert, showConfirm } = useModal();
 
   const qrRef = useRef(null);
   const [downloadingQR, setDownloadingQR] = useState(false);
@@ -110,17 +114,29 @@ function ShopDashboardContent() {
     setDownloadingQR(true);
     try {
       const { toPng } = await import("html-to-image");
+
+      // Wait a moment to ensure images are hydrated
+      await new Promise(r => setTimeout(r, 500));
+
       const dataUrl = await toPng(qrRef.current, {
         quality: 1,
         pixelRatio: 4,
         backgroundColor: "#ffffff",
+        cacheBust: true,
+        style: {
+          visibility: 'visible',
+        }
       });
+
       const link = document.createElement("a");
       link.download = `${shop.name?.replace(/\s+/g, "_")}_QRCode.png`;
       link.href = dataUrl;
       link.click();
     } catch (err) {
       console.error("QR Download failed:", err);
+      // Fallback: If html-to-image fails, open the QR directly
+      const directUrl = `https://api.qrserver.com/v1/create-qr-code/?size=1000x1000&data=${encodeURIComponent(window.location.origin + "/" + slugify(shop.city) + "/" + slugify(shop.category) + "/" + slugify(shop.slug))}`;
+      window.open(directUrl, '_blank');
     } finally {
       setDownloadingQR(false);
     }
@@ -143,6 +159,38 @@ function ShopDashboardContent() {
     }
   }, [user, shopId, authLoading]);
 
+  useEffect(() => {
+    if (activeView === 'reviews' && shopId) {
+      fetchReviews();
+    }
+  }, [activeView, shopId]);
+
+  const fetchReviews = async () => {
+    setLoadingReviews(true);
+    const data = await getShopRatings(shopId);
+    setReviews(data);
+    setLoadingReviews(false);
+  };
+
+  const handleDeleteReview = async (reviewId) => {
+    showConfirm({
+      title: "Delete Review",
+      message: "Are you sure you want to delete this customer review? This will also update your aggregate rating.",
+      confirmText: "Yes, Delete",
+      type: "error",
+      onConfirm: async () => {
+        const res = await deleteShopRating(shopId, reviewId);
+        if (res.success) {
+          fetchReviews();
+          showAlert({ title: "Deleted", message: "Review removed successfully", type: "success" });
+          // Refresh shop data to get new avgRating
+          const updatedShop = await getShopById(shopId);
+          setShop(updatedShop);
+        }
+      }
+    });
+  };
+
   const handleFullUpdate = async (finalData) => {
     setIsSaving(true);
     try {
@@ -152,8 +200,7 @@ function ShopDashboardContent() {
       });
       if (result.success) {
         setShop(prev => ({ ...prev, ...finalData }));
-        setMessageModal({
-          isOpen: true,
+        showAlert({
           title: "Success",
           message: "Shop details updated successfully!",
           type: "success"
@@ -163,8 +210,7 @@ function ShopDashboardContent() {
       }
     } catch (error) {
       console.error(error);
-      setMessageModal({
-        isOpen: true,
+      showAlert({
         title: "Update Failed",
         message: error.message || "Unknown error",
         type: "error"
@@ -184,8 +230,7 @@ function ShopDashboardContent() {
       }
     } catch (error) {
       console.error(error);
-      setMessageModal({
-        isOpen: true,
+      showAlert({
         title: "Catalog Error",
         message: error.message || "Unknown error",
         type: "error"
@@ -211,10 +256,17 @@ function ShopDashboardContent() {
   };
 
   const handleDeleteCategory = () => {
-    if (!confirm(`Delete entire category "${shop.menu[activeCategoryIdx]?.name}" and all its items?`)) return;
-    const newMenu = shop.menu.filter((_, i) => i !== activeCategoryIdx);
-    handleUpdateMenu(newMenu);
-    setShowEditCategoryModal(false);
+    showConfirm({
+      title: "Delete Category",
+      message: `Are you sure you want to delete the entire category "${shop.menu[activeCategoryIdx]?.name}" and all its items? This action cannot be undone.`,
+      confirmText: "Delete Everything",
+      type: "error",
+      onConfirm: () => {
+        const newMenu = shop.menu.filter((_, i) => i !== activeCategoryIdx);
+        handleUpdateMenu(newMenu);
+        setShowEditCategoryModal(false);
+      }
+    });
   };
 
   const toggleCategory = (idx) => {
@@ -232,6 +284,7 @@ function ShopDashboardContent() {
     newMenu[activeCategoryIdx].items.push({
       name: itemName.trim(),
       price: parseFloat(itemPrice) || 0,
+      description: itemDescription.trim(),
       image: itemImage
     });
     handleUpdateMenu(newMenu);
@@ -246,6 +299,7 @@ function ShopDashboardContent() {
       ...newMenu[activeCategoryIdx].items[activeItemIdx],
       name: itemName.trim(),
       price: parseFloat(itemPrice) || 0,
+      description: itemDescription.trim(),
       image: itemImage
     };
     handleUpdateMenu(newMenu);
@@ -256,6 +310,7 @@ function ShopDashboardContent() {
   const resetItemForm = () => {
     setItemName("");
     setItemPrice("");
+    setItemDescription("");
     setItemImage("");
   };
 
@@ -269,8 +324,7 @@ function ShopDashboardContent() {
   const handleUpdateGallery = async (url) => {
     if (!url) return;
     if ((shop.gallery || []).length >= 5) {
-      setMessageModal({
-        isOpen: true,
+      showAlert({
         title: "Gallery Full",
         message: "Maximum 5 images allowed in the gallery.",
         type: "info"
@@ -305,8 +359,7 @@ function ShopDashboardContent() {
       });
       if (result.success) {
         setShop(prev => ({ ...prev, openingHoursDetails: openingHours, holidays }));
-        setMessageModal({
-          isOpen: true,
+        showAlert({
           title: "Success",
           message: "Opening hours and holidays updated!",
           type: "success"
@@ -400,6 +453,7 @@ function ShopDashboardContent() {
               { id: "catalog", label: "Catalog", icon: ListFilter },
               { id: "gallery", label: "Gallery", icon: ImageIcon },
               { id: "hours", label: "Hours", icon: CalendarDays },
+              { id: "reviews", label: "Reviews", icon: Star },
               { id: "settings", label: "Settings", icon: Settings2 },
             ].map((tab) => (
               <button
@@ -477,7 +531,7 @@ function ShopDashboardContent() {
                 <h3 className="text-[13px] font-semibold text-[#0F0F0F] mb-3">Store Discovery</h3>
                 <div className="bg-gray-50 p-4 rounded-xl mb-3 flex items-center justify-center">
                   <img
-                    src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(window.location.origin + "/" + shop.city?.toLowerCase() + "/" + shop.category?.toLowerCase() + "/" + shop.slug)}`}
+                    src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(window.location.origin + "/" + slugify(shop.city) + "/" + slugify(shop.category) + "/" + slugify(shop.slug))}`}
                     alt="Store QR"
                     className="w-32 h-32"
                   />
@@ -497,10 +551,9 @@ function ShopDashboardContent() {
                   </button>
                   <button
                     onClick={() => {
-                      const url = window.location.origin + "/" + shop.city?.toLowerCase() + "/" + shop.category?.toLowerCase() + "/" + shop.slug;
+                      const url = window.location.origin + "/" + slugify(shop.city) + "/" + slugify(shop.category) + "/" + slugify(shop.slug);
                       navigator.clipboard.writeText(url);
-                      setMessageModal({
-                        isOpen: true,
+                      showAlert({
                         title: "Link Copied",
                         message: "The shop link has been copied to your clipboard.",
                         type: "success"
@@ -624,7 +677,7 @@ function ShopDashboardContent() {
                 <ChevronRight size={14} />
               </button>
               <Link
-                href={`/${shop.city?.toLowerCase()}/${shop.category?.toLowerCase()}/${shop.slug}`}
+                href={`/${slugify(shop.city)}/${slugify(shop.category)}/${slugify(shop.slug)}`}
                 target="_blank"
                 className="w-full flex items-center justify-between p-4 border-t border-black/[0.06] hover:bg-gray-50 transition-all text-[12px] font-medium text-[#666]"
               >
@@ -747,6 +800,7 @@ function ShopDashboardContent() {
                                           setActiveItemIdx(originalItemIdx);
                                           setItemName(item.name);
                                           setItemPrice(item.price.toString());
+                                          setItemDescription(item.description || "");
                                           setItemImage(item.image || "");
                                           setShowEditItemModal(true);
                                         }}
@@ -989,6 +1043,71 @@ function ShopDashboardContent() {
 
           </div>
         )}
+         {activeView === "reviews" && (
+          <div className="bg-white rounded-xl border border-black/[0.06] p-6">
+            <div className="flex items-center justify-between mb-8">
+              <div>
+                <h3 className="text-lg font-bold text-[#0F0F0F]">Customer Reviews</h3>
+                <p className="text-[11px] text-[#999]">Manage what customers are saying about your shop</p>
+              </div>
+              <div className="px-3 py-1 bg-gray-50 rounded-lg text-[11px] font-bold text-[#FF6B35]">
+                {shop.avgRating || "5.0"} Avg Rating
+              </div>
+            </div>
+
+            {loadingReviews ? (
+              <div className="py-20 flex flex-col items-center justify-center gap-4">
+                <div className="w-8 h-8 border-2 border-[#FF6B35]/20 border-t-[#FF6B35] rounded-full animate-spin" />
+                <p className="text-[12px] text-[#999] font-medium">Fetching feedback...</p>
+              </div>
+            ) : reviews.length > 0 ? (
+              <div className="space-y-4">
+                {reviews.map((review) => (
+                  <div key={review.id} className="p-5 rounded-2xl bg-gray-50/50 border border-black/[0.03] group hover:border-[#FF6B35]/10 transition-all">
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex gap-4">
+                        <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center border border-black/[0.06] shadow-sm">
+                          <UserIcon size={20} className="text-[#ccc]" />
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-3 mb-1">
+                            <span className="text-[15px] font-bold text-[#0F0F0F]">{review.userName}</span>
+                            <div className="flex items-center gap-0.5 text-[#FFB800]">
+                              {[1, 2, 3, 4, 5].map((s) => (
+                                <Star key={s} size={12} fill={s <= review.rating ? "currentColor" : "none"} />
+                              ))}
+                            </div>
+                          </div>
+                          <p className="text-[11px] text-[#999] mb-3">
+                            Posted on {new Date(review.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}
+                          </p>
+                          <p className="text-[13px] text-[#666] leading-relaxed italic">
+                            "{review.comment}"
+                          </p>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => handleDeleteReview(review.id)}
+                        className="p-2.5 bg-white border border-red-100 text-red-500 rounded-xl opacity-0 group-hover:opacity-100 transition-all hover:bg-red-50"
+                        title="Delete Review"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-20">
+                <div className="w-16 h-16 bg-gray-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                  <ThumbsUpIcon size={32} className="text-[#ccc]" />
+                </div>
+                <h3 className="text-[15px] font-bold text-[#0F0F0F] mb-1">No Reviews Yet</h3>
+                <p className="text-[11px] text-[#999]">Reviews from customers will appear here.</p>
+              </div>
+            )}
+          </div>
+        )}
       </main>
 
       {/* ── Mobile Bottom Navigation ── */}
@@ -1005,8 +1124,8 @@ function ShopDashboardContent() {
               key={tab.id}
               onClick={() => setActiveView(tab.id)}
               className={`flex-1 flex flex-col items-center justify-center py-3 gap-1 text-[9px] font-bold uppercase tracking-wider transition-all ${activeView === tab.id
-                  ? "text-[#FF6B35]"
-                  : "text-[#999]"
+                ? "text-[#FF6B35]"
+                : "text-[#999]"
                 }`}
             >
               <tab.icon size={18} className={activeView === tab.id ? "text-[#FF6B35]" : "text-[#ccc]"} />
@@ -1081,6 +1200,13 @@ function ShopDashboardContent() {
               />
             </div>
           </div>
+          <Textarea
+            label="Short Description"
+            placeholder="e.g. Include details about what's included or features..."
+            value={itemDescription}
+            onChange={(e) => setItemDescription(e.target.value)}
+            rows={2}
+          />
           <div className="flex justify-end pt-2">
             <Button onClick={handleAddItem} disabled={!itemName.trim() || !itemPrice}>
               Add to Catalog
@@ -1124,6 +1250,13 @@ function ShopDashboardContent() {
               />
             </div>
           </div>
+          <Textarea
+            label="Short Description"
+            placeholder="e.g. Include details about what's included or features..."
+            value={itemDescription}
+            onChange={(e) => setItemDescription(e.target.value)}
+            rows={2}
+          />
           <div className="flex justify-end pt-2">
             <Button onClick={handleEditItem} disabled={!itemName.trim() || !itemPrice}>
               Update Item
@@ -1201,33 +1334,20 @@ function ShopDashboardContent() {
       <div className="fixed -left-[9999px] top-0 pointer-events-none">
         <div
           ref={qrRef}
-          className="w-[400px] bg-white p-10 flex flex-col items-center text-center"
+          className="w-[420px] bg-white rounded-[32px] p-8 flex flex-col items-center text-center shadow-xl border"
         >
-          <div className="w-20 h-20 mb-6 flex items-center justify-center">
-            {shop?.logo ? (
-              <img 
-                src={shop.logo} 
-                alt="Logo" 
-                className="w-20 h-20 object-contain rounded-2xl"
-                crossOrigin="anonymous"
-              />
-            ) : (
-              <div className="w-20 h-20 bg-[#FF6B35]/10 rounded-2xl flex items-center justify-center">
-                <Store size={40} className="text-[#FF6B35]" />
-              </div>
-            )}
+          <div className="w-16 h-16 bg-[#FF6B35]/10 rounded-2xl flex items-center justify-center mb-6">
+            {shop?.logo ? <img
+              src={shop?.logo || "/logo.png"}
+              alt="Shop Logo"
+              className="w-20 h-20 object-contain mb-6"
+            /> :
+              <Store size={32} className="text-[#FF6B35]" />}
           </div>
-          <h2 className="text-3xl font-black text-[#0F0F0F] mb-1 tracking-tight">{shop?.name}</h2>
-          <div className="flex flex-col items-center gap-1 text-[12px] text-[#666] font-bold uppercase tracking-widest mb-8">
-            <div className="flex items-center gap-1.5">
-              <MapPin size={12} className="text-[#FF6B35]" />
-              {shop?.city}
-            </div>
-            {(shop?.area || shop?.zone) && (
-              <div className="text-[10px] opacity-70">
-                {[shop?.area, shop?.zone].filter(Boolean).join(" • ")}
-              </div>
-            )}
+          <h2 className="text-2xl font-black text-[#0F0F0F]">{shop?.name}</h2>
+          <div className="flex items-center gap-2 text-[14px] text-[#666] font-bold uppercase tracking-widest mb-8">
+            <MapPin size={14} className="text-[#FF6B35]" />
+            {shop?.city}
           </div>
 
           <div className="p-6 bg-white border-4 border-[#0F0F0F] rounded-[40px] mb-8">
@@ -1235,34 +1355,66 @@ function ShopDashboardContent() {
               src={`https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(window.location.origin + "/" + shop?.city?.toLowerCase() + "/" + shop?.category?.toLowerCase() + "/" + shop?.slug)}`}
               alt="QR Code"
               className="w-48 h-48"
-              crossOrigin="anonymous"
             />
           </div>
 
-          <div className="space-y-1">
-            <p className="text-[16px] font-black text-[#0F0F0F] uppercase tracking-tighter">Scan to View Catalog</p>
-            <p className="text-[12px] text-[#999] font-medium">Powered by ShopSetu</p>
-          </div>
+
+          {/* CTA */}
+          <p className="mt-6 text-sm font-semibold">
+            Scan to explore
+          </p>
+
+          {/* FOOTER */}
+          <p className="text-xs text-gray-400 mt-2">
+            Powered by ShopBajar
+          </p>
         </div>
       </div>
 
-      <Dialog
-        isOpen={messageModal.isOpen}
-        onClose={() => setMessageModal({ ...messageModal, isOpen: false })}
-        title={messageModal.title}
-        icon={messageModal.type === "success" ? CheckCircle2 : messageModal.type === "error" ? AlertCircle : Info}
-      >
-        <div className="space-y-6">
-          <p className="text-[13px] text-[#666] leading-relaxed">
-            {messageModal.message}
-          </p>
-          <div className="flex justify-end pt-2">
-            <Button onClick={() => setMessageModal({ ...messageModal, isOpen: false })}>
-              Close
-            </Button>
+      {/* Generic Message Modal */}
+      {/* ── Hidden Printable QR Card (for high-res download) ── */}
+      <div className="fixed -left-[9999px] top-0 pointer-events-none">
+        <div
+          ref={qrRef}
+          className="w-[420px] bg-white rounded-[40px] p-10 flex flex-col items-center text-center border shadow-sm"
+        >
+          <div className="w-24 h-24 bg-[#FF6B35]/10 rounded-3xl flex items-center justify-center mb-6 overflow-hidden">
+            {shop?.logo ? (
+              <img
+                src={`https://images.weserv.nl/?url=${encodeURIComponent(shop.logo)}&output=png&t=${Date.now()}`}
+                alt="Shop Logo"
+                className="w-full h-full object-cover"
+                crossOrigin="anonymous"
+              />
+            ) : (
+              <Store size={40} className="text-[#FF6B35]" />
+            )}
           </div>
+
+          <h2 className="text-3xl font-black text-[#0F0F0F] mb-1 tracking-tight">{shop?.name}</h2>
+          <div className="flex items-center gap-2 text-[14px] text-[#666] tracking-widest mb-8">
+            <MapPin size={14} className="text-[#FF6B35]" />
+            {[shop?.zone, shop?.area, shop?.city].filter(Boolean).join(", ")}
+          </div>
+
+          <div className="p-8 bg-white border-4 border-[#0F0F0F] rounded-[48px] mb-8 shadow-sm">
+            <img
+              src={`${encodeURIComponent(`https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(window.location.origin + "/" + shop?.city?.toLowerCase() + "/" + shop?.category?.toLowerCase() + "/" + shop?.slug)}`)}&output=png`}
+              alt="QR Code"
+              className="w-48 h-48"
+              crossOrigin="anonymous"
+              onError={(e) => {
+                // Fallback to direct if proxy fails
+                e.target.src = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(window.location.origin + "/" + shop?.city?.toLowerCase() + "/" + shop?.category?.toLowerCase() + "/" + shop?.slug)}`;
+              }}
+            />
+          </div>
+
+          <p className="text-[18px] font-black text-[#0F0F0F] uppercase tracking-tighter">Scan to explore</p>
+          <p className="text-[12px] text-[#999] mt-2 font-medium">Powered by ShopBajar</p>
         </div>
-      </Dialog>
+      </div>
+
     </div>
   );
 }

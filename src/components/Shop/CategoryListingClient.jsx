@@ -3,6 +3,7 @@
 import React from "react";
 import Link from "next/link";
 import Navbar from "@/components/Navbar";
+import { slugify } from "@/lib/slugify";
 import Card from "@/components/UI/Card";
 import SectionHeader from "@/components/UI/SectionHeader";
 import { MapPin, Star, ArrowRight } from "lucide-react";
@@ -23,7 +24,7 @@ export default function CategoryListingClient({ shops, title, subtitle, view }) 
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {shops.map((s) => (
-              <Link key={s.id} href={`/${encodeURIComponent(s.city)}/${encodeURIComponent(s.category)}/${encodeURIComponent(s.slug)}`}>
+              <Link key={s.id} href={`/${slugify(s.city)}/${slugify(s.category)}/${slugify(s.slug)}`}>
                 <Card className="h-full flex flex-col justify-between group border-2 hover:border-[#FF6B35] transition-all duration-500 rounded-[32px] overflow-hidden p-0">
                   <div className="p-6">
                     <div className="flex items-center gap-4 mb-4">

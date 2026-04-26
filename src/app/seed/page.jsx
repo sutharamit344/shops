@@ -5,6 +5,7 @@ import { db } from "@/lib/firebase";
 import { collection, addDoc, serverTimestamp, getDocs, deleteDoc, doc } from "firebase/firestore";
 import Button from "@/components/UI/Button";
 import Navbar from "@/components/Navbar";
+import { useModal } from "@/hooks/useModal";
 import { Trash2, Database, RefreshCw, CheckCircle2 } from "lucide-react";
 
 const PROPER_SHOPS = [
@@ -121,14 +122,24 @@ const PROPER_SHOPS = [
 ];
 
 export default function SeedPage() {
+  const { showConfirm, showAlert } = useModal();
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [step, setStep] = useState("");
 
   const resetAndSeed = async () => {
-    if (!confirm("This will DELETE ALL SHOPS in your database. Are you sure?")) return;
+    showConfirm({
+      title: "Dangerous Action",
+      message: "This will DELETE ALL SHOPS in your database and replace them with sample data. This cannot be undone. Are you absolutely sure?",
+      confirmText: "Yes, Wipe Database",
+      type: "error",
+      onConfirm: async () => {
+        executeSeed();
+      }
+    });
+  };
 
-    setLoading(true);
+  const executeSeed = async () => {
     setMessage("");
     try {
       const shopsRef = collection(db, "shops");

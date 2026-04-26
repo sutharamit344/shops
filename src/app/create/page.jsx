@@ -2,12 +2,13 @@
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
-import { useAuth } from "@/context/AuthContext";
+import { useAuth } from "@/hooks/useAuth";
 import { saveShop } from "@/lib/db";
 import ShopForm from "@/components/Create/ShopForm";
 import Navbar from "@/components/Navbar";
 import Button from "@/components/UI/Button";
-import { CheckCircle2, Store, ArrowRight } from "lucide-react";
+import { CheckCircle2, Store, ArrowRight, ShieldCheck } from "lucide-react";
+import Card from "@/components/UI/Card";
 
 const CreateShopPage = () => {
   const router = useRouter();
@@ -45,22 +46,22 @@ const CreateShopPage = () => {
     return (
       <div className="min-h-screen bg-[#FAFAF8]">
         <Navbar />
-        <main className="max-w-2xl mx-auto px-4 py-32 text-center">
-          <div className="bg-white rounded-2xl p-12 shadow-sm border border-black/[0.06]">
-            <div className="w-20 h-20 bg-[#25D366]/10 rounded-2xl flex items-center justify-center mx-auto mb-6">
+        <main className="max-w-2xl mx-auto px-4 py-32">
+          <Card className="p-12 text-center shadow-2xl">
+            <div className="w-20 h-20 bg-[#25D366]/10 rounded-2xl flex items-center justify-center mx-auto mb-8 shadow-inner">
               <CheckCircle2 size={40} className="text-[#25D366]" />
             </div>
-            <h1 className="text-3xl md:text-4xl font-bold text-[#0F0F0F] mb-3 tracking-tight">
-              Shop Submitted!
+            <h1 className="text-3xl md:text-4xl font-extrabold text-[#1A1F36] mb-4 tracking-tight">
+              Application Submitted!
             </h1>
-            <p className="text-[14px] text-[#666] mb-6 max-w-md mx-auto">
-              Your page is now under review by our team. We'll notify you once it's approved.
+            <p className="text-[16px] text-[#1A1F36]/50 mb-10 max-w-md mx-auto font-medium leading-relaxed">
+              Your business page is now under review. Our team verifies every listing to maintain quality. You'll be notified via email once approved.
             </p>
-            <div className="flex items-center justify-center gap-2 text-[11px] text-[#999]">
-              <div className="w-5 h-5 rounded-full border-2 border-[#FF6B35] border-t-transparent animate-spin"></div>
-              <span>Redirecting to dashboard...</span>
+            <div className="flex items-center justify-center gap-3 py-3 px-6 bg-[#FAFAF8] rounded-xl border border-[#1A1F36]/[0.04] inline-flex mx-auto">
+              <div className="w-4 h-4 rounded-full border-2 border-[#FF6B35] border-t-transparent animate-spin"></div>
+              <span className="text-[12px] font-bold text-[#1A1F36]/40 uppercase tracking-widest">Redirecting to Dashboard</span>
             </div>
-          </div>
+          </Card>
         </main>
       </div>
     );
@@ -70,24 +71,28 @@ const CreateShopPage = () => {
     return (
       <div className="min-h-screen bg-[#FAFAF8]">
         <Navbar />
-        <main className="max-w-2xl mx-auto px-4 py-32 text-center">
-          <div className="bg-white rounded-2xl p-12 shadow-sm border border-black/[0.06]">
-            <div className="w-20 h-20 bg-[#FF6B35]/10 rounded-2xl flex items-center justify-center mx-auto mb-6">
+        <main className="max-w-2xl mx-auto px-4 py-32">
+          <Card className="p-12 text-center shadow-2xl">
+            <div className="w-20 h-20 bg-[#FF6B35]/10 rounded-2xl flex items-center justify-center mx-auto mb-8 shadow-inner">
               <Store size={40} className="text-[#FF6B35]" />
             </div>
-            <h1 className="text-3xl md:text-4xl font-bold text-[#0F0F0F] mb-3 tracking-tight">
-              Sign in to continue
+            <h1 className="text-3xl md:text-4xl font-extrabold text-[#1A1F36] mb-4 tracking-tight">
+              Sign in to list your shop
             </h1>
-            <p className="text-[14px] text-[#666] mb-8 max-w-md mx-auto">
-              Please sign in with Google to create your shop page and get discovered online.
+            <p className="text-[16px] text-[#1A1F36]/50 mb-10 max-w-md mx-auto font-medium leading-relaxed">
+              Please sign in with Google to create your shop profile, manage products, and get discovered by local customers.
             </p>
-            <button
+            <Button
               onClick={loginWithGoogle}
-              className="inline-flex items-center gap-2 px-6 py-3 bg-[#0F0F0F] text-white text-[13px] font-semibold rounded-xl hover:bg-[#333] transition-all"
+              variant="dark"
+              size="xl"
+              icon={ArrowRight}
+              iconPosition="right"
+              className="px-10 shadow-xl shadow-[#1A1F36]/20"
             >
-              Sign In with Google <ArrowRight size={16} />
-            </button>
-          </div>
+              Sign In with Google
+            </Button>
+          </Card>
         </main>
       </div>
     );
@@ -96,39 +101,35 @@ const CreateShopPage = () => {
   return (
     <div className="min-h-screen bg-[#FAFAF8]">
       <Navbar />
-      <main className="max-w-4xl mx-auto px-4 pt-24 md:pt-32 pb-20">
-        <div className="text-center mb-10">
-          <div className="inline-flex items-center gap-2 px-3 py-1 bg-[#FF6B35]/10 rounded-full mb-4">
-            <Store size={14} className="text-[#FF6B35]" />
-            <span className="text-[10px] font-semibold text-[#FF6B35] uppercase tracking-wider">Get Started</span>
+      <main className="max-w-4xl mx-auto px-4 pt-24 md:pt-36 pb-32">
+        <div className="text-center mb-16">
+          <div className="inline-flex items-center gap-2.5 px-4 py-1.5 bg-[#FF6B35]/10 rounded-full mb-6 border border-[#FF6B35]/20">
+            <ShieldCheck size={14} className="text-[#FF6B35]" />
+            <span className="text-[11px] font-bold text-[#FF6B35] uppercase tracking-[0.15em]">Official Merchant Onboarding</span>
           </div>
-          <h1 className="text-3xl md:text-4xl font-bold text-[#0F0F0F] mb-2 tracking-tight">
+          <h1 className="text-4xl md:text-5xl font-extrabold text-[#1A1F36] mb-4 tracking-tight leading-none">
             Create your shop page
           </h1>
-          <p className="text-[14px] text-[#666] max-w-md mx-auto">
-            Fill in the details below to create your professional shop page and start getting discovered online.
+          <p className="text-[17px] text-[#1A1F36]/40 max-w-lg mx-auto font-medium">
+            Fill in the details below to launch your professional business profile on ShopSetu.
           </p>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-sm border border-black/[0.06] overflow-hidden p-6">
+        <Card className="shadow-2xl shadow-[#1A1F36]/5 p-2 md:p-4">
           <ShopForm
             onSubmit={handleCreate}
             isLoading={loading}
             error={error}
           />
-        </div>
+        </Card>
 
         {/* Help Section */}
-        <div className="mt-8 text-center">
-          <p className="text-[11px] text-[#999]">
+        <div className="mt-12 text-center">
+          <p className="text-[13px] font-bold text-[#1A1F36]/30 uppercase tracking-widest">
             Need help? Check out our{' '}
-            <a href="/guide" className="text-[#FF6B35] hover:underline font-semibold">
-              setup guide
-            </a>{' '}
+            <a href="#" className="text-[#FF6B35] hover:underline">Setup Guide</a>{' '}
             or{' '}
-            <a href="/contact" className="text-[#FF6B35] hover:underline font-semibold">
-              contact support
-            </a>
+            <a href="#" className="text-[#FF6B35] hover:underline">Support</a>
           </p>
         </div>
       </main>

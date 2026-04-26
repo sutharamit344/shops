@@ -16,7 +16,12 @@ service cloud.firestore {
       
       // Allow authenticated users to create a shop
       allow create: if request.auth != null;
-      
+
+      // Allow updates by owners or admins
+      allow update: if request.auth != null && (isAdmin() || request.auth.uid == resource.data.ownerId);
+
+      // Only admins can delete shops
+      allow delete: if isAdmin();
 
       // Ratings Subcollection
       match /ratings/{ratingId} {

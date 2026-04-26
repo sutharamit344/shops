@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useAuth } from "@/context/AuthContext";
+import { useAuth } from "@/hooks/useAuth";
 import { getShopById, updateShop } from "@/lib/db";
 import ShopForm from "@/components/Create/ShopForm";
 import Navbar from "@/components/Navbar";

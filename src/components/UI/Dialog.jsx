@@ -49,7 +49,7 @@ export default function Dialog({
       onClick={onClose}
     >
       <div
-        className={`bg-white rounded-2xl w-full ${maxWidth} shadow-xl animate-in fade-in zoom-in duration-200 relative max-h-[90vh] flex flex-col`}
+        className={`bg-white rounded-2xl w-full ${maxWidth} shadow-md animate-in fade-in zoom-in duration-200 relative max-h-[90vh] flex flex-col`}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
@@ -86,7 +86,7 @@ export default function Dialog({
         )}
 
         {/* Content */}
-        <div className="p-5 overflow-y-auto flex-1 custom-scrollbar">
+        <div className="p-5 ">
           {children}
         </div>
       </div>

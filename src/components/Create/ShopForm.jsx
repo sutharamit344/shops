@@ -3,15 +3,16 @@
 import React, { useState, useEffect } from "react";
 import { slugify } from "@/lib/slugify";
 import { uploadImage } from "@/lib/storage";
-import { proposeCategory, getCategories } from "@/lib/db";
+import { proposeCategory, getCategories, getClusters, proposeCluster } from "@/lib/db";
 import ImageUpload from "@/components/UI/ImageUpload";
 import Input from "@/components/UI/Input";
 import Select from "@/components/UI/Select";
 import Textarea from "@/components/UI/Textarea";
-// UI Components
+import Button from "@/components/UI/Button";
+import Card from "@/components/UI/Card";
 
 // Icons
-import { Save, CheckCircle2, AlertCircle, Plus, Loader2, Zap, MapPin, Phone, Info, X, ChevronRight, ChevronLeft, Image, Star, Palette } from "lucide-react";
+import { Save, CheckCircle2, AlertCircle, Plus, Loader2, Zap, MapPin, Phone, Info, X, ChevronRight, ChevronLeft, Image, Star, Palette, ShieldCheck, Clock } from "lucide-react";
 
 const ShopForm = ({ initialData, onSubmit, isEdit = false, isLoading = false, error: externalError }) => {
   const [currentStep, setCurrentStep] = useState(1);
@@ -30,48 +31,73 @@ const ShopForm = ({ initialData, onSubmit, isEdit = false, isLoading = false, er
     description: "",
     mapEmbed: "",
     primaryColor: "#FF6B35",
-    secondaryColor: "#0F0F0F",
+    secondaryColor: "#1A1F36",
     rating: "5.0",
     logo: "",
     businessType: "mixed",
+    address: "",
     socialLinks: [],
-    openingHoursDetails: {
-      monday: { open: "09:00", close: "21:00", isClosed: false },
-      tuesday: { open: "09:00", close: "21:00", isClosed: false },
-      wednesday: { open: "09:00", close: "21:00", isClosed: false },
-      thursday: { open: "09:00", close: "21:00", isClosed: false },
-      friday: { open: "09:00", close: "21:00", isClosed: false },
-      saturday: { open: "09:00", close: "21:00", isClosed: false },
-      sunday: { open: "09:00", close: "21:00", isClosed: true },
-    },
+    logo: "",
+    coverImage: "",
+    clusterType: "",
   });
 
   const [logoFile, setLogoFile] = useState(null);
   const [logoPreview, setLogoPreview] = useState("");
+  const [coverFile, setCoverFile] = useState(null);
+  const [coverPreview, setCoverPreview] = useState("");
   const [dbCategories, setDbCategories] = useState([]);
   const [showNewCategoryInput, setShowNewCategoryInput] = useState(false);
   const [proposedCategory, setProposedCategory] = useState("");
+  const [showCustomCluster, setShowCustomCluster] = useState(false);
+  const [dbClusters, setDbClusters] = useState([]);
+  const [proposedCluster, setProposedCluster] = useState("");
+
+  const commonClusters = [
+    "Food & Dining",
+    "Beauty & Wellness",
+    "Electronics Market",
+    "Fashion Hub",
+    "Daily Essentials",
+    "Street Food",
+    "Automotive",
+    "Home & Decor",
+    "Health & Medical"
+  ];
 
   const steps = [
-    { title: "Basics", desc: "Name & Category" },
-    { title: "Location", desc: "Contact & Address" },
-    { title: "Theme", desc: "Branding & Photos" }
+    { title: "Basics", desc: "Identity" },
+    { title: "Location", desc: "Contact" },
+    { title: "Branding", desc: "Look & Feel" }
   ];
 
   useEffect(() => {
     const init = async () => {
-      const cats = await getCategories();
+      const [cats, clusters] = await Promise.all([
+        getCategories(),
+        getClusters()
+      ]);
+      
       const catNames = cats.map(c => c.name);
       setDbCategories(catNames);
+      setDbClusters(clusters);
 
       if (initialData) {
         setFormData(prev => ({ ...prev, ...initialData }));
         setLogoPreview(initialData.logo || "");
+        setCoverPreview(initialData.coverImage || "");
 
         if (initialData.category && !catNames.includes(initialData.category)) {
           setFormData(prev => ({ ...prev, category: "OTHER_PROPOSE" }));
           setProposedCategory(initialData.category);
           setShowNewCategoryInput(true);
+        }
+
+        // Check if cluster is in DB or common list
+        const allClusterNames = [...commonClusters, ...clusters.map(c => c.name)];
+        if (initialData.clusterType && !allClusterNames.includes(initialData.clusterType)) {
+          setShowCustomCluster(true);
+          setProposedCluster(initialData.clusterType);
         }
       }
     };
@@ -80,24 +106,28 @@ const ShopForm = ({ initialData, onSubmit, isEdit = false, isLoading = false, er
 
   const handleChange = (e) => {
     let { name, value } = e.target;
-    if (name === "category") setShowNewCategoryInput(value === "OTHER_PROPOSE");
+    if (name === "category") {
+      setShowNewCategoryInput(value === "OTHER_PROPOSE");
+      
+      // Auto-assign clusterType based on category
+      const lowVal = value.toLowerCase();
+      let cluster = "";
+      if (lowVal.includes("food") || lowVal.includes("restaurant") || lowVal.includes("cafe")) cluster = "Food & Dining";
+      else if (lowVal.includes("salon") || lowVal.includes("spa") || lowVal.includes("beauty")) cluster = "Beauty & Wellness";
+      else if (lowVal.includes("electronic") || lowVal.includes("mobile") || lowVal.includes("computer")) cluster = "Electronics Market";
+      else if (lowVal.includes("cloth") || lowVal.includes("fashion") || lowVal.includes("boutique")) cluster = "Fashion Hub";
+      else if (lowVal.includes("grocery") || lowVal.includes("kirana") || lowVal.includes("supermarket")) cluster = "Daily Essentials";
+      
+      if (cluster) {
+        setFormData(prev => ({ ...prev, [name]: value, clusterType: cluster }));
+        return;
+      }
+    }
+    if (name === "clusterType") {
+      setShowCustomCluster(value === "CUSTOM");
+    }
     setFormData({ ...formData, [name]: value });
   };
-
-  const handleHoursChange = (day, field, value) => {
-    setFormData(prev => ({
-      ...prev,
-      openingHoursDetails: {
-        ...prev.openingHoursDetails,
-        [day]: {
-          ...(prev.openingHoursDetails?.[day] || { open: "09:00", close: "21:00", isClosed: false }),
-          [field]: value
-        }
-      }
-    }));
-  };
-
-
 
   const nextStep = () => {
     if (currentStep === 1 && (!formData.name || !formData.category)) {
@@ -137,14 +167,23 @@ const ShopForm = ({ initialData, onSubmit, isEdit = false, isLoading = false, er
         logoUrl = await uploadImage(logoFile, path);
       }
 
-
-
-      const finalMenu = [];
+      let coverUrl = formData.coverImage || "";
+      if (coverFile) {
+        setUploadStatus("Uploading cover image...");
+        const path = `shops/${slug}/cover_${timestamp}.jpg`;
+        coverUrl = await uploadImage(coverFile, path);
+      }
 
       let finalCategory = formData.category;
       if (formData.category === "OTHER_PROPOSE" && proposedCategory.trim()) {
         finalCategory = proposedCategory.trim();
         await proposeCategory(finalCategory);
+      }
+
+      let finalCluster = formData.clusterType;
+      if (formData.clusterType === "CUSTOM" && proposedCluster.trim()) {
+        finalCluster = proposedCluster.trim();
+        await proposeCluster(finalCluster, finalCategory);
       }
 
       let cleanMapEmbed = formData.mapEmbed || "";
@@ -157,10 +196,12 @@ const ShopForm = ({ initialData, onSubmit, isEdit = false, isLoading = false, er
         ...formData,
         mapEmbed: cleanMapEmbed,
         category: finalCategory,
-        menu: finalMenu,
+        clusterType: finalCluster,
         logo: logoUrl,
+        coverImage: coverUrl,
         slug,
-        proposedCategory: formData.category === "OTHER_PROPOSE"
+        proposedCategory: formData.category === "OTHER_PROPOSE",
+        proposedCluster: formData.clusterType === "CUSTOM"
       });
 
     } catch (err) {
@@ -174,26 +215,26 @@ const ShopForm = ({ initialData, onSubmit, isEdit = false, isLoading = false, er
   const displayError = externalError || localError;
 
   return (
-    <div className="w-full">
-      {/* Progress Steps */}
-      <div className="max-w-2xl mx-auto mb-12 px-2">
-        <div className="relative flex justify-between">
-          <div className="absolute top-4 left-0 w-full h-[1px] bg-black/[0.06] -z-10">
-            <div className={`h-full bg-[#FF6B35] transition-all duration-500`} style={{ width: `${((currentStep - 1) / (totalSteps - 1)) * 100}%` }}></div>
-          </div>
+    <div className="w-full p-4 md:p-8">
+      {/* ── PROGRESS STEPS ─────────────────────────────────────── */}
+      <div className="max-w-xl mx-auto mb-16 relative">
+        <div className="absolute top-5 left-0 w-full h-[2px] bg-[#1A1F36]/[0.06] -z-0">
+          <div className="h-full bg-[#FF6B35] transition-all duration-700 ease-in-out" style={{ width: `${((currentStep - 1) / (totalSteps - 1)) * 100}%` }} />
+        </div>
+        <div className="relative flex justify-between z-10">
           {steps.map((step, i) => (
-            <div key={i} className="flex flex-col items-center group relative">
-              <div className={`w-8 h-8 rounded-xl flex items-center justify-center font-semibold text-[11px] transition-all duration-300 ${currentStep > i + 1
-                ? "bg-[#FF6B35] text-white"
-                : currentStep === i + 1
-                  ? "bg-[#0F0F0F] text-white scale-105 shadow-sm"
-                  : "bg-white text-[#ccc] border border-black/[0.06]"
+            <div key={i} className="flex flex-col items-center">
+              <div className={`w-10 h-10 rounded-2xl flex items-center justify-center font-bold text-[13px] transition-all duration-500 shadow-md
+                ${currentStep > i + 1
+                  ? "bg-[#FF6B35] text-white"
+                  : currentStep === i + 1
+                    ? "bg-[#1A1F36] text-white scale-110 shadow-md"
+                    : "bg-white text-[#1A1F36]/20 border border-[#1A1F36]/[0.06]"
                 }`}>
-                {currentStep > i + 1 ? <CheckCircle2 size={14} /> : i + 1}
+                {currentStep > i + 1 ? <CheckCircle2 size={18} /> : i + 1}
               </div>
-              <div className="absolute -bottom-8 flex flex-col items-center w-24">
-                <span className={`text-[9px] font-semibold text-center transition-colors ${currentStep === i + 1 ? "text-[#0F0F0F]" : "text-[#999]"
-                  }`}>
+              <div className="absolute top-12 flex flex-col items-center">
+                <span className={`text-[11px] font-bold uppercase tracking-wider transition-colors duration-300 ${currentStep === i + 1 ? "text-[#1A1F36]" : "text-[#1A1F36]/30"}`}>
                   {step.title}
                 </span>
               </div>
@@ -202,30 +243,31 @@ const ShopForm = ({ initialData, onSubmit, isEdit = false, isLoading = false, er
         </div>
       </div>
 
-      <form onSubmit={internalSubmit} className="space-y-8">
-        {/* Error Display */}
+      <form onSubmit={internalSubmit} className="space-y-10">
+        {/* ── ERROR DISPLAY ─────────────────────────────────────── */}
         {displayError && (
-          <div className="bg-red-50 rounded-xl p-4 flex items-start gap-3 border border-red-100">
-            <AlertCircle size={18} className="text-red-500 flex-shrink-0 mt-0.5" />
+          <div className="bg-red-50 rounded-2xl p-5 flex items-start gap-4 border border-red-100 animate-in shake duration-300">
+            <div className="w-10 h-10 rounded-xl bg-red-100 flex items-center justify-center text-red-500 shrink-0">
+              <AlertCircle size={20} />
+            </div>
             <div>
-              <p className="text-[10px] font-bold text-red-600 uppercase tracking-wider mb-0.5">Error</p>
-              <p className="text-[12px] text-red-700">{displayError}</p>
+              <p className="text-[11px] font-bold text-red-600 uppercase tracking-widest mb-1">Attention Required</p>
+              <p className="text-[14px] text-red-700 font-medium leading-relaxed">{displayError}</p>
             </div>
           </div>
         )}
 
-        {/* STEP 1: IDENTITY */}
+        {/* ── STEP 1: BASICS ─────────────────────────────────────── */}
         {currentStep === 1 && (
-          <div className="space-y-6 animate-in fade-in duration-300">
+          <div className="space-y-8 animate-in fade-in duration-500 slide-in-from-bottom-2">
             <div>
-              <h2 className="text-xl font-bold text-[#0F0F0F] tracking-tight mb-1">Shop Basics</h2>
-              <p className="text-[12px] text-[#666]">Tell us about your business</p>
+              <h2 className="text-2xl font-extrabold text-[#1A1F36] tracking-tight mb-2">Business Identity</h2>
+              <p className="text-[15px] text-[#1A1F36]/50 font-medium">Tell us what your business is called and what you specialize in.</p>
             </div>
 
-            <div className="space-y-6">
-              {/* Logo Upload */}
-              <div className="flex flex-col sm:flex-row gap-6 items-start">
-                <div className="flex-shrink-0">
+            <div className="space-y-8">
+              <div className="flex flex-col md:flex-row gap-8 items-start">
+                <div className="shrink-0">
                   <ImageUpload
                     onSelect={(file) => { 
                       setLogoFile(file); 
@@ -233,86 +275,131 @@ const ShopForm = ({ initialData, onSubmit, isEdit = false, isLoading = false, er
                     }}
                     currentImage={logoPreview}
                     compact
-                    label="Logo"
+                    label="Store Logo"
                   />
                 </div>
                 <div className="flex-1 w-full">
                   <Input
-                    label="Shop Name"
+                    label="Business Name"
                     name="name"
                     value={formData.name}
                     onChange={handleChange}
-                    placeholder="e.g., Sharma Kirana Store"
+                    placeholder="e.g., Sharma Premium Groceries"
                     required
-                    helpText="This will be your shop's unique URL"
+                    helpText="This will define your unique ShopSetu URL"
                   />
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <Select
-                  label="Category"
+                  label="Market Category"
                   name="category"
                   value={formData.category}
                   onChange={handleChange}
                   required
                   options={[
-                    { value: "", label: "Select category", disabled: true },
+                    { value: "", label: "Select a category", disabled: true },
                     ...dbCategories.map(c => ({ value: c, label: c })),
-                    { value: "OTHER_PROPOSE", label: "➕ Propose new category" }
+                    { value: "OTHER_PROPOSE", label: "➕ Propose new category..." }
                   ]}
                 />
 
                 <Select
-                  label="Business Type"
+                  label="Service Model"
                   name="businessType"
                   value={formData.businessType}
                   onChange={handleChange}
                   required
                   options={[
-                    { value: "product", label: "Products" },
-                    { value: "service", label: "Services" },
-                    { value: "mixed", label: "Both products & services" }
+                    { value: "product", label: "Product Based (Retail, Grocery)" },
+                    { value: "service", label: "Service Based (Salon, Repair)" },
+                    { value: "mixed", label: "Hybrid (Both Products & Services)" }
                   ]}
                 />
               </div>
 
-              {showNewCategoryInput && (
-                <div className="animate-in zoom-in duration-200">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <Select
+                  label="Cluster / Group Name"
+                  name="clusterType"
+                  value={showCustomCluster ? "CUSTOM" : formData.clusterType}
+                  onChange={handleChange}
+                  options={[
+                    { value: "", label: "Select a cluster", disabled: true },
+                    ...commonClusters.map(c => ({ value: c, label: c })),
+                    ...dbClusters
+                      .filter(c => !formData.category || c.category === formData.category)
+                      .map(c => ({ value: c.name, label: c.name })),
+                    { value: "CUSTOM", label: "➕ Custom Cluster..." }
+                  ]}
+                  helpText="Groups your business with similar local hubs"
+                />
+                <div className="flex items-end">
+                   <p className="text-[11px] text-[#1A1F36]/40 font-medium mb-3">Helping users find you in "hub" searches like 'Electronics Market'.</p>
+                </div>
+              </div>
+
+              {showCustomCluster && (
+                <div className="p-6 bg-[#FAFAF8] rounded-2xl border border-[#1A1F36]/[0.04] animate-in zoom-in duration-300">
                   <Input
-                    label="Proposed Category Name"
-                    value={proposedCategory}
-                    onChange={(e) => setProposedCategory(e.target.value)}
-                    placeholder="e.g., Organic Store"
+                    label="Custom Cluster Name"
+                    value={proposedCluster}
+                    onChange={(e) => setProposedCluster(e.target.value)}
+                    placeholder="e.g., Organic Food Park"
                     required
                   />
-                  <p className="text-[10px] text-[#999] mt-1">We'll review and add it to our category list</p>
+                </div>
+              )}
+
+              <Textarea
+                label="Store Description"
+                name="description"
+                value={formData.description}
+                onChange={handleChange}
+                placeholder="What makes your store unique? Mention your best-sellers or specialties..."
+                required
+                rows={3}
+                helpText="A brief overview of your business for search results."
+              />
+
+              {showNewCategoryInput && (
+                <div className="p-6 bg-[#FAFAF8] rounded-2xl border border-[#1A1F36]/[0.04] animate-in zoom-in duration-300">
+                  <Input
+                    label="New Category Suggestion"
+                    value={proposedCategory}
+                    onChange={(e) => setProposedCategory(e.target.value)}
+                    placeholder="e.g., Organic Lifestyle"
+                    required
+                  />
+                  <p className="text-[11px] text-[#1A1F36]/40 mt-2 font-medium">We will review your suggestion and add it to our global directory.</p>
                 </div>
               )}
             </div>
           </div>
         )}
 
-        {/* STEP 2: LOCATION & CONTACT */}
+        {/* ── STEP 2: LOCATION ───────────────────────────────────── */}
         {currentStep === 2 && (
-          <div className="space-y-6 animate-in fade-in duration-300">
+          <div className="space-y-8 animate-in fade-in duration-500 slide-in-from-bottom-2">
             <div>
-              <h2 className="text-xl font-bold text-[#0F0F0F] tracking-tight mb-1">Location & Contact</h2>
-              <p className="text-[12px] text-[#666]">Help customers find and reach you</p>
+              <h2 className="text-2xl font-extrabold text-[#1A1F36] tracking-tight mb-2">Reach & Location</h2>
+              <p className="text-[15px] text-[#1A1F36]/50 font-medium">Connect your business with local customers in your area.</p>
             </div>
 
-            <div className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div className="space-y-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <Input
-                  label="WhatsApp Number"
+                  label="WhatsApp For Business"
                   name="phone"
                   value={formData.phone}
                   onChange={handleChange}
                   placeholder="9876543210"
                   required
                   icon={Phone}
+                  helpText="Customers will reach out to you on this number"
                 />
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-2 gap-4">
                   <Input
                     label="City"
                     name="city"
@@ -332,199 +419,158 @@ const ShopForm = ({ initialData, onSubmit, isEdit = false, isLoading = false, er
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <Input
-                  label="Locality/Area"
+                  label="Primary Locality"
                   name="area"
                   value={formData.area}
                   onChange={handleChange}
-                  placeholder="Andheri West"
+                  placeholder="e.g., Andheri West"
                 />
                 <Input
-                  label="Place/Street"
+                  label="Landmark / Street"
                   name="zone"
                   value={formData.zone}
                   onChange={handleChange}
-                  placeholder="Main Market"
+                  placeholder="e.g., Near Link Road"
                 />
               </div>
 
               <Textarea
-                label="Shop Description"
-                name="description"
-                value={formData.description}
+                label="Full Address"
+                name="address"
+                value={formData.address}
                 onChange={handleChange}
-                placeholder="Tell customers about your shop, what makes you special, and what you offer..."
+                placeholder="e.g., Shop No. 12, Sai Plaza, MG Road"
                 required
-                rows={3}
+                rows={2}
+                helpText="Exact location for customers to find you"
               />
 
-              <div>
-                <label className="block text-[11px] font-semibold text-[#0F0F0F] mb-1">Google Maps Embed</label>
-                <Textarea
-                  name="mapEmbed"
-                  value={formData.mapEmbed}
-                  onChange={handleChange}
-                  placeholder="Paste Google Maps iframe embed code or URL"
-                  rows={2}
-                />
-                <p className="text-[10px] text-[#999] mt-1">Paste the iframe code from Google Maps sharing option</p>
-              </div>
-
-              <div className="pt-4">
-                <div className="flex items-center gap-2 mb-4">
-                  <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center text-blue-500">
-                    <Loader2 className="animate-spin-slow" size={14} />
-                  </div>
-                  <h3 className="text-[15px] font-bold text-[#0F0F0F]">Business Hours</h3>
-                </div>
-
-                <div className="space-y-3 bg-gray-50/50 p-4 rounded-2xl border border-black/[0.04]">
-                  {['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'].map(day => (
-                    <div key={day} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 py-2 border-b border-black/[0.04] last:border-0">
-                      <span className="text-[12px] font-bold text-[#0F0F0F] capitalize w-24">{day}</span>
-                      <div className="flex items-center gap-3 flex-1">
-                        <input
-                          type="time"
-                          disabled={formData.openingHoursDetails?.[day]?.isClosed}
-                          value={formData.openingHoursDetails?.[day]?.open || "09:00"}
-                          onChange={(e) => handleHoursChange(day, "open", e.target.value)}
-                          className="flex-1 h-9 px-3 bg-white border border-black/[0.08] rounded-xl text-[12px] font-medium text-[#0F0F0F] outline-none focus:border-[#FF6B35]/50 disabled:opacity-30"
-                        />
-                        <span className="text-[10px] text-[#999] font-bold">to</span>
-                        <input
-                          type="time"
-                          disabled={formData.openingHoursDetails?.[day]?.isClosed}
-                          value={formData.openingHoursDetails?.[day]?.close || "21:00"}
-                          onChange={(e) => handleHoursChange(day, "close", e.target.value)}
-                          className="flex-1 h-9 px-3 bg-white border border-black/[0.08] rounded-xl text-[12px] font-medium text-[#0F0F0F] outline-none focus:border-[#FF6B35]/50 disabled:opacity-30"
-                        />
-                      </div>
-                      <label className="flex items-center gap-2 cursor-pointer group">
-                        <input
-                          type="checkbox"
-                          checked={formData.openingHoursDetails?.[day]?.isClosed}
-                          onChange={(e) => handleHoursChange(day, "isClosed", e.target.checked)}
-                          className="w-4 h-4 rounded border-black/[0.08] text-[#FF6B35] focus:ring-[#FF6B35]/20"
-                        />
-                        <span className="text-[10px] font-bold text-[#999] group-hover:text-red-500 transition-colors uppercase tracking-wider">Closed</span>
-                      </label>
-                    </div>
-                  ))}
-                </div>
-              </div>
             </div>
           </div>
         )}
 
-        {/* STEP 3: BRANDING */}
+        {/* ── STEP 3: BRANDING ───────────────────────────────────── */}
         {currentStep === 3 && (
-          <div className="space-y-6 animate-in fade-in duration-300">
+          <div className="space-y-8 animate-in fade-in duration-500 slide-in-from-bottom-2">
             <div>
-              <h2 className="text-xl font-bold text-[#0F0F0F] tracking-tight mb-1">Brand Identity</h2>
-              <p className="text-[12px] text-[#666]">Customize your shop's look and feel</p>
+              <h2 className="text-2xl font-extrabold text-[#1A1F36] tracking-tight mb-2">Visual Branding</h2>
+              <p className="text-[15px] text-[#1A1F36]/50 font-medium">Personalize your shop page with your brand colors and cover image.</p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-3">
-                <label className="text-[11px] font-semibold text-[#0F0F0F]">Primary Color</label>
-                <div className="flex gap-3 items-center">
+            <div className="space-y-6">
+               <ImageUpload
+                  label="Background Cover Image"
+                  onSelect={(file) => {
+                    setCoverFile(file);
+                    setCoverPreview(file ? URL.createObjectURL(file) : "");
+                  }}
+                  currentImage={coverPreview}
+                  helpText="Recommended size: 1200x400. This will appear as the banner on your shop profile."
+               />
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <Card className="p-6 bg-[#FAFAF8] border-none shadow-none">
+                <label className="text-[11px] font-bold text-[#1A1F36]/40 uppercase tracking-[0.15em] mb-4 block">Brand Primary Color</label>
+                <div className="flex gap-4 items-center mb-4">
                   <input
                     type="color"
                     name="primaryColor"
                     value={formData.primaryColor}
                     onChange={handleChange}
-                    className="w-12 h-12 rounded-xl border border-black/[0.06] cursor-pointer"
+                    className="w-16 h-16 rounded-[20px] border-4 border-white cursor-pointer shadow-md p-0 overflow-hidden"
                   />
-                  <Input
-                    name="primaryColor"
-                    value={formData.primaryColor}
-                    onChange={handleChange}
-                    className="flex-1"
-                  />
+                  <div className="flex-1">
+                     <Input
+                        name="primaryColor"
+                        value={formData.primaryColor}
+                        onChange={handleChange}
+                        className="bg-white"
+                      />
+                  </div>
                 </div>
-                <p className="text-[10px] text-[#999]">Used for buttons, links, and accents</p>
-              </div>
+                <p className="text-[11px] text-[#1A1F36]/40 font-medium leading-relaxed">Used for buttons, category badges, and premium accents throughout your storefront.</p>
+              </Card>
 
-              <div className="space-y-3">
-                <label className="text-[11px] font-semibold text-[#0F0F0F]">Secondary Color</label>
-                <div className="flex gap-3 items-center">
+              <Card className="p-6 bg-[#FAFAF8] border-none shadow-none">
+                <label className="text-[11px] font-bold text-[#1A1F36]/40 uppercase tracking-[0.15em] mb-4 block">Navigation Theme</label>
+                <div className="flex gap-4 items-center mb-4">
                   <input
                     type="color"
                     name="secondaryColor"
                     value={formData.secondaryColor}
                     onChange={handleChange}
-                    className="w-12 h-12 rounded-xl border border-black/[0.06] cursor-pointer"
+                    className="w-16 h-16 rounded-[20px] border-4 border-white cursor-pointer shadow-md p-0 overflow-hidden"
                   />
-                  <Input
-                    name="secondaryColor"
-                    value={formData.secondaryColor}
-                    onChange={handleChange}
-                    className="flex-1"
-                  />
+                  <div className="flex-1">
+                     <Input
+                        name="secondaryColor"
+                        value={formData.secondaryColor}
+                        onChange={handleChange}
+                        className="bg-white"
+                      />
+                  </div>
                 </div>
-                <p className="text-[10px] text-[#999]">Used for backgrounds and highlights</p>
-              </div>
+                <p className="text-[11px] text-[#1A1F36]/40 font-medium leading-relaxed">Used for sidebar, headings, and high-contrast structural elements.</p>
+              </Card>
             </div>
 
-            <div className="pt-4 pb-4">
-              <Select
-                label="Rating Display"
-                name="rating"
-                value={formData.rating}
-                onChange={handleChange}
-                options={[
-                  { value: "5.0", label: "5.0 Stars - Trust Badge" },
-                  { value: "4.5", label: "4.5 Stars - Verified" },
-                  { value: "4.0", label: "4.0 Stars - Good" }
-                ]}
-              />
-              <p className="text-[10px] text-[#999] mt-1">Shown as a trust badge on your shop page</p>
+            <div className="p-8 bg-[#1A1F36] rounded-3xl text-white relative overflow-hidden shadow-2xl">
+              <div className="absolute top-0 right-0 p-8 opacity-10"><ShieldCheck size={120} /></div>
+              <div className="relative z-10 max-w-lg">
+                <h3 className="text-[11px] font-bold text-[#FF6B35] uppercase tracking-[0.2em] mb-4">Final Review</h3>
+                <p className="text-[16px] font-bold mb-6">By submitting, you agree that your business follows our local marketplace guidelines.</p>
+                <div className="flex items-center gap-4 text-[13px] font-bold opacity-60">
+                   <div className="flex items-center gap-2"><CheckCircle2 size={16} className="text-[#25D366]" /> <span>Free Forever</span></div>
+                   <div className="flex items-center gap-2"><CheckCircle2 size={16} className="text-[#25D366]" /> <span>SEO Optimised</span></div>
+                </div>
+              </div>
             </div>
           </div>
         )}
 
-        {/* Navigation Buttons */}
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-8 border-t border-black/[0.06]">
-          <button
-            key="prev-btn"
+        {/* ── NAVIGATION ─────────────────────────────────────────── */}
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-6 pt-10 border-t border-[#1A1F36]/[0.06]">
+          <Button
             type="button"
+            variant="outline"
+            size="lg"
             onClick={prevStep}
-            className={`w-full sm:w-auto px-6 py-2.5 border border-black/[0.06] text-[#0F0F0F] text-[12px] font-semibold rounded-xl hover:bg-gray-50 transition-all ${currentStep === 1 ? "invisible" : ""
-              }`}
+            icon={ChevronLeft}
+            className={`w-full sm:w-auto bg-white ${currentStep === 1 ? "invisible" : ""}`}
           >
-            <ChevronLeft size={14} className="inline mr-1" /> Previous
-          </button>
+            Go Back
+          </Button>
 
-          {currentStep < totalSteps ? (
-            <button
-              key="next-btn"
-              type="button"
-              onClick={nextStep}
-              className="w-full sm:w-auto px-6 py-2.5 bg-[#0F0F0F] text-white text-[12px] font-semibold rounded-xl hover:bg-[#333] transition-all"
-            >
-              Continue <ChevronRight size={14} className="inline ml-1" />
-            </button>
-          ) : (
-            <button
-              key="submit-btn"
-              type="submit"
-              disabled={isLoading || uploadStatus}
-              className="w-full sm:w-auto px-8 py-3 bg-[#FF6B35] text-white text-[13px] font-semibold rounded-xl hover:bg-[#e85c25] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-            >
-              {(isLoading || uploadStatus) ? (
-                <>
-                  <Loader2 size={16} className="animate-spin" />
-                  {uploadStatus || "Saving..."}
-                </>
-              ) : (
-                <>
-                  <Save size={16} />
-                  {isEdit ? "Update Shop" : "Create Shop"}
-                </>
-              )}
-            </button>
-          )}
+          <div className="flex items-center gap-3 w-full sm:w-auto">
+            {currentStep < totalSteps ? (
+              <Button
+                type="button"
+                variant="dark"
+                size="lg"
+                onClick={nextStep}
+                className="w-full sm:w-auto shadow-md"
+                icon={ChevronRight}
+                iconPosition="right"
+              >
+                Continue Next
+              </Button>
+            ) : (
+              <Button
+                type="submit"
+                variant="primary"
+                size="xl"
+                disabled={isLoading || uploadStatus}
+                loading={isLoading || !!uploadStatus}
+                className="w-full sm:w-auto px-12 shadow-md shadow-[#FF6B35]/20"
+                icon={Save}
+              >
+                {uploadStatus || (isEdit ? "Update Business" : "Launch Storefront")}
+              </Button>
+            )}
+          </div>
         </div>
       </form>
     </div>
