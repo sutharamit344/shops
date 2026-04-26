@@ -15,7 +15,7 @@ const Select = ({ label, name, value, onChange, options = [], required = false, 
           value={value}
           onChange={onChange}
           required={required}
-          className={`w-full h-11 pl-4 pr-10 rounded-xl border bg-white text-[14px] font-medium text-[#1A1F36] shadow-md transition-all outline-none appearance-none cursor-pointer
+          className={`w-full h-11 pl-4 pr-10 rounded-xl border bg-white text-[14px] font-medium text-[#1A1F36] transition-all outline-none appearance-none cursor-pointer
             ${error 
               ? "border-red-400 focus:ring-2 focus:ring-red-100" 
               : "border-black/10 focus:border-[#FF6B35]/60 focus:ring-2 focus:ring-[#FF6B35]/15"

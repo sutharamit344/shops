@@ -41,7 +41,7 @@ const Pagination = ({ currentPage, totalPages, onPageChange, totalItems, itemsPe
           variant="ghost"
           onClick={() => onPageChange(1)}
           disabled={currentPage === 1}
-          className="p-3 !rounded-md border border-navy/10 bg-white text-navy disabled:opacity-20 hover:bg-navy hover:text-white transition-all shadow-md group"
+          className="p-3 !rounded-md border border-navy/10 bg-white text-navy disabled:opacity-20 hover:bg-navy hover:text-white transition-all group"
           title="First Page"
         >
           <ChevronsLeft size={16} className="group-hover:scale-110 transition-transform" />
@@ -52,7 +52,7 @@ const Pagination = ({ currentPage, totalPages, onPageChange, totalItems, itemsPe
           variant="ghost"
           onClick={() => onPageChange(Math.max(1, currentPage - 1))}
           disabled={currentPage === 1}
-          className="p-3 !rounded-md border border-navy/10 bg-white text-navy disabled:opacity-20 hover:bg-navy hover:text-white transition-all shadow-md"
+          className="p-3 !rounded-md border border-navy/10 bg-white text-navy disabled:opacity-20 hover:bg-navy hover:text-white transition-all"
         >
           <ChevronLeft size={18} />
         </Button>
@@ -63,7 +63,7 @@ const Pagination = ({ currentPage, totalPages, onPageChange, totalItems, itemsPe
               key={page}
               variant={currentPage === page ? "primary" : "ghost"}
               onClick={() => onPageChange(page)}
-              className={`w-10 h-10 !rounded-md font-black text-[10px] transition-all shadow-md transform ${
+              className={`w-10 h-10 !rounded-md font-black text-[10px] transition-all transform ${
                 currentPage === page 
                 ? "bg-navy text-white scale-110 z-10" 
                 : "bg-white text-navy/40 border border-navy/10 hover:border-navy/30 hover:bg-navy/5"
@@ -89,7 +89,7 @@ const Pagination = ({ currentPage, totalPages, onPageChange, totalItems, itemsPe
           variant="ghost"
           onClick={() => onPageChange(totalPages)}
           disabled={currentPage === totalPages}
-          className="p-3 !rounded-md border border-navy/10 bg-white text-navy disabled:opacity-20 hover:bg-navy hover:text-white transition-all shadow-md group"
+          className="p-3 !rounded-md border border-navy/10 bg-white text-navy disabled:opacity-20 hover:bg-navy hover:text-white transition-all group"
           title="Last Page"
         >
           <ChevronsRight size={16} className="group-hover:scale-110 transition-transform" />

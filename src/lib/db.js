@@ -26,11 +26,12 @@ const LOGS_COLLECTION = "activity_logs";
 async function resolveParameter(slug, type) {
   try {
     if (!slug) return slug;
+    const cleanSlug = slug.toLowerCase().trim();
     
     // For categories, check the categories collection first
     if (type === 'category') {
       const cats = await getCategories();
-      const match = cats.find(c => slugify(c.name) === slug.toLowerCase());
+      const match = cats.find(c => slugify(c.name) === cleanSlug);
       if (match) return match.name;
     }
 
@@ -38,11 +39,11 @@ async function resolveParameter(slug, type) {
     const shops = await getApprovedShops();
     const field = type === 'city' ? 'city' : type === 'area' ? 'area' : type === 'zone' ? 'zone' : 'category';
     
-    const match = shops.find(s => s[field] && slugify(s[field]) === slug.toLowerCase());
-    return match ? match[field] : slug;
+    const match = shops.find(s => s[field] && slugify(s[field]) === cleanSlug);
+    return match ? match[field] : slug.replace(/-/g, " ");
   } catch (error) {
     console.error(`Error resolving ${type} slug:`, error);
-    return slug;
+    return slug.replace(/-/g, " ");
   }
 }
 
@@ -735,6 +736,20 @@ export async function approveCluster(id) {
     return { success: true };
   } catch (error) {
     console.error("Error approving cluster: ", error);
+    return { success: false, error };
+  }
+}
+
+/**
+ * Rejects/Deletes a cluster.
+ */
+export async function rejectCluster(id) {
+  try {
+    const docRef = doc(db, "clusters", id);
+    await deleteDoc(docRef);
+    return { success: true };
+  } catch (error) {
+    console.error("Error rejecting cluster: ", error);
     return { success: false, error };
   }
 }

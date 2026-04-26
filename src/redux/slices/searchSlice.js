@@ -3,9 +3,11 @@ import { fetchSearchResults } from "../thunks/searchThunks";
 
 const initialState = {
   query: "",
+  normalizedQuery: "",
   parsed: {
     category: "",
     location: "",
+    clusterType: "",
     type: "all",
     cityFallback: ""
   },
@@ -22,6 +24,7 @@ const searchSlice = createSlice({
   reducers: {
     setQuery: (state, action) => {
       state.query = action.payload;
+      state.normalizedQuery = (action.payload || "").toLowerCase().trim();
     },
     setParsed: (state, action) => {
       state.parsed = { ...state.parsed, ...action.payload };

@@ -84,21 +84,21 @@ export default function Home() {
             </div>
 
             <div className="flex items-center gap-4 animate-in fade-in slide-in-from-bottom-10 duration-1000">
-              <Link href="/explore?nearby=true">
+              <Link href="/cafe-near-me">
                 <Button
                   variant="outline"
                   size="lg"
                   icon={Navigation}
                   className="bg-white"
                 >
-                  Find Shops Near Me
+                  Find Cafe Near Me
                 </Button>
               </Link>
               <Link
                 href="/explore"
                 className="text-[13px] font-bold text-[#1A1F36]/40 hover:text-[#FF6B35] transition-colors"
               >
-                Browse all categories
+                Explore Local Shops
               </Link>
             </div>
 

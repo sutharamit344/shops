@@ -46,7 +46,7 @@ export default async function sitemap() {
 
       // Shop Route (keeping existing structure for compatibility)
       shopRoutes.push({
-        url: `${baseUrl}/${city}/${category}/${slug}`,
+        url: `${baseUrl}/shop/${slug}`,
         lastModified: new Date(shop.updatedAt || shop.approvedAt || new Date()),
         changeFrequency: "weekly",
         priority: 0.7,

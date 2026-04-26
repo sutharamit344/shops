@@ -144,7 +144,7 @@ const ShopProfileClient = ({ shop }) => {
         {/* Back Button */}
         <button
           onClick={() => router.back()}
-          className="absolute top-4 left-4 w-9 h-9 rounded-xl bg-white shadow-sm border border-black/[0.06] flex items-center justify-center text-[#666] hover:text-[#0F0F0F] transition-all"
+          className="absolute top-4 left-4 w-9 h-9 rounded-xl bg-white border border-black/[0.06] flex items-center justify-center text-[#666] hover:text-[#0F0F0F] transition-all"
         >
           <ChevronRight className="rotate-180" size={18} />
         </button>
@@ -154,7 +154,7 @@ const ShopProfileClient = ({ shop }) => {
           <div className="relative">
             <button
               onClick={handleShare}
-              className="w-9 h-9 rounded-xl bg-white shadow-sm border border-black/[0.06] flex items-center justify-center text-[#666] hover:text-[#0F0F0F] transition-all"
+              className="w-9 h-9 rounded-xl bg-white border border-black/[0.06] flex items-center justify-center text-[#666] hover:text-[#0F0F0F] transition-all"
             >
               <Share2 size={16} />
             </button>
@@ -170,11 +170,11 @@ const ShopProfileClient = ({ shop }) => {
       <div className="max-w-4xl mx-auto px-4 -mt-16 relative z-10 pb-32">
 
         {/* Shop Info Card */}
-        <div className="bg-white rounded-2xl border border-black/[0.06] shadow-sm overflow-hidden mb-6">
+        <div className="bg-white rounded-2xl border border-black/[0.06] overflow-hidden mb-6">
           <div className="p-6">
             {/* Logo & Basic Info */}
             <div className="flex flex-col md:flex-row gap-5 mb-5">
-              <div className="w-20 h-20 rounded-xl bg-white border border-black/[0.06] shadow-sm overflow-hidden flex-shrink-0">
+              <div className="w-20 h-20 rounded-xl bg-white border border-black/[0.06] overflow-hidden flex-shrink-0">
                 {shop.logo ? (
                   <img src={shop.logo} alt={shop.name} className="w-full h-full object-cover" />
                 ) : (
@@ -203,6 +203,12 @@ const ShopProfileClient = ({ shop }) => {
                     <Store size={12} className="text-[#FF6B35]" />
                     <span>{shop.category}</span>
                   </Link>
+                  {shop.clusterType && (
+                    <div className="flex items-center gap-1">
+                      <Award size={12} className="text-[#FF6B35]" />
+                      <span className="font-semibold">{shop.clusterType}</span>
+                    </div>
+                  )}
                   <div className="flex items-center gap-1">
                     <MapPin size={12} className="text-[#FF6B35]" />
                     <span className="capitalize">{shop.area}, {shop.city}</span>
@@ -242,7 +248,7 @@ const ShopProfileClient = ({ shop }) => {
         </div>
 
         {/* Tab Navigation */}
-        <div className="md:sticky md:top-16 md:bottom-auto fixed bottom-6 left-4 right-4 z-40 flex gap-1 bg-white/90 backdrop-blur-md rounded-xl p-1 border border-black/[0.06] shadow-lg md:shadow-sm md:mb-8">
+        <div className="md:sticky md:top-0 md:bottom-auto fixed bottom-6 left-4 right-4 z-40 flex gap-1 bg-white/90 backdrop-blur-md rounded-xl p-1 border border-black/[0.06] md:mb-8">
           {["menu", "about", "gallery", "reviews"].map((tab) => {
             const tabLabels = {
               menu: shop.category?.toLowerCase() === 'restaurant' ? 'Menu' : 'Products',
@@ -255,7 +261,7 @@ const ShopProfileClient = ({ shop }) => {
                 key={tab}
                 onClick={() => setActiveTab(tab)}
                 className={`flex-1 py-2.5 text-[12px] font-semibold rounded-lg transition-all capitalize ${activeTab === tab
-                  ? "bg-[#0F0F0F] text-white shadow-sm"
+                  ? "bg-[#0F0F0F] text-white"
                   : "text-[#666] hover:text-[#0F0F0F]"
                   }`}
               >
@@ -287,7 +293,7 @@ const ShopProfileClient = ({ shop }) => {
                   <div
                     key={idx}
                     onClick={() => setSelectedItem(item)}
-                    className="bg-white rounded-xl border border-black/[0.06] p-4 flex items-center gap-4 cursor-pointer hover:border-[#FF6B35]/30 hover:shadow-sm transition-all"
+                    className="bg-white rounded-xl border border-black/[0.06] p-4 flex items-center gap-4 cursor-pointer hover:border-[#FF6B35]/30 transition-all"
                   >
                     <div className="w-14 h-14 rounded-lg bg-gray-50 flex items-center justify-center overflow-hidden flex-shrink-0">
                       {item.image ? (
@@ -328,7 +334,7 @@ const ShopProfileClient = ({ shop }) => {
                         <div
                           key={itemIdx}
                           onClick={() => setSelectedItem({ ...item, category: section.name || section.category })}
-                          className="bg-white rounded-xl border border-black/[0.06] p-4 flex items-center gap-4 cursor-pointer hover:border-[#FF6B35]/30 hover:shadow-sm transition-all group"
+                          className="bg-white rounded-xl border border-black/[0.06] p-4 flex items-center gap-4 cursor-pointer hover:border-[#FF6B35]/30 transition-all group"
                         >
                           <div className="w-14 h-14 rounded-lg bg-gray-50 flex items-center justify-center overflow-hidden flex-shrink-0">
                             {item.image ? (
@@ -385,6 +391,12 @@ const ShopProfileClient = ({ shop }) => {
                       {shop.businessType?.toLowerCase() === 'mixed' ? 'Products & Services' : (shop.businessType || 'Local Store')}
                     </p>
                   </div>
+                  {shop.clusterType && (
+                    <div>
+                      <p className="text-[10px] font-semibold text-[#999] uppercase tracking-wider mb-1">Cluster Hub</p>
+                      <p className="text-[14px] font-medium text-[#0F0F0F]">{shop.clusterType}</p>
+                    </div>
+                  )}
                   <div>
                     <p className="text-[10px] font-semibold text-[#999] uppercase tracking-wider mb-1">Established</p>
                     <p className="text-[14px] font-medium text-[#0F0F0F]">{shop.establishedYear || "2024"}</p>
@@ -553,7 +565,7 @@ const ShopProfileClient = ({ shop }) => {
                 </div>
                 <button
                   onClick={() => setShowReviewForm(true)}
-                  className="px-6 py-2.5 bg-[#0F0F0F] text-white text-[12px] font-bold rounded-xl hover:bg-[#333] transition-all shadow-sm"
+                  className="px-6 py-2.5 bg-[#0F0F0F] text-white text-[12px] font-bold rounded-xl hover:bg-[#333] transition-all"
                 >
                   Write a Review
                 </button>
@@ -654,7 +666,7 @@ const ShopProfileClient = ({ shop }) => {
             <button
               type="submit"
               disabled={submittingReview}
-              className="w-full py-4 bg-[#FF6B35] text-white rounded-xl font-bold text-[14px] shadow-lg shadow-[#FF6B35]/20 flex items-center justify-center gap-2 hover:bg-[#FF8457] transition-all disabled:opacity-50"
+              className="w-full py-4 bg-[#FF6B35] text-white rounded-xl font-bold text-[14px] flex items-center justify-center gap-2 hover:bg-[#FF8457] transition-all disabled:opacity-50"
             >
               {submittingReview ? (
                 <>
@@ -689,7 +701,7 @@ const ShopProfileClient = ({ shop }) => {
               )}
               <button
                 onClick={() => setSelectedItem(null)}
-                className="absolute top-4 right-4 w-8 h-8 rounded-lg bg-white shadow-sm flex items-center justify-center text-[#666] hover:text-[#0F0F0F] transition-all"
+                className="absolute top-4 right-4 w-8 h-8 rounded-lg bg-white flex items-center justify-center text-[#666] hover:text-[#0F0F0F] transition-all"
               >
                 <X size={16} />
               </button>

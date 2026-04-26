@@ -1,7 +1,7 @@
 import React from 'react';
 
 const Button = ({ children, variant = 'primary', size = 'md', className = '', loading = false, disabled = false, icon: Icon, iconPosition = 'left', ...props }) => {
-  const baseStyles = 'inline-flex items-center justify-center gap-2 font-semibold transition-all active:scale-95 shadow-md disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100';
+  const baseStyles = 'inline-flex items-center justify-center gap-2 font-semibold transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100';
 
   const sizes = {
     sm: 'h-8 px-4 text-xs rounded-lg',

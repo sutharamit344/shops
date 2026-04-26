@@ -53,17 +53,6 @@ const ShopForm = ({ initialData, onSubmit, isEdit = false, isLoading = false, er
   const [dbClusters, setDbClusters] = useState([]);
   const [proposedCluster, setProposedCluster] = useState("");
 
-  const commonClusters = [
-    "Food & Dining",
-    "Beauty & Wellness",
-    "Electronics Market",
-    "Fashion Hub",
-    "Daily Essentials",
-    "Street Food",
-    "Automotive",
-    "Home & Decor",
-    "Health & Medical"
-  ];
 
   const steps = [
     { title: "Basics", desc: "Identity" },
@@ -93,8 +82,8 @@ const ShopForm = ({ initialData, onSubmit, isEdit = false, isLoading = false, er
           setShowNewCategoryInput(true);
         }
 
-        // Check if cluster is in DB or common list
-        const allClusterNames = [...commonClusters, ...clusters.map(c => c.name)];
+        // Check if cluster is in DB
+        const allClusterNames = clusters.map(c => c.name);
         if (initialData.clusterType && !allClusterNames.includes(initialData.clusterType)) {
           setShowCustomCluster(true);
           setProposedCluster(initialData.clusterType);
@@ -327,7 +316,6 @@ const ShopForm = ({ initialData, onSubmit, isEdit = false, isLoading = false, er
                   onChange={handleChange}
                   options={[
                     { value: "", label: "Select a cluster", disabled: true },
-                    ...commonClusters.map(c => ({ value: c, label: c })),
                     ...dbClusters
                       .filter(c => !formData.category || c.category === formData.category)
                       .map(c => ({ value: c.name, label: c.name })),

@@ -3,39 +3,62 @@ import { slugify } from "./slugify";
 /**
  * URL Architect for SEO-friendly dynamic URLs
  */
-export function generateDiscoveryUrl(category, location, type = "all") {
-  const catSlug = slugify(category || "shops");
-  const locSlug = slugify(location);
-
+export function generateDiscoveryUrl(category, location, type = "all", clusterType = "") {
+  const base = clusterType || category || "shops";
+  const baseSlug = slugify(base);
+  
   if (type === "nearby") {
-    return `/${catSlug}-near-me`;
+    return `/${baseSlug}-near-me`;
   }
 
-  if (locSlug) {
-    return `/${catSlug}-in-${locSlug}`;
+  if (location && location !== "all") {
+    return `/${baseSlug}-in-${slugify(location)}`;
   }
 
-  return `/${catSlug}`;
+  return `/${baseSlug}`;
 }
 
 export function parseDiscoverySlug(slug) {
   if (!slug) return null;
 
-  // Pattern: {category}-near-me
+  // Pattern: {base}-near-me
   if (slug.endsWith("-near-me")) {
-    const category = slug.replace("-near-me", "").replace(/-/g, " ");
-    return { category, location: "current", type: "nearby" };
+    const base = slug.replace("-near-me", "").replace(/-/g, " ");
+    return { category: base, location: "current", type: "nearby", clusterType: "" };
   }
 
-  // Pattern: {category}-in-{location}
+  // Pattern: {base}-in-{location}
   if (slug.includes("-in-")) {
-    const [catSlug, locSlug] = slug.split("-in-");
-    const category = catSlug.replace(/-/g, " ");
-    const location = locSlug.replace(/-/g, " ");
-    return { category, location, type: "location" };
+    const [baseSlug, locSlug] = slug.split("-in-");
+    const base = baseSlug.replace(/-/g, " ");
+    const location = locSlug === "all" ? "" : locSlug.replace(/-/g, " ");
+    
+    // Check if base is a known cluster (simplified check)
+    const isCluster = base.includes("hub") || base.includes("park") || base.includes("market") || base.includes("food");
+    
+    return { 
+      category: isCluster ? base.split(" ")[0] : base, 
+      location: location, 
+      type: location ? "location" : "category",
+      clusterType: isCluster ? base : ""
+    };
   }
 
-  // Pattern: {category}
-  const category = slug.replace(/-/g, " ");
-  return { category, location: "", type: "category" };
+  // Pattern: {base}
+  const base = slug.replace(/-/g, " ");
+  
+  // Check if base is a known cluster (simplified check)
+  const isCluster = base.includes("hub") || base.includes("park") || base.includes("market") || base.includes("food");
+  
+  return { 
+    category: isCluster ? base.split(" ")[0] : base, 
+    location: "", 
+    type: "category", 
+    clusterType: isCluster ? base : "" 
+  };
+}
+
+export function generateShopUrl(shop) {
+  if (!shop || !shop.slug) return "/";
+  return `/shop/${slugify(shop.slug)}`;
 }

@@ -15,7 +15,7 @@ const Textarea = ({ label, name, placeholder, value, onChange, rows = 3, require
         placeholder={placeholder}
         rows={rows}
         required={required}
-        className={`w-full px-4 py-3 rounded-xl border bg-white text-[14px] font-medium text-[#1A1F36] shadow-md placeholder:text-[#bbb] transition-all outline-none resize-none
+        className={`w-full px-4 py-3 rounded-xl border bg-white text-[14px] font-medium text-[#1A1F36] placeholder:text-[#bbb] transition-all outline-none resize-none
           ${error 
             ? "border-red-400 focus:ring-2 focus:ring-red-100" 
             : "border-black/10 focus:border-[#FF6B35]/60 focus:ring-2 focus:ring-[#FF6B35]/15"

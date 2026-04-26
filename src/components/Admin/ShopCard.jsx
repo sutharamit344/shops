@@ -139,7 +139,7 @@ const AdminShopCard = ({ shop, onRefresh, isSelected = false, onToggleSelect }) 
         <div className="flex flex-wrap lg:flex-nowrap items-center gap-2 lg:min-w-fit">
           {isApproved && (
             <Link
-              href={`/${slugify(shop.city)}/${slugify(shop.category)}/${slugify(shop.slug)}`}
+              href={`/shop/${slugify(shop.slug)}`}
               target="_blank"
               className="px-4 py-2 bg-white border border-[#1A1F36]/[0.07] hover:border-[#1A1F36] rounded-xl text-[11px] font-bold uppercase tracking-wider text-[#1A1F36] transition-all flex items-center gap-2 shadow-md"
             >

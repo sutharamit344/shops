@@ -6,58 +6,43 @@ service cloud.firestore {
     function isAdmin() {
       return request.auth != null && 
         (request.auth.token.email == 'sutharamit344@gmail.com' || 
-         request.auth.token.email == 'webiestindiasolution@gmail.com');
+         request.auth.token.email == 'webiestindiasolution@gmail.com' ||
+         request.auth.token.email == 'admin@shopsetu.com');
     }
 
     match /shops/{shopId} {
-      // Allow public read only for approved shops
-      // Admins and Owners can always read
       allow read: if resource.data.status == 'approved' || request.auth != null;
-      
-      // Allow authenticated users to create a shop
       allow create: if request.auth != null;
-
-      // Allow updates by owners or admins
       allow update: if request.auth != null && (isAdmin() || request.auth.uid == resource.data.ownerId);
-
-      // Only admins can delete shops
       allow delete: if isAdmin();
 
-      // Ratings Subcollection
       match /ratings/{ratingId} {
-        // Allow public read for ratings
         allow read: if true;
-        
-        // Allow public creation with basic validation
-        allow create: if request.resource.data.rating >= 1 
-                      && request.resource.data.rating <= 5;
+        allow create: if request.resource.data.rating >= 1 && request.resource.data.rating <= 5;
+        allow delete: if isAdmin();
       }
-
     }
-
 
     match /categories/{catId} {
       allow read: if true;
-      // Allow authenticated users to propose new categories (must be pending)
-      allow create: if request.auth != null && request.resource.data.status == 'pending';
-      // Only admins can approve or modify categories
+      allow create: if request.auth != null && (isAdmin() || request.resource.data.status == 'pending');
       allow update, delete: if isAdmin();
     }
 
-    // Canary Document for Client-Side Obfuscated Check
+    match /clusters/{clusterId} {
+      allow read: if true;
+      allow create: if request.auth != null && (isAdmin() || request.resource.data.status == 'pending');
+      allow update, delete: if isAdmin();
+    }
+
     match /meta/adminCheck {
       allow read: if isAdmin();
     }
 
-    // Activity Logs System
     match /activity_logs/{logId} {
-      // Only admins can view the logs
       allow read: if isAdmin();
-      // Any authenticated user can create a log entry
       allow create: if request.auth != null;
-      // Logs are immutable (no update or delete)
-      allow update, delete: if false;
+      allow update, delete: if isAdmin();
     }
   }
 }
-

@@ -16,7 +16,7 @@ const Input = ({ label, name, placeholder, value, onChange, type = "text", requi
           onChange={onChange}
           placeholder={placeholder}
           required={required}
-          className={`w-full h-11 px-4 rounded-xl border bg-white text-[14px] font-medium text-[#1A1F36] shadow-md placeholder:text-[#bbb] transition-all outline-none 
+          className={`w-full h-11 px-4 rounded-xl border bg-white text-[14px] font-medium text-[#1A1F36] placeholder:text-[#bbb] transition-all outline-none 
             ${error 
               ? "border-red-400 focus:ring-2 focus:ring-red-100" 
               : "border-black/10 focus:border-[#FF6B35]/60 focus:ring-2 focus:ring-[#FF6B35]/15"

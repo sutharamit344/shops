@@ -7,7 +7,7 @@ import { Plus, Check, X, Tag, Loader2, AlertCircle, Trash2, Shuffle, ShieldAlert
 import { 
   getCategories, getPendingCategories, approveCategory, 
   proposeCategory, addApprovedCategory, deleteAndReassignCategory,
-  getClusters, getPendingClusters, approveCluster
+  getClusters, getPendingClusters, approveCluster, rejectCluster
 } from "@/lib/db";
 import Dialog from "@/components/UI/Dialog";
 
@@ -61,6 +61,14 @@ const CategoryManager = () => {
   const handleApproveCluster = async (id) => {
     setClusterActionLoading(true);
     const res = await approveCluster(id);
+    if (res.success) fetchData();
+    setClusterActionLoading(false);
+  };
+  
+  const handleRejectCluster = async (id) => {
+    if (!confirm("Are you sure you want to reject this cluster proposal?")) return;
+    setClusterActionLoading(true);
+    const res = await rejectCluster(id);
     if (res.success) fetchData();
     setClusterActionLoading(false);
   };
@@ -182,7 +190,13 @@ const CategoryManager = () => {
                   >
                     <Check size={18} />
                   </button>
-                  {/* Reuse delete for rejection if needed, but for now just approve */}
+                  <button 
+                    onClick={() => handleRejectCluster(cluster.id)} 
+                    disabled={clusterActionLoading}
+                    className="w-10 h-10 bg-red-50 text-red-500 rounded-xl hover:bg-red-500 hover:text-white transition-all flex items-center justify-center border border-red-100 disabled:opacity-50"
+                  >
+                    <Trash2 size={18} />
+                  </button>
                 </div>
               </div>
             ))}
@@ -290,8 +304,14 @@ const CategoryManager = () => {
                     {allClusters
                       .filter(cluster => cluster.category === cat.name)
                       .map(cluster => (
-                        <div key={cluster.id} className="px-3 py-1 bg-gray-50 text-[#1A1F36] text-[11px] font-bold rounded-lg border border-[#1A1F36]/[0.05]">
+                        <div key={cluster.id} className="flex items-center gap-2 px-3 py-1 bg-gray-50 text-[#1A1F36] text-[11px] font-bold rounded-lg border border-[#1A1F36]/[0.05] group/cluster">
                           {cluster.name}
+                          <button 
+                            onClick={() => handleRejectCluster(cluster.id)}
+                            className="opacity-0 group-hover/cluster:opacity-100 text-red-400 hover:text-red-600 transition-all"
+                          >
+                            <X size={10} />
+                          </button>
                         </div>
                       ))}
                     {allClusters.filter(cluster => cluster.category === cat.name).length === 0 && (

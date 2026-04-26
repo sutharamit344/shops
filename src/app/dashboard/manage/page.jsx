@@ -135,7 +135,7 @@ function ShopDashboardContent() {
     } catch (err) {
       console.error("QR Download failed:", err);
       // Fallback: If html-to-image fails, open the QR directly
-      const directUrl = `https://api.qrserver.com/v1/create-qr-code/?size=1000x1000&data=${encodeURIComponent(window.location.origin + "/" + slugify(shop.city) + "/" + slugify(shop.category) + "/" + slugify(shop.slug))}`;
+      const directUrl = `https://api.qrserver.com/v1/create-qr-code/?size=1000x1000&data=${encodeURIComponent(window.location.origin + "/shop/" + slugify(shop.slug))}`;
       window.open(directUrl, '_blank');
     } finally {
       setDownloadingQR(false);
@@ -531,7 +531,7 @@ function ShopDashboardContent() {
                 <h3 className="text-[13px] font-semibold text-[#0F0F0F] mb-3">Store Discovery</h3>
                 <div className="bg-gray-50 p-4 rounded-xl mb-3 flex items-center justify-center">
                   <img
-                    src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(window.location.origin + "/" + slugify(shop.city) + "/" + slugify(shop.category) + "/" + slugify(shop.slug))}`}
+                    src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(window.location.origin + "/shop/" + slugify(shop.slug))}`}
                     alt="Store QR"
                     className="w-32 h-32"
                   />
@@ -551,7 +551,7 @@ function ShopDashboardContent() {
                   </button>
                   <button
                     onClick={() => {
-                      const url = window.location.origin + "/" + slugify(shop.city) + "/" + slugify(shop.category) + "/" + slugify(shop.slug);
+                      const url = window.location.origin + "/shop/" + slugify(shop.slug);
                       navigator.clipboard.writeText(url);
                       showAlert({
                         title: "Link Copied",
@@ -677,7 +677,7 @@ function ShopDashboardContent() {
                 <ChevronRight size={14} />
               </button>
               <Link
-                href={`/${slugify(shop.city)}/${slugify(shop.category)}/${slugify(shop.slug)}`}
+                href={`/shop/${slugify(shop.slug)}`}
                 target="_blank"
                 className="w-full flex items-center justify-between p-4 border-t border-black/[0.06] hover:bg-gray-50 transition-all text-[12px] font-medium text-[#666]"
               >
@@ -1330,46 +1330,6 @@ function ShopDashboardContent() {
       </Dialog>
 
       {/* Generic Message Modal */}
-      {/* ── Hidden Printable QR Card (for high-res download) ── */}
-      <div className="fixed -left-[9999px] top-0 pointer-events-none">
-        <div
-          ref={qrRef}
-          className="w-[420px] bg-white rounded-[32px] p-8 flex flex-col items-center text-center shadow-xl border"
-        >
-          <div className="w-16 h-16 bg-[#FF6B35]/10 rounded-2xl flex items-center justify-center mb-6">
-            {shop?.logo ? <img
-              src={shop?.logo || "/logo.png"}
-              alt="Shop Logo"
-              className="w-20 h-20 object-contain mb-6"
-            /> :
-              <Store size={32} className="text-[#FF6B35]" />}
-          </div>
-          <h2 className="text-2xl font-black text-[#0F0F0F]">{shop?.name}</h2>
-          <div className="flex items-center gap-2 text-[14px] text-[#666] font-bold uppercase tracking-widest mb-8">
-            <MapPin size={14} className="text-[#FF6B35]" />
-            {shop?.city}
-          </div>
-
-          <div className="p-6 bg-white border-4 border-[#0F0F0F] rounded-[40px] mb-8">
-            <img
-              src={`https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(window.location.origin + "/" + shop?.city?.toLowerCase() + "/" + shop?.category?.toLowerCase() + "/" + shop?.slug)}`}
-              alt="QR Code"
-              className="w-48 h-48"
-            />
-          </div>
-
-
-          {/* CTA */}
-          <p className="mt-6 text-sm font-semibold">
-            Scan to explore
-          </p>
-
-          {/* FOOTER */}
-          <p className="text-xs text-gray-400 mt-2">
-            Powered by ShopBajar
-          </p>
-        </div>
-      </div>
 
       {/* Generic Message Modal */}
       {/* ── Hidden Printable QR Card (for high-res download) ── */}
@@ -1399,13 +1359,13 @@ function ShopDashboardContent() {
 
           <div className="p-8 bg-white border-4 border-[#0F0F0F] rounded-[48px] mb-8 shadow-sm">
             <img
-              src={`${encodeURIComponent(`https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(window.location.origin + "/" + shop?.city?.toLowerCase() + "/" + shop?.category?.toLowerCase() + "/" + shop?.slug)}`)}&output=png`}
+              src={`https://images.weserv.nl/?url=${encodeURIComponent(`https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(window.location.origin + "/shop/" + shop?.slug)}`)}&output=png`}
               alt="QR Code"
               className="w-48 h-48"
               crossOrigin="anonymous"
               onError={(e) => {
                 // Fallback to direct if proxy fails
-                e.target.src = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(window.location.origin + "/" + shop?.city?.toLowerCase() + "/" + shop?.category?.toLowerCase() + "/" + shop?.slug)}`;
+                e.target.src = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(window.location.origin + "/shop/" + shop?.slug)}`;
               }}
             />
           </div>

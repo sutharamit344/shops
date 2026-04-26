@@ -37,6 +37,7 @@ const AdminDashboard = () => {
   const [selectedShops, setSelectedShops] = useState(new Set());
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [bulkLoading, setBulkLoading] = useState(false);
   const itemsPerPage = 8;
 
   const fetchShops = async () => {
@@ -456,7 +457,12 @@ const AdminDashboard = () => {
                       <div className="space-y-6">
                         {/* Bulk Actions Bar */}
                         {(activeSubTab === 'pending' || activeSubTab === 'rejected') && (
-                          <div className="flex items-center gap-3 p-3 bg-white rounded-xl border border-[#1A1F36]/[0.07] shadow-md flex-wrap">
+                          <div className="flex items-center gap-3 p-3 bg-white rounded-xl border border-[#1A1F36]/[0.07] shadow-md flex-wrap relative overflow-hidden">
+                            {bulkLoading && (
+                              <div className="absolute inset-0 bg-white/60 backdrop-blur-[1px] z-10 flex items-center justify-center">
+                                <Loader2 size={16} className="text-[#FF6B35] animate-spin" />
+                              </div>
+                            )}
                             <button
                               onClick={() => {
                                 const allSelected = paginated.every(s => selectedShops.has(s.id));
@@ -466,15 +472,28 @@ const AdminDashboard = () => {
                                   setSelectedShops(prev => { const next = new Set(prev); paginated.forEach(s => next.add(s.id)); return next; });
                                 }
                               }}
-                               className="px-3 py-1.5 bg-gray-50 border border-[#1A1F36]/[0.06] rounded-xl text-[10px] font-bold uppercase tracking-wider text-[#1A1F36]/40"
+                              disabled={bulkLoading}
+                              className="px-3 py-1.5 bg-gray-50 border border-[#1A1F36]/[0.06] rounded-xl text-[10px] font-bold uppercase tracking-wider text-[#1A1F36]/40 disabled:opacity-50"
                             >
                               {paginated.every(s => selectedShops.has(s.id)) ? "Deselect All" : "Select All"}
                             </button>
                             {selectedShops.size > 0 && (
                               <div className="flex items-center gap-2 ml-auto">
-                                 <span className="text-[10px] font-bold text-[#1A1F36]/30 uppercase tracking-wider mr-2">{selectedShops.size} selected</span>
-                                <button onClick={handleBulkApprove} className="px-4 py-1.5 bg-green-600 text-white rounded-xl text-[10px] font-bold uppercase tracking-wider">Approve</button>
-                                <button onClick={handleBulkReject} className="px-4 py-1.5 bg-red-500 text-white rounded-xl text-[10px] font-bold uppercase tracking-wider">Reject</button>
+                                <span className="text-[10px] font-bold text-[#1A1F36]/30 uppercase tracking-wider mr-2">{selectedShops.size} selected</span>
+                                <button 
+                                  onClick={handleBulkApprove} 
+                                  disabled={bulkLoading}
+                                  className="px-4 py-1.5 bg-green-600 text-white rounded-xl text-[10px] font-bold uppercase tracking-wider disabled:opacity-50"
+                                >
+                                  Approve
+                                </button>
+                                <button 
+                                  onClick={handleBulkReject} 
+                                  disabled={bulkLoading}
+                                  className="px-4 py-1.5 bg-red-500 text-white rounded-xl text-[10px] font-bold uppercase tracking-wider disabled:opacity-50"
+                                >
+                                  Reject
+                                </button>
                               </div>
                             )}
                           </div>

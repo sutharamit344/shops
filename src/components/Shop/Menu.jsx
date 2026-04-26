@@ -1,9 +1,6 @@
 import React, { useState } from "react";
-import Card from "@/components/UI/Card";
-import Button from "@/components/UI/Button";
 import { UtensilsCrossed, X, ShoppingBag, ServerIcon, Search } from "lucide-react";
-import IconButton from "../UI/IconButton";
-import SectionHeader from "../UI/SectionHeader";
+
 
 const ShopMenu = ({ menu, businessType = "mixed", onItemClick }) => {
   const [searchQuery, setSearchQuery] = useState("");

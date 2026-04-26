@@ -64,18 +64,29 @@ export default function ExploreClient() {
       parts.push("Shops");
     }
 
-    if (city) {
+    if (area && city) {
+      parts.push(`in ${area.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')} ${city.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}`);
+    } else if (city) {
       parts.push(`in ${city.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}`);
+    } else if (area) {
+      parts.push(`in ${area.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}`);
     }
-
-    if (area) {
-      parts.push(`- ${area.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}`);
-    }
-
     const title = parts.join(' ');
     return title === "Shops" ? "Explore Marketplace" : title;
   };
   const titleText = getDynamicTitle();
+
+  const [localSubtitle, setLocalSubtitle] = useState("");
+
+  useEffect(() => {
+    const lastCity = localStorage.getItem('last_city');
+    const lastArea = localStorage.getItem('last_area');
+    if (lastArea && lastCity) {
+      setLocalSubtitle(`${lastArea} ${lastCity}`);
+    } else if (lastCity) {
+      setLocalSubtitle(lastCity);
+    }
+  }, []);
 
   useEffect(() => {
     document.title = `${titleText} | ShopSetu Marketplace`;
@@ -100,18 +111,31 @@ export default function ExploreClient() {
           }
 
           const data = await res.json();
-          const city = data.address.city || data.address.town || data.address.village || data.address.state_district;
+          const address = data.address || {};
+          const city = address.city || address.town || address.village || address.state_district;
+          const area = address.suburb || address.neighbourhood || address.residential || address.industrial;
+
           if (city) {
             const cleanCity = city.replace(/ District| Division/g, "");
+            const cleanArea = area ? area.replace(/ District| Division/g, "") : "";
+
             dispatch(setCity(cleanCity));
+            if (cleanArea) dispatch(setArea(cleanArea));
+
             const params = new URLSearchParams(searchParams.toString());
             params.set("city", slugify(cleanCity));
+            if (cleanArea) params.set("area", slugify(cleanArea));
             params.set("nearby", "true");
+
             router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+
+            // Also update localStorage for persistent context
+            localStorage.setItem('last_city', cleanCity);
+            if (cleanArea) localStorage.setItem('last_area', cleanArea);
           }
         } catch (error) {
           console.error("Location error:", error);
-          alert(error.message.includes("busy") ? error.message : "Could not detect your city. Please select it manually.");
+          alert(error.message.includes("busy") ? error.message : "Could not detect your location precisely.");
         } finally {
           setIsDetecting(false);
         }
@@ -211,7 +235,7 @@ export default function ExploreClient() {
       }
     }, 400);
     return () => clearTimeout(timer);
-  }, [localSearch, localState, localCity, localCategory, localArea]);
+  }, [localSearch, localState, localCity, localCategory, localArea, searchParams]);
 
   // Reset pagination when search/filters change
   useEffect(() => {
@@ -223,51 +247,35 @@ export default function ExploreClient() {
     router.push(pathname);
   };
 
-  const filteredShops = shops.filter((shop) => {
-    const q = searchParams.get("q")?.toLowerCase() || "";
-    const s = searchParams.get("state") || "";
-    const c = searchParams.get("city") || "";
-    const cat = searchParams.get("category") || "";
-    const a = searchParams.get("area") || "";
-    return (
-      (!q || shop.name.toLowerCase().includes(q) || shop.description?.toLowerCase().includes(q)) &&
-      (!s || shop.state === s) &&
-      (!c || slugify(shop.city) === c) &&
-      (!cat || slugify(shop.category) === cat) &&
-      (!a || slugify(shop.area) === a)
-    );
-  });
-
-  const availableCities = [...new Set(shops.filter(s => !localState || s.state === localState).map(s => s.city).filter(Boolean))].sort();
-  const availableAreas = [...new Set(shops.filter(s => !localCity || s.city === localCity).map(s => s.area).filter(Boolean))].sort();
-  const activeFilterCount = [localState, localCity, localCategory, localArea].filter(Boolean).length;
-
   return (
     <div className="min-h-screen bg-[#FAFAF8]">
       <Navbar />
 
-      {/* SMART SEARCH BAR */}
-      <div className="sticky top-16 z-40 bg-white/95 backdrop-blur-md border-b border-[#1A1F36]/[0.06] shadow-md py-6 px-4 md:px-8">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center gap-6">
-          <div className="flex-1 w-full">
+      {/* SMART SEARCH BAR (Mobile/Tablet Only) */}
+      <div className="sticky top-16 z-40 py-2 px-3 md:px-6 transition-all lg:hidden bg-[#FAFAF8]/95 backdrop-blur-sm">
+        <div className="max-w-7xl mx-auto flex items-center gap-3 md:gap-6 group">
+          <div className="flex-1 w-full transition-all duration-300">
             <SmartSearch />
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 transition-all duration-300 group-focus-within:max-md:hidden">
             <Button
               variant={isNearbyActive ? "primary" : "ghost"}
               onClick={handleNearbyToggle}
               loading={isDetecting}
               icon={Navigation}
+              className="px-3 md:px-5"
             >
-              {isNearbyActive ? "Near Me Active" : "Near Me"}
+              <span className="hidden md:inline">{isNearbyActive ? "Near Me Active" : "Near Me"}</span>
             </Button>
-            <Button variant="ghost" onClick={handleReset} icon={RotateCcw}>Reset</Button>
+            <Button variant="ghost" onClick={handleReset} icon={RotateCcw} className="px-3 md:px-5">
+              <span className="hidden md:inline">Reset</span>
+            </Button>
           </div>
         </div>
       </div>
 
       {/* MAIN CONTENT */}
-      <DiscoveryView title={titleText} />
+      <DiscoveryView title={titleText} subtitle={localSubtitle} />
     </div>
   );
 }

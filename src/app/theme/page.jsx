@@ -6,7 +6,7 @@ export default function ThemeReferencePage() {
       <style dangerouslySetInnerHTML={{ __html: `
         .token-dot { width: 12px; height: 12px; border-radius: 50%; display: inline-block; }
         @keyframes theme-float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-6px)} }
-        @keyframes pulse-green { 0%,100%{box-shadow:0 0 0 0 rgba(37,211,102,0.4)} 70%{box-shadow:0 0 0 10px rgba(37,211,102,0)} }
+        @keyframes pulse-green { 0%,100%{background-color:rgba(37,211,102,0.1)} 70%{background-color:rgba(37,211,102,0.3)} }
         .animate-theme-float { animation: theme-float 3s ease-in-out infinite; }
         .animate-wa { animation: pulse-green 2s infinite; }
         .skeleton { background: linear-gradient(90deg, #f0f0ee 25%, #e8e8e6 50%, #f0f0ee 75%); background-size: 200% 100%; animation: theme-shimmer 1.5s infinite; }

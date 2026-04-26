@@ -2,29 +2,58 @@
 
 import React, { useState, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
+import { useRouter } from "next/navigation";
 import ShopCard from "@/components/Shop/ShopCard";
-import { 
-  ChevronDown, LayoutGrid, List, Search, RotateCcw 
+import ClusterSlider from "@/components/Shop/ClusterSlider";
+import { getClusters } from "@/lib/db";
+import {
+  ChevronDown, LayoutGrid, List, Search, RotateCcw, MapPin
 } from "lucide-react";
 import Button from "@/components/UI/Button";
+import { setSearch } from "@/redux/slices/filterSlice";
+import { generateDiscoveryUrl } from "@/lib/urlArchitect";
 
-const DiscoveryView = ({ title }) => {
-  const { results: filteredShops, loading: shopsLoading } = useSelector((state) => state.search);
+const DiscoveryView = ({ title, subtitle }) => {
+  const dispatch = useDispatch();
+  const router = useRouter();
+  const { results: filteredShops, loading: shopsLoading, parsed } = useSelector((state) => state.search);
+  const { items: allShops } = useSelector((state) => state.shops);
+  const [clusters, setClusters] = useState([]);
   const [viewMode, setViewMode] = useState("grid");
   const [visibleCount, setVisibleCount] = useState(6);
+
+  useEffect(() => {
+    const fetchClusters = async () => {
+      const data = await getClusters();
+      setClusters(data);
+    };
+    fetchClusters();
+  }, []);
+
+  const handleClusterClick = (clusterName) => {
+    // Generate clean URL based on cluster and current location
+    const url = generateDiscoveryUrl("", parsed?.location, "all", clusterName);
+    router.push(url);
+  };
 
   useEffect(() => {
     setVisibleCount(6);
   }, [filteredShops]);
 
   return (
-    <main className="max-w-7xl mx-auto px-4 md:px-8 py-12">
-      <header className="mb-10 flex flex-col md:flex-row md:items-end justify-between gap-4">
+    <main className="max-w-7xl mx-auto px-4 md:px-8 py-8 md:py-22">
+      <header className="mb-6 flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
           <p className="text-[11px] font-bold text-[#FF6B35] uppercase tracking-[0.12em] mb-2">Verified Businesses</p>
-          <h1 className="text-3xl md:text-4xl font-bold text-[#1A1F36] tracking-tight">
+          <h1 className="text-2xl md:text-4xl font-bold text-[#1A1F36] tracking-tight">
             {title}
           </h1>
+          {subtitle && (
+            <div className="flex items-center gap-1.5 mt-2 text-[#FF6B35] font-semibold text-[13px]">
+              <MapPin size={14} />
+              <span>{subtitle}</span>
+            </div>
+          )}
           <p className="text-[15px] text-[#1A1F36]/50 mt-1">
             {shopsLoading ? "Discovering local businesses..." : `${filteredShops.length} certified business${filteredShops.length !== 1 ? "es" : ""} found`}
           </p>
@@ -46,6 +75,15 @@ const DiscoveryView = ({ title }) => {
           ))}
         </div>
       </header>
+
+      {!shopsLoading && filteredShops.length > 0 && (
+        <ClusterSlider
+          clusters={clusters}
+          shops={allShops}
+          onClusterClick={handleClusterClick}
+          parsed={parsed}
+        />
+      )}
 
       {shopsLoading ? (
         <div className={`grid gap-6 ${viewMode === "grid" ? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3" : "grid-cols-1"}`}>
@@ -77,7 +115,7 @@ const DiscoveryView = ({ title }) => {
           </div>
 
           {visibleCount < filteredShops.length && (
-            <div className="mt-16 flex justify-center">
+            <div className="mt-8 flex justify-center">
               <Button
                 variant="outline"
                 size="lg"

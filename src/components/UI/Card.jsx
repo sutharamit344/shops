@@ -1,7 +1,7 @@
 import React from 'react';
 
 const Card = ({ children, className = '', hover = true, variant = 'default', ...props }) => {
-  const baseStyles = 'rounded-2xl border transition-all duration-300 shadow-md';
+  const baseStyles = 'rounded-2xl border transition-all duration-300';
   
   const variants = {
     default: 'bg-white border-[#1A1F36]/[0.07]',
@@ -10,7 +10,7 @@ const Card = ({ children, className = '', hover = true, variant = 'default', ...
     surface: 'bg-[#FAFAF8] border-[#1A1F36]/[0.07]',
   };
 
-  const hoverStyles = hover ? 'hover:border-[#FF6B35]/30 hover:shadow-md hover:-translate-y-0.5' : '';
+  const hoverStyles = hover ? 'hover:border-[#FF6B35]/30 hover:-translate-y-0.5' : '';
 
   return (
     <div 

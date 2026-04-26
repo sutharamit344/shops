@@ -12,13 +12,30 @@ import Navbar from "@/components/Navbar";
 
 export default function DiscoveryClient({ slug, parsed }) {
   const dispatch = useDispatch();
+  const [localTitle, setLocalTitle] = React.useState("");
+  const [localSubtitle, setLocalSubtitle] = React.useState("");
 
   useEffect(() => {
     const hydrate = async () => {
       // Sync Redux with parsed slug
       dispatch(setParsed(parsed));
-      dispatch(setQuery(slug.replace(/-/g, " ")));
+      const queryText = slug.replace(/-/g, " ");
+      dispatch(setQuery(queryText));
       
+      // Initial title from slug/parsed
+      const formatTitle = (text) => text.replace(/-/g, " ").split(" ").map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
+      const baseTitle = formatTitle(slug === "explore" ? (parsed.location || "Shops") : slug);
+      setLocalTitle(baseTitle);
+
+      // Check for personalized location info
+      const lastCity = localStorage.getItem('last_city');
+      const lastArea = localStorage.getItem('last_area');
+      if (lastArea && lastCity) {
+        setLocalSubtitle(`${lastArea} ${lastCity}`);
+      } else if (lastCity) {
+        setLocalSubtitle(lastCity);
+      }
+
       // Fetch data
       await Promise.all([
         dispatch(fetchApprovedShops()),
@@ -30,23 +47,17 @@ export default function DiscoveryClient({ slug, parsed }) {
     hydrate();
   }, [slug, parsed, dispatch]);
 
-  const displayTitle = slug
-    .split("-")
-    .map(w => w.charAt(0).toUpperCase() + w.slice(1))
-    .join(" ");
-
   return (
     <div className="min-h-screen bg-[#FAFAF8]">
       <Navbar />
       
-      <div className="bg-white border-b border-[#1A1F36]/[0.06] py-12 px-4 md:px-8 shadow-sm">
-        <div className="max-w-7xl mx-auto text-center space-y-6">
-          <h2 className="text-[11px] font-bold text-[#FF6B35] uppercase tracking-[0.2em]">Smart Discovery</h2>
+      <div className="sticky top-16 z-40 py-4 px-4 md:px-8 lg:hidden bg-[#FAFAF8]/95 backdrop-blur-sm">
+        <div className="max-w-7xl mx-auto text-center">
           <SmartSearch />
         </div>
       </div>
 
-      <DiscoveryView title={displayTitle} />
+      <DiscoveryView title={localTitle || "Shops"} subtitle={localSubtitle} />
     </div>
   );
 }

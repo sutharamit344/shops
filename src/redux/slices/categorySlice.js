@@ -1,10 +1,11 @@
 import { createSlice } from "@reduxjs/toolkit";
-import { fetchCategories } from "../thunks/categoryThunks";
+import { fetchCategories, fetchClusters } from "../thunks/categoryThunks";
 
 const categorySlice = createSlice({
   name: "categories",
   initialState: {
     items: [],
+    clusters: [],
     loading: false,
     error: null,
   },
@@ -21,6 +22,9 @@ const categorySlice = createSlice({
       .addCase(fetchCategories.rejected, (state, action) => {
         state.loading = false;
         state.error = action.error.message;
+      })
+      .addCase(fetchClusters.fulfilled, (state, action) => {
+        state.clusters = action.payload;
       });
   },
 });
