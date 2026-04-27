@@ -15,8 +15,13 @@ export const metadata = {
   description:
     "Create a digital shop page and connect with customers via WhatsApp.",
   manifest: "/manifest.json",
+};
+
+export const viewport = {
   themeColor: "#0F172A",
-  viewport: "width=device-width, initial-scale=1, maximum-scale=1",
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
 };
 
 export default function RootLayout({ children }) {

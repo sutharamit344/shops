@@ -7,7 +7,7 @@ export async function generateMetadata({ params }) {
   const { slug } = await params;
   const parsed = parseDiscoverySlug(slug);
   
-  if (!parsed) return { title: "Explore Marketplace | ShopSetu" };
+  if (!parsed) return null;
 
   const { category, location, type } = parsed;
   let title = "";
@@ -25,7 +25,7 @@ export default async function DiscoverySlugPage({ params }) {
   const { slug } = await params;
   const parsed = parseDiscoverySlug(slug);
 
-  if (!parsed) return null;
+  if (!parsed) return notFound();
 
   return <DiscoveryClient slug={slug} parsed={parsed} />;
 }

@@ -476,7 +476,7 @@ const SmartSearch = () => {
                         </div>
                       )}
 
-                      {!item.type === 'shop' && <Navigation className="text-gray-200" size={14} />}
+                      {item.type !== 'shop' && <Navigation className="text-gray-200" size={14} />}
                     </button>
                   </div>
                 )}

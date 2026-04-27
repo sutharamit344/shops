@@ -140,7 +140,10 @@ export default function ExploreClient() {
           setIsDetecting(false);
         }
       },
-      () => setIsDetecting(false)
+      (error) => {
+        setIsDetecting(false);
+        alert("Location access denied. Please enable location permissions in your browser.");
+      }
     );
   };
 
@@ -257,7 +260,7 @@ export default function ExploreClient() {
           <div className="flex-1 w-full transition-all duration-300">
             <SmartSearch />
           </div>
-          <div className="flex items-center gap-2 transition-all duration-300 group-focus-within:max-md:hidden">
+          <div className="flex items-center gap-2 transition-all duration-300">
             <Button
               variant={isNearbyActive ? "primary" : "ghost"}
               onClick={handleNearbyToggle}

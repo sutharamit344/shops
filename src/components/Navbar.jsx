@@ -76,7 +76,10 @@ const Navbar = () => {
           setIsDetecting(false);
         }
       },
-      () => setIsDetecting(false)
+      (error) => {
+        setIsDetecting(false);
+        alert("Location access denied. Please enable location permissions in your browser.");
+      }
     );
   };
 

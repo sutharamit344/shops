@@ -19,7 +19,7 @@ export function generateDiscoveryUrl(category, location, type = "all", clusterTy
 }
 
 export function parseDiscoverySlug(slug) {
-  if (!slug) return null;
+  if (!slug || slug.includes(".")) return null;
 
   // Pattern: {base}-near-me
   if (slug.endsWith("-near-me")) {
