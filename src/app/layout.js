@@ -3,6 +3,7 @@ import "./globals.css";
 import ReduxProvider from "@/redux/ReduxProvider";
 import AuthInit from "@/components/AuthInit";
 import ModalContainer from "@/components/ModalContainer";
+import PWARegistration from "@/components/PWARegistration";
 
 const jakarta = Plus_Jakarta_Sans({
   subsets: ["latin"],
@@ -13,6 +14,9 @@ export const metadata = {
   title: "ShopSetu - Your Shop's Digital Presence",
   description:
     "Create a digital shop page and connect with customers via WhatsApp.",
+  manifest: "/manifest.json",
+  themeColor: "#0F172A",
+  viewport: "width=device-width, initial-scale=1, maximum-scale=1",
 };
 
 export default function RootLayout({ children }) {
@@ -22,6 +26,7 @@ export default function RootLayout({ children }) {
         <ReduxProvider>
           <AuthInit />
           <ModalContainer />
+          <PWARegistration />
           {children}
         </ReduxProvider>
       </body>
