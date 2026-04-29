@@ -12,7 +12,7 @@ import Button from "@/components/UI/Button";
 import Card from "@/components/UI/Card";
 
 // Icons
-import { Save, CheckCircle2, AlertCircle, Plus, Loader2, Zap, MapPin, Phone, Info, X, ChevronRight, ChevronLeft, Image, Star, Palette, ShieldCheck, Clock } from "lucide-react";
+import { Save, CheckCircle2, AlertCircle, Plus, Loader2, Zap, MapPin, Phone, Info, X, ChevronRight, ChevronLeft, ImageIcon, Star, Palette, ShieldCheck, Clock, Navigation } from "lucide-react";
 
 const ShopForm = ({ initialData, onSubmit, isEdit = false, isLoading = false, error: externalError }) => {
   const [currentStep, setCurrentStep] = useState(1);
@@ -35,11 +35,16 @@ const ShopForm = ({ initialData, onSubmit, isEdit = false, isLoading = false, er
     rating: "5.0",
     logo: "",
     businessType: "mixed",
-    address: "",
+    shopNo: "",
+    building: "",
+    village: "",
     socialLinks: [],
     logo: "",
     coverImage: "",
     clusterType: "",
+    pincode: "",
+    lat: null,
+    lng: null
   });
 
   const [logoFile, setLogoFile] = useState(null);
@@ -52,6 +57,7 @@ const ShopForm = ({ initialData, onSubmit, isEdit = false, isLoading = false, er
   const [showCustomCluster, setShowCustomCluster] = useState(false);
   const [dbClusters, setDbClusters] = useState([]);
   const [proposedCluster, setProposedCluster] = useState("");
+  const [pincodeAreas, setPincodeAreas] = useState([]);
 
 
   const steps = [
@@ -61,12 +67,47 @@ const ShopForm = ({ initialData, onSubmit, isEdit = false, isLoading = false, er
   ];
 
   useEffect(() => {
+    const fetchPincodeDetails = async () => {
+      const pin = formData.pincode;
+      if (pin && pin.length === 6) {
+        try {
+          setUploadStatus("Searching location for PIN Code...");
+          const res = await fetch(`https://api.postalpincode.in/pincode/${pin}`);
+          const data = await res.json();
+          
+          if (data && data[0] && data[0].Status === "Success") {
+            const offices = data[0].PostOffice;
+            setPincodeAreas(offices.map(o => o.Name));
+            
+            const first = offices[0];
+            setFormData(prev => ({
+              ...prev,
+              city: first.District || first.Division || "",
+              state: first.State,
+              area: first.Name,
+              village: first.Block || "" // In India, Block often represents the village cluster
+            }));
+            setUploadStatus("");
+          } else {
+            setPincodeAreas([]);
+            setUploadStatus("");
+          }
+        } catch (error) {
+          console.error("PIN Code API failed:", error);
+          setUploadStatus("");
+        }
+      }
+    };
+    fetchPincodeDetails();
+  }, [formData.pincode]);
+
+  useEffect(() => {
     const init = async () => {
       const [cats, clusters] = await Promise.all([
         getCategories(),
         getClusters()
       ]);
-      
+
       const catNames = cats.map(c => c.name);
       setDbCategories(catNames);
       setDbClusters(clusters);
@@ -97,7 +138,7 @@ const ShopForm = ({ initialData, onSubmit, isEdit = false, isLoading = false, er
     let { name, value } = e.target;
     if (name === "category") {
       setShowNewCategoryInput(value === "OTHER_PROPOSE");
-      
+
       // Auto-assign clusterType based on category
       const lowVal = value.toLowerCase();
       let cluster = "";
@@ -106,7 +147,7 @@ const ShopForm = ({ initialData, onSubmit, isEdit = false, isLoading = false, er
       else if (lowVal.includes("electronic") || lowVal.includes("mobile") || lowVal.includes("computer")) cluster = "Electronics Market";
       else if (lowVal.includes("cloth") || lowVal.includes("fashion") || lowVal.includes("boutique")) cluster = "Fashion Hub";
       else if (lowVal.includes("grocery") || lowVal.includes("kirana") || lowVal.includes("supermarket")) cluster = "Daily Essentials";
-      
+
       if (cluster) {
         setFormData(prev => ({ ...prev, [name]: value, clusterType: cluster }));
         return;
@@ -181,13 +222,34 @@ const ShopForm = ({ initialData, onSubmit, isEdit = false, isLoading = false, er
         if (srcMatch && srcMatch[1]) cleanMapEmbed = srcMatch[1];
       }
 
+      // AUTO-GEOCODING (Free Nominatim) - Skip if already detected via GPS
+      let lat = formData.lat;
+      let lng = formData.lng;
+
+      if (!lat || !lng) {
+        try {
+          setUploadStatus("Geocoding address...");
+          const addressStr = `${formData.shopNo || ""}, ${formData.building || ""}, ${formData.zone || ""}, ${formData.village || ""}, ${formData.area || ""}, ${formData.city}, ${formData.state}, India`;
+          const geoRes = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(addressStr)}&limit=1`);
+          const geoData = await geoRes.json();
+          if (geoData && geoData[0]) {
+            lat = parseFloat(geoData[0].lat);
+            lng = parseFloat(geoData[0].lon);
+          }
+        } catch (err) {
+          console.error("Geocoding failed:", err);
+        }
+      }
+
       await onSubmit({
         ...formData,
         mapEmbed: cleanMapEmbed,
         category: finalCategory,
-        clusterType: finalCluster,
+        clusterType: finalClusterType,
         logo: logoUrl,
         coverImage: coverUrl,
+        lat,
+        lng,
         slug,
         proposedCategory: formData.category === "OTHER_PROPOSE",
         proposedCluster: formData.clusterType === "CUSTOM"
@@ -258,9 +320,9 @@ const ShopForm = ({ initialData, onSubmit, isEdit = false, isLoading = false, er
               <div className="flex flex-col md:flex-row gap-8 items-start">
                 <div className="shrink-0">
                   <ImageUpload
-                    onSelect={(file) => { 
-                      setLogoFile(file); 
-                      setLogoPreview(file ? URL.createObjectURL(file) : ""); 
+                    onSelect={(file) => {
+                      setLogoFile(file);
+                      setLogoPreview(file ? URL.createObjectURL(file) : "");
                     }}
                     currentImage={logoPreview}
                     compact
@@ -324,7 +386,7 @@ const ShopForm = ({ initialData, onSubmit, isEdit = false, isLoading = false, er
                   helpText="Groups your business with similar local hubs"
                 />
                 <div className="flex items-end">
-                   <p className="text-[11px] text-[#1A1F36]/40 font-medium mb-3">Helping users find you in "hub" searches like 'Electronics Market'.</p>
+                  <p className="text-[11px] text-[#1A1F36]/40 font-medium mb-3">Helping users find you in "hub" searches like 'Electronics Market'.</p>
                 </div>
               </div>
 
@@ -370,30 +432,130 @@ const ShopForm = ({ initialData, onSubmit, isEdit = false, isLoading = false, er
         {/* ── STEP 2: LOCATION ───────────────────────────────────── */}
         {currentStep === 2 && (
           <div className="space-y-8 animate-in fade-in duration-500 slide-in-from-bottom-2">
-            <div>
-              <h2 className="text-2xl font-extrabold text-[#1A1F36] tracking-tight mb-2">Reach & Location</h2>
-              <p className="text-[15px] text-[#1A1F36]/50 font-medium">Connect your business with local customers in your area.</p>
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div>
+                <h2 className="text-2xl font-extrabold text-[#1A1F36] tracking-tight mb-2">Reach & Location</h2>
+                <p className="text-[15px] text-[#1A1F36]/50 font-medium">Connect your business with local customers in your area.</p>
+              </div>
+              <button
+                type="button"
+                onClick={async () => {
+                  if (!navigator.geolocation) return alert("Geolocation not supported");
+                  setUploadStatus("Detecting your location...");
+                  navigator.geolocation.getCurrentPosition(async (pos) => {
+                    try {
+                      const { latitude, longitude } = pos.coords;
+                      const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`);
+                      const data = await res.json();
+                      const addr = data.address || {};
+                      
+                      // Priority for City: Major City > District > State District > Town/Village
+                      const city = addr.city || addr.city_district || addr.state_district || addr.town || addr.village || "";
+                      const area = addr.suburb || addr.neighbourhood || addr.residential || "";
+                      const village = addr.village || addr.hamlet || addr.isolated_dwelling || "";
+                      
+                      setFormData(prev => ({
+                        ...prev,
+                        city: city.replace(/ District| Division/g, ""),
+                        state: addr.state || "",
+                        area: area || "",
+                        village: village || "",
+                        pincode: addr.postcode || "",
+                        lat: latitude,
+                        lng: longitude
+                      }));
+                      setUploadStatus("");
+                    } catch (err) {
+                      console.error(err);
+                      setUploadStatus("");
+                    }
+                  }, () => setUploadStatus(""));
+                }}
+                className="flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-600 rounded-xl text-[13px] font-bold hover:bg-blue-100 transition-all active:scale-95 self-start"
+              >
+                <Navigation size={14} />
+                Use My Location
+              </button>
             </div>
 
-            <div className="space-y-8">
+            <div className="space-y-6">
+              {/* WhatsApp */}
+              <Input
+                label="WhatsApp For Business"
+                name="phone"
+                value={formData.phone}
+                onChange={handleChange}
+                placeholder="9876543210"
+                required
+                icon={Phone}
+                helpText="Customers will reach out to you on this number"
+              />
+
+              {/* Specific Address */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <Input
-                  label="WhatsApp For Business"
-                  name="phone"
-                  value={formData.phone}
+                  label="Shop No."
+                  name="shopNo"
+                  value={formData.shopNo}
                   onChange={handleChange}
-                  placeholder="9876543210"
+                  placeholder="e.g., Shop 4"
                   required
-                  icon={Phone}
-                  helpText="Customers will reach out to you on this number"
                 />
+                <Input
+                  label="Building / Complex"
+                  name="building"
+                  value={formData.building}
+                  onChange={handleChange}
+                  placeholder="e.g., Sai Plaza"
+                  required
+                />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <Input
+                  label="Landmark / Street"
+                  name="zone"
+                  value={formData.zone}
+                  onChange={handleChange}
+                  placeholder="e.g., Near Main Market"
+                  required
+                />
+                <Input
+                  label="Primary Locality (Area)"
+                  name="area"
+                  value={formData.area}
+                  onChange={handleChange}
+                  placeholder="e.g., Gota"
+                  required
+                />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <Input
+                  label="Village (if any)"
+                  name="village"
+                  value={formData.village}
+                  onChange={handleChange}
+                  placeholder="e.g., Chenpur"
+                />
+                <Input
+                  label="PIN Code"
+                  name="pincode"
+                  value={formData.pincode}
+                  onChange={handleChange}
+                  placeholder="e.g., 380060"
+                  required
+                />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="grid grid-cols-2 gap-4">
                   <Input
                     label="City"
                     name="city"
                     value={formData.city}
                     onChange={handleChange}
-                    placeholder="Mumbai"
+                    placeholder="Ahmedabad"
                     required
                   />
                   <Input
@@ -401,40 +563,11 @@ const ShopForm = ({ initialData, onSubmit, isEdit = false, isLoading = false, er
                     name="state"
                     value={formData.state}
                     onChange={handleChange}
-                    placeholder="Maharashtra"
+                    placeholder="Gujarat"
                     required
                   />
                 </div>
               </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <Input
-                  label="Primary Locality"
-                  name="area"
-                  value={formData.area}
-                  onChange={handleChange}
-                  placeholder="e.g., Andheri West"
-                />
-                <Input
-                  label="Landmark / Street"
-                  name="zone"
-                  value={formData.zone}
-                  onChange={handleChange}
-                  placeholder="e.g., Near Link Road"
-                />
-              </div>
-
-              <Textarea
-                label="Full Address"
-                name="address"
-                value={formData.address}
-                onChange={handleChange}
-                placeholder="e.g., Shop No. 12, Sai Plaza, MG Road"
-                required
-                rows={2}
-                helpText="Exact location for customers to find you"
-              />
-
             </div>
           </div>
         )}
@@ -448,15 +581,15 @@ const ShopForm = ({ initialData, onSubmit, isEdit = false, isLoading = false, er
             </div>
 
             <div className="space-y-6">
-               <ImageUpload
-                  label="Background Cover Image"
-                  onSelect={(file) => {
-                    setCoverFile(file);
-                    setCoverPreview(file ? URL.createObjectURL(file) : "");
-                  }}
-                  currentImage={coverPreview}
-                  helpText="Recommended size: 1200x400. This will appear as the banner on your shop profile."
-               />
+              <ImageUpload
+                label="Background Cover Image"
+                onSelect={(file) => {
+                  setCoverFile(file);
+                  setCoverPreview(file ? URL.createObjectURL(file) : "");
+                }}
+                currentImage={coverPreview}
+                helpText="Recommended size: 1200x400. This will appear as the banner on your shop profile."
+              />
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -471,12 +604,12 @@ const ShopForm = ({ initialData, onSubmit, isEdit = false, isLoading = false, er
                     className="w-16 h-16 rounded-[20px] border-4 border-white cursor-pointer shadow-md p-0 overflow-hidden"
                   />
                   <div className="flex-1">
-                     <Input
-                        name="primaryColor"
-                        value={formData.primaryColor}
-                        onChange={handleChange}
-                        className="bg-white"
-                      />
+                    <Input
+                      name="primaryColor"
+                      value={formData.primaryColor}
+                      onChange={handleChange}
+                      className="bg-white"
+                    />
                   </div>
                 </div>
                 <p className="text-[11px] text-[#1A1F36]/40 font-medium leading-relaxed">Used for buttons, category badges, and premium accents throughout your storefront.</p>
@@ -493,12 +626,12 @@ const ShopForm = ({ initialData, onSubmit, isEdit = false, isLoading = false, er
                     className="w-16 h-16 rounded-[20px] border-4 border-white cursor-pointer shadow-md p-0 overflow-hidden"
                   />
                   <div className="flex-1">
-                     <Input
-                        name="secondaryColor"
-                        value={formData.secondaryColor}
-                        onChange={handleChange}
-                        className="bg-white"
-                      />
+                    <Input
+                      name="secondaryColor"
+                      value={formData.secondaryColor}
+                      onChange={handleChange}
+                      className="bg-white"
+                    />
                   </div>
                 </div>
                 <p className="text-[11px] text-[#1A1F36]/40 font-medium leading-relaxed">Used for sidebar, headings, and high-contrast structural elements.</p>
@@ -511,8 +644,8 @@ const ShopForm = ({ initialData, onSubmit, isEdit = false, isLoading = false, er
                 <h3 className="text-[11px] font-bold text-[#FF6B35] uppercase tracking-[0.2em] mb-4">Final Review</h3>
                 <p className="text-[16px] font-bold mb-6">By submitting, you agree that your business follows our local marketplace guidelines.</p>
                 <div className="flex items-center gap-4 text-[13px] font-bold opacity-60">
-                   <div className="flex items-center gap-2"><CheckCircle2 size={16} className="text-[#25D366]" /> <span>Free Forever</span></div>
-                   <div className="flex items-center gap-2"><CheckCircle2 size={16} className="text-[#25D366]" /> <span>SEO Optimised</span></div>
+                  <div className="flex items-center gap-2"><CheckCircle2 size={16} className="text-[#25D366]" /> <span>Free Forever</span></div>
+                  <div className="flex items-center gap-2"><CheckCircle2 size={16} className="text-[#25D366]" /> <span>SEO Optimised</span></div>
                 </div>
               </div>
             </div>

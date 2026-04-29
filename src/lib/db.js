@@ -14,11 +14,183 @@ import {
   runTransaction,
 } from "firebase/firestore";
 import { db } from "./firebase";
+export { db };
 import { unstable_cache } from "next/cache";
 import { slugify } from "./slugify";
 
 const COLLECTION_NAME = "shops";
 const LOGS_COLLECTION = "activity_logs";
+const LOCATION_CACHE = "locations";
+
+/**
+ * LOCATION CACHE SYSTEM
+ */
+
+/**
+ * Gets a location from cache by its slugified name.
+ */
+export async function getCachedLocation(name) {
+  try {
+    const slug = slugify(name);
+    const docRef = doc(db, LOCATION_CACHE, slug);
+    const snap = await getDoc(docRef);
+    if (snap.exists()) {
+      // Update lastSearchedAt timestamp whenever it's used
+      await updateDoc(docRef, { lastSearchedAt: serverTimestamp() });
+      return standardizeData(snap);
+    }
+    return null;
+  } catch (error) {
+    console.error("Error getting cached location:", error);
+    return null;
+  }
+}
+
+/**
+ * Adds or updates a location in the cache.
+ */
+export async function updateLocationCache(name, lat, lng, extraData = {}) {
+  try {
+    if (!name || !lat || !lng) return;
+    const slug = slugify(name);
+    const docRef = doc(db, LOCATION_CACHE, slug);
+    
+    await runTransaction(db, async (transaction) => {
+      const snap = await transaction.get(docRef);
+      if (snap.exists()) {
+        transaction.update(docRef, {
+          ...extraData,
+          lastSearchedAt: serverTimestamp()
+        });
+      } else {
+        transaction.set(docRef, {
+          name,
+          lat,
+          lng,
+          ...extraData,
+          lastSearchedAt: serverTimestamp(),
+          createdAt: serverTimestamp()
+        });
+      }
+    });
+  } catch (error) {
+    console.error("Error updating location cache:", error);
+  }
+}
+
+/**
+ * Admin: Removes locations that haven't been searched in 7 days.
+ */
+export async function cleanupOldLocations() {
+  try {
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+    const q = query(
+      collection(db, LOCATION_CACHE),
+      where("lastSearchedAt", "<", sevenDaysAgo)
+    );
+
+    const snap = await getDocs(q);
+    const deletePromises = snap.docs.map(d => deleteDoc(doc(db, LOCATION_CACHE, d.id)));
+    await Promise.all(deletePromises);
+    
+    return { success: true, count: snap.size };
+  } catch (error) {
+    console.error("Error cleaning up locations:", error);
+    return { success: false, error };
+  }
+}
+
+/**
+ * Finds the nearest cached location within a specific radius (default 1km).
+ * Uses client-side filtering on the most recent 100 entries.
+ */
+export async function getNearestLocation(userLat, userLng, radiusInMeters = 2000) {
+  try {
+    // 1. Fetch Locations Cache and Approved Shops in parallel
+    const [locationsSnap, shopsSnap] = await Promise.all([
+      getDocs(query(collection(db, LOCATION_CACHE), orderBy("lastSearchedAt", "desc"), limit(400))),
+      getDocs(query(collection(db, "shops"), where("status", "==", "approved"), limit(200)))
+    ]);
+
+    const calculateDistance = (lat1, lon1, lat2, lon2) => {
+      const R = 6371e3; // metres
+      const φ1 = lat1 * Math.PI/180;
+      const φ2 = lat2 * Math.PI/180;
+      const Δφ = (lat2-lat1) * Math.PI/180;
+      const Δλ = (lon2-lon1) * Math.PI/180;
+      const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
+                Math.cos(φ1) * Math.cos(φ2) *
+                Math.sin(Δλ/2) * Math.sin(Δλ/2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+      return R * c;
+    };
+
+    let closestCache = null;
+    let minCacheDist = radiusInMeters;
+
+    // Check Locations Cache
+    locationsSnap.docs.forEach(doc => {
+      const data = standardizeData(doc);
+      if (data.lat && data.lng) {
+        const dist = calculateDistance(userLat, userLng, data.lat, data.lng);
+        if (dist < minCacheDist) {
+          minCacheDist = dist;
+          closestCache = { ...data, source: "cache" };
+        }
+      }
+    });
+
+    let closestShop = null;
+    let minShopDist = radiusInMeters;
+
+    // Check Shops (Often more accurate!)
+    shopsSnap.docs.forEach(doc => {
+      const data = doc.data();
+      if (data.lat && data.lng) {
+        const dist = calculateDistance(userLat, userLng, data.lat, data.lng);
+        if (dist < minShopDist) {
+          minShopDist = dist;
+          closestShop = { 
+            name: data.area || data.city,
+            city: data.city,
+            area: data.area,
+            village: data.village || "",
+            pincode: data.pincode || "",
+            lat: data.lat,
+            lng: data.lng,
+            source: "shop"
+          };
+        }
+      }
+    });
+
+    // Priority: Shops within 1km > Cache within 2km > Shops within 2km
+    let closest = null;
+    let finalDist = radiusInMeters;
+
+    if (closestShop && minShopDist <= 1000) {
+      closest = closestShop;
+      finalDist = minShopDist;
+    } else if (closestCache && minCacheDist <= radiusInMeters) {
+      closest = closestCache;
+      finalDist = minCacheDist;
+    } else if (closestShop && minShopDist <= radiusInMeters) {
+      closest = closestShop;
+      finalDist = minShopDist;
+    }
+
+    if (closest) {
+      console.log(`Smart Discovery: Closest match is ${closest.area || closest.name} from ${closest.source} at ${Math.round(finalDist)}m`);
+    }
+    
+    return closest;
+  } catch (error) {
+    console.error("Error finding nearest location:", error);
+    return null;
+  }
+}
 
 /**
  * HELPER: Resolves a slugified parameter to its original DB value.

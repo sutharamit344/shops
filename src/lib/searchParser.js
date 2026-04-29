@@ -6,7 +6,7 @@ export function parseSmartQuery(query, knownClusters = []) {
   let normalized = query
     .toLowerCase()
     .trim()
-    .replace(/[^\w\s]/g, "");
+    .replace(/[^\w\s&'-]/g, "");
 
   // Words that should NEVER be misinterpreted as a location
   const LOCATION_BLACKLIST = [
@@ -48,12 +48,16 @@ export function parseSmartQuery(query, knownClusters = []) {
 
   const queryTokens = normalized.split(/\s+/).filter(Boolean);
 
-  // 2. Pre-process "Best" intent
+  // 2. Pre-process "Best" / "Top" / "Good" intent
   let isBestSearch = false;
   let processingQuery = normalized;
-  if (normalized.startsWith("best ")) {
-    isBestSearch = true;
-    processingQuery = normalized.replace(/^best\s+/, "").trim();
+  const prefixes = ["best ", "top ", "good ", "all ", "premium "];
+  for (const prefix of prefixes) {
+    if (normalized.startsWith(prefix)) {
+      isBestSearch = true;
+      processingQuery = normalized.replace(prefix, "").trim();
+      break;
+    }
   }
 
   // 3. Cluster Detection (Exact & Token-Based)
@@ -84,8 +88,8 @@ export function parseSmartQuery(query, knownClusters = []) {
   }
 
   // 4. Pattern: "{category} near me"
-  if (normalized.includes("near me")) {
-    let category = normalized.replace("near me", "").trim();
+  if (processingQuery.includes("near me")) {
+    let category = processingQuery.replace("near me", "").trim();
     // Strip trailing "in" if user typed "cafe in near me"
     if (category.endsWith(" in")) {
       category = category.slice(0, -3).trim();
@@ -94,36 +98,17 @@ export function parseSmartQuery(query, knownClusters = []) {
   }
 
   // 5. Pattern: "{category} in {location}"
-  if (normalized.includes(" in ")) {
-    const parts = normalized.split(" in ");
-    const category = parts[0].trim();
+  if (processingQuery.includes(" in ")) {
+    const parts = processingQuery.split(" in ");
+    const category = parts[0].trim().replace(/\s+(shops|shop)$/, "");
     const location = parts.slice(1).join(" in ").trim();
     return { category, location, clusterType: "", type: "location" };
   }
 
-  // 6. Intelligent Fallback Split
-  if (queryTokens.length >= 3) {
-    const lastWord = queryTokens[queryTokens.length - 1];
-
-    // If the last word is in the blacklist, it's not a location (e.g., "Best Cafe Shops")
-    if (LOCATION_BLACKLIST.includes(lastWord)) {
-      return {
-        category: normalized,
-        location: "",
-        clusterType: "",
-        type: "category",
-      };
-    }
-
-    // Heuristic: If 3+ words and no "in", treat last word as location
-    const location = lastWord;
-    const category = queryTokens.slice(0, -1).join(" ");
-    return { category, location, clusterType: "", type: "location" };
-  }
-
-  // Single or Two-word phrases are treated as category by default
+  // Fallback: Treat as category by default
+  const cleanCategory = processingQuery.replace(/\s+(shops|shop)$/, "");
   return {
-    category: normalized,
+    category: cleanCategory,
     location: "",
     clusterType: "",
     type: "category",

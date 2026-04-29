@@ -3,23 +3,50 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useSelector, useDispatch } from "react-redux";
+import { toggleFavoriteInDb } from "@/redux/thunks/authThunks";
 import { slugify } from "@/lib/slugify";
 import { generateShopUrl } from "@/lib/urlArchitect";
 import Card from "@/components/UI/Card";
 import OpenNowBadge from "@/components/UI/OpenNowBadge";
 import {
   MapPin, Star, ArrowRight, Store, Phone, MessageSquare,
-  Share2, ShieldCheck, Copy, Check, Shield, Award
+  Share2, ShieldCheck, Copy, Check, Shield, Award, Heart
 } from "lucide-react";
 import Button from "@/components/UI/Button";
 
 const ShopCard = ({ shop, variant = "grid", showActions = false }) => {
   const router = useRouter();
+  const dispatch = useDispatch();
   const [copied, setCopied] = useState(false);
+  const userCoords = useSelector((state) => state.search.userCoords);
+  const { favorites, user } = useSelector((state) => state.auth);
+  const isFavorited = favorites.includes(shop.id);
 
   if (!shop) return null;
 
   const isApproved = shop.status === "approved";
+
+  const getDistanceDisplay = () => {
+    if (!userCoords || !userCoords.lat || !userCoords.lng || !shop.lat || !shop.lng) return null;
+    
+    const R = 6371; // Earth's radius in km
+    const dLat = (shop.lat - userCoords.lat) * (Math.PI / 180);
+    const dLon = (shop.lng - userCoords.lng) * (Math.PI / 180);
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(userCoords.lat * (Math.PI / 180)) * Math.cos(shop.lat * (Math.PI / 180)) *
+      Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    const distanceKm = R * c;
+
+    if (distanceKm < 1) {
+      return `${Math.round(distanceKm * 1000)}m`;
+    }
+    return `${distanceKm.toFixed(1)} km`;
+  };
+
+  const distanceText = getDistanceDisplay();
 
   const handleWhatsApp = (e, phone) => {
     e.preventDefault();
@@ -61,6 +88,15 @@ const ShopCard = ({ shop, variant = "grid", showActions = false }) => {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     }
+  };
+  const handleFavorite = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!user) {
+      alert("Please sign in to favorite shops!");
+      return;
+    }
+    dispatch(toggleFavoriteInDb(shop.id));
   };
 
   const content = (
@@ -109,8 +145,9 @@ const ShopCard = ({ shop, variant = "grid", showActions = false }) => {
               </div>
               <OpenNowBadge shop={shop} size="sm" />
             </div>
-            <h3 className="text-[17px] font-bold text-[#1A1F36] tracking-tight truncate group-hover/card:text-[#FF6B35] transition-colors">
+            <h3 className="text-[17px] font-bold text-[#1A1F36] tracking-tight truncate group-hover/card:text-[#FF6B35] transition-colors flex items-center gap-1.5">
               {shop.name}
+              {shop.isVerified && <ShieldCheck size={16} className="text-blue-500 fill-blue-50" />}
             </h3>
             {shop.clusterType && (
               <div className="flex items-center gap-1.5 mt-0.5 opacity-70">
@@ -124,11 +161,26 @@ const ShopCard = ({ shop, variant = "grid", showActions = false }) => {
             >
               <MapPin size={12} className="text-[#1A1F36]/30" />
               <span className="text-[11px] text-[#1A1F36]/50 font-medium">{shop.area}, {shop.city}</span>
+              {distanceText && (
+                <span className="text-[10px] font-bold text-[#FF6B35] bg-[#FF6B35]/10 px-1.5 py-0.5 rounded ml-1">
+                  {distanceText}
+                </span>
+              )}
             </div>
           </div>
 
           {/* Action */}
           <div className="flex-shrink-0 ml-auto flex items-center gap-2">
+            <button
+              onClick={handleFavorite}
+              className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all ${
+                isFavorited 
+                  ? "bg-red-50 text-red-500 border border-red-100" 
+                  : "bg-[#1A1F36]/[0.03] text-[#1A1F36]/30 hover:text-red-500 hover:bg-red-50"
+              }`}
+            >
+              <Heart size={14} className={isFavorited ? "fill-current" : ""} />
+            </button>
             <button
               onClick={handleShare}
               className="w-9 h-9 rounded-xl bg-[#1A1F36]/[0.03] flex items-center justify-center text-[#1A1F36]/30 hover:text-[#FF6B35] hover:bg-[#FF6B35]/10 transition-all"
@@ -171,8 +223,9 @@ const ShopCard = ({ shop, variant = "grid", showActions = false }) => {
           </div>
 
           <div className="mb-4 flex-1">
-            <h3 className="text-[15px] md:text-[17px] font-bold text-[#1A1F36] tracking-tight mb-2 group-hover/card:text-[#FF6B35] transition-colors leading-tight">
+            <h3 className="text-[15px] md:text-[17px] font-bold text-[#1A1F36] tracking-tight mb-2 group-hover/card:text-[#FF6B35] transition-colors leading-tight flex items-center gap-1.5">
               {shop.name}
+              {shop.isVerified && <ShieldCheck size={16} className="text-blue-500 fill-blue-50" />}
             </h3>
             <div className="flex items-center gap-1">
               <Star size={12} className="text-[#FF6B35] fill-[#FF6B35]" />
@@ -199,8 +252,23 @@ const ShopCard = ({ shop, variant = "grid", showActions = false }) => {
                 <span className="text-[11px] font-semibold group-hover/loc:text-[#FF6B35] transition-colors truncate max-w-[120px]">
                   {shop.area}, {shop.city}
                 </span>
+                {distanceText && (
+                  <span className="text-[10px] font-bold text-[#FF6B35] bg-[#FF6B35]/10 px-1.5 py-0.5 rounded ml-1 whitespace-nowrap">
+                    {distanceText}
+                  </span>
+                )}
               </div>
               <div className="flex items-center gap-1.5">
+                <button
+                  onClick={handleFavorite}
+                  className={`w-8 h-8 rounded-xl flex items-center justify-center transition-all ${
+                    isFavorited 
+                      ? "bg-red-50 text-red-500 border border-red-100" 
+                      : "bg-[#1A1F36]/[0.03] text-[#1A1F36]/30 hover:text-red-500 hover:bg-red-50"
+                  }`}
+                >
+                  <Heart size={12} className={isFavorited ? "fill-current" : ""} />
+                </button>
                 <button
                   onClick={handleShare}
                   className="w-8 h-8 rounded-xl bg-[#1A1F36]/[0.03] flex items-center justify-center text-[#1A1F36]/30 hover:text-[#FF6B35] hover:bg-[#FF6B35]/10 transition-all"

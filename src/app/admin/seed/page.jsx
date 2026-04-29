@@ -1,172 +1,176 @@
 "use client";
 
 import React, { useState } from "react";
-import { seedTestShops, clearShops, clearAllData } from "@/lib/seedShops";
-import Navbar from "@/components/Navbar";
-import { Loader2, CheckCircle2, AlertCircle, Database } from "lucide-react";
+import { collection, addDoc, getDocs, writeBatch, serverTimestamp } from "firebase/firestore";
+import { db } from "@/lib/db";
+import { slugify } from "@/lib/slugify";
+import Button from "@/components/UI/Button";
+import { Loader2, Check, Zap, ShieldCheck, Trash2 } from "lucide-react";
 
-export default function SeedDashboard() {
-  const [loading, setLoading] = useState(false);
-  const [progress, setProgress] = useState({ current: 0, total: 0 });
-  const [status, setStatus] = useState("idle"); // idle, clearing, seeding, completed, error
+const AREAS = [
+  { name: "Gota", lat: 23.1058, lng: 72.5413, pincode: "382481" },
+  { name: "Sola", lat: 23.0754, lng: 72.5254, pincode: "380060" },
+  { name: "Thaltej", lat: 23.0500, lng: 72.5100, pincode: "380059" },
+  { name: "Bopal", lat: 23.0341, lng: 72.4632, pincode: "380058" },
+  { name: "Satellite", lat: 23.0305, lng: 72.5221, pincode: "380015" },
+  { name: "Prahlad Nagar", lat: 23.0120, lng: 72.5030, pincode: "380015" },
+  { name: "Vastrapur", lat: 23.0351, lng: 72.5293, pincode: "380015" },
+  { name: "Chandkheda", lat: 23.1116, lng: 72.5833, pincode: "382424" },
+  { name: "Nikol", lat: 23.0494, lng: 72.6743, pincode: "382350" },
+  { name: "Maninagar", lat: 22.9965, lng: 72.6015, pincode: "380008" }
+];
 
+const CATEGORIES = [
+  { name: "Grocery Store", adjectives: ["Shree", "Krishna", "Om", "Jai", "Best", "Fresh"], nouns: ["Mart", "Provision Store", "Bazaar", "Kirana"], img: "https://images.unsplash.com/photo-1534723452862-4c874018d66d?w=800&q=80" },
+  { name: "Electronics Shop", adjectives: ["A-1", "Modern", "Super", "Digital", "Prime", "Elite"], nouns: ["Electronics", "Mobile", "Gadget Zone", "Computers"], img: "https://images.unsplash.com/photo-1550009158-9ebf69173e03?w=800&q=80" },
+  { name: "Fashion Boutique", adjectives: ["Style", "Modern", "Ethnic", "Classic", "Glamour", "New"], nouns: ["Boutique", "Collection", "Wear", "Fabrics"], img: "https://images.unsplash.com/photo-1441984904996-e0b6ba687e12?w=800&q=80" },
+  { name: "Bakery & Cafe", adjectives: ["Sweet", "Brown", "Oven", "Deli", "Tasty", "Classic"], nouns: ["Bakery", "Bakes", "Cafe", "Treats"], img: "https://images.unsplash.com/photo-1555507036-ab1f4038808a?w=800&q=80" },
+  { name: "Pharmacy", adjectives: ["Lifeline", "Wellness", "City", "Health", "Care", "Global"], nouns: ["Pharmacy", "Medicals", "Health Care", "Pharma"], img: "https://images.unsplash.com/photo-1587854692152-cbe660dbbb88?w=800&q=80" },
+  { name: "Hardware Store", adjectives: ["Bharat", "National", "Shakti", "Diamond", "Everest"], nouns: ["Hardware", "Sanitary", "Paints", "Tools"], img: "https://images.unsplash.com/photo-1530124560677-bdaea027df01?w=800&q=80" },
+  { name: "Toy Shop", adjectives: ["Kids", "Magic", "Dream", "Toy", "Little", "Fun"], nouns: ["World", "Zone", "Kingdom", "Planet"], img: "https://images.unsplash.com/photo-1536640712247-c575adcfc623?w=800&q=80" },
+  { name: "Pet Store", adjectives: ["Pet", "Doggy", "Happy", "Furry", "Tail", "Smart"], nouns: ["Store", "Groomers", "Planet", "Care"], img: "https://images.unsplash.com/photo-1601758124510-52d02ddb7cbd?w=800&q=80" }
+];
 
+const BUILDINGS = ["Capital Heights", "Galaxy Arcade", "Sun Moon Plaza", "Fortune Business Hub", "Shreeji Towers", "Akshar Residency", "Silicon Valley Center", "Maruti Complex", "Shukan Mall", "City Center"];
 
-  const handleWipeAll = async () => {
-    if (!confirm("CRITICAL WARNING: This will DELETE EVERYTHING in Firestore (shops, logs, categories, clusters). This action is irreversible. Proceed?")) return;
+export default function SeederPage() {
+  const [status, setStatus] = useState("idle"); // idle, clearing, seeding, finished
+  const [progress, setProgress] = useState(0);
+
+  const clearCollection = async (collectionName) => {
+    const colRef = collection(db, collectionName);
+    const snapshot = await getDocs(colRef);
     
-    setLoading(true);
-    setStatus("wiping");
-    try {
-      await clearAllData();
-      setStatus("completed");
-    } catch (error) {
-      console.error(error);
-      setStatus("error");
-    } finally {
-      setLoading(false);
+    const batches = [];
+    let currentBatch = writeBatch(db);
+    let count = 0;
+
+    for (const doc of snapshot.docs) {
+      currentBatch.delete(doc.ref);
+      count++;
+      if (count === 500) {
+        batches.push(currentBatch.commit());
+        currentBatch = writeBatch(db);
+        count = 0;
+      }
     }
+    
+    if (count > 0) batches.push(currentBatch.commit());
+    await Promise.all(batches);
   };
 
-  const handleSeed = async (count) => {
-    if (!confirm(`Are you sure? This will insert ${count} NEW shops into your live Firestore database.`)) return;
-    
-    setLoading(true);
-    setStatus("seeding");
+  const generateShops = async () => {
     try {
-      await seedTestShops(count, (current, total) => {
-        setProgress({ current, total });
-      });
-      setStatus("completed");
-    } catch (error) {
-      console.error(error);
-      setStatus("error");
-    } finally {
-      setLoading(false);
+      // 1. CLEAR COLLECTIONS
+      setStatus("clearing");
+      await Promise.all([
+        clearCollection("shops"),
+        clearCollection("locations")
+      ]);
+
+      // 2. START SEEDING
+      setStatus("seeding");
+      const total = 500;
+      
+      for (let i = 0; i < total; i++) {
+        const area = AREAS[Math.floor(Math.random() * AREAS.length)];
+        const cat = CATEGORIES[Math.floor(Math.random() * CATEGORIES.length)];
+        const building = BUILDINGS[Math.floor(Math.random() * BUILDINGS.length)];
+        
+        const adj = cat.adjectives[Math.floor(Math.random() * cat.adjectives.length)];
+        const noun = cat.nouns[Math.floor(Math.random() * cat.nouns.length)];
+        const shopName = `${adj} ${noun} - ${area.name} Unit ${i + 1}`;
+        
+        const lat = area.lat + (Math.random() - 0.5) * 0.015;
+        const lng = area.lng + (Math.random() - 0.5) * 0.015;
+
+        const shopData = {
+          name: shopName,
+          slug: slugify(shopName),
+          category: cat.name,
+          city: "Ahmedabad",
+          state: "Gujarat",
+          area: area.name,
+          pincode: area.pincode,
+          village: "",
+          zone: "Main Road",
+          building: building,
+          shopNo: `G-${Math.floor(Math.random() * 50) + 1}`,
+          phone: `9${Math.floor(Math.random() * 900000000) + 100000000}`,
+          description: `Premium ${cat.name} providing top-quality service in ${area.name}. We specialize in a wide range of ${cat.name.toLowerCase()} products and services with customer satisfaction as our priority.`,
+          rating: (Math.random() * (5.0 - 4.0) + 4.0).toFixed(1),
+          status: "approved",
+          createdAt: serverTimestamp(),
+          approvedAt: serverTimestamp(),
+          lat,
+          lng,
+          logo: `https://api.dicebear.com/7.x/shapes/svg?seed=${shopName}`,
+          coverImage: cat.img,
+          ownerId: "system_seeder",
+          isCertified: true,
+          businessHours: "9:00 AM - 9:00 PM",
+          primaryColor: "#FF6B35",
+          secondaryColor: "#1A1F36"
+        };
+
+        await addDoc(collection(db, "shops"), shopData);
+        setProgress(i + 1);
+      }
+      setStatus("finished");
+    } catch (err) {
+      console.error("Seeding failed", err);
+      setStatus("idle");
+      alert("Error clearing/seeding database. Check console.");
     }
   };
 
   return (
-    <div className="min-h-screen bg-[#FAFAF8]">
-      <Navbar />
-      
-      <div className="max-w-3xl mx-auto py-20 px-6">
-        <div className="bg-white rounded-[32px] p-12 shadow-xl border border-black/[0.04] text-center space-y-8">
-          <div className="w-20 h-20 bg-[#FF6B35]/10 rounded-3xl flex items-center justify-center mx-auto text-[#FF6B35]">
-            <Database size={40} />
+    <div className="min-h-screen bg-[#FAFAF8] flex items-center justify-center p-6">
+      <div className="max-w-md w-full bg-white rounded-[40px] p-10 shadow-2xl shadow-[#1A1F36]/5 border border-[#1A1F36]/[0.02]">
+        <div className="flex flex-col items-center text-center">
+          <div className="w-20 h-20 rounded-[28px] bg-[#FF6B35]/10 flex items-center justify-center text-[#FF6B35] mb-8">
+            {status === "clearing" ? <Trash2 className="animate-pulse" size={40} /> : <ShieldCheck size={40} />}
           </div>
           
-          <div className="space-y-2">
-            <h1 className="text-3xl font-bold text-[#1A1F36]">Data Seeding Tool</h1>
-            <p className="text-gray-500">Populate your Firestore with high-quality shops for testing.</p>
-          </div>
+          <h1 className="text-3xl font-black text-[#1A1F36] mb-4 tracking-tight">Marketplace Reset & Seed</h1>
+          <p className="text-[#1A1F36]/50 font-medium mb-10 text-[15px] leading-relaxed">
+            {status === "clearing" 
+              ? "Wiping old data to ensure a clean slate..." 
+              : "Generating 500 premium shop profiles in Ahmedabad with proper GPS, addresses, and images."}
+          </p>
 
           {status === "idle" && (
-            <div className="space-y-4">
-              <button
-                onClick={() => handleSeed(500)}
-                className="w-full h-16 bg-white border-2 border-black/[0.06] text-[#1A1F36] rounded-2xl font-bold text-lg hover:border-[#FF6B35] transition-all active:scale-[0.98] flex items-center justify-center gap-3"
-              >
-                <Database size={20} />
-                Seed 500 Shops
-              </button>
-
-              <button
-                onClick={handleWipeAll}
-                className="w-full h-16 bg-red-600 text-white rounded-2xl font-bold text-lg hover:bg-red-700 transition-all flex items-center justify-center gap-3 active:scale-[0.98]"
-              >
-                <AlertCircle size={20} />
-                Wipe All Firestore Data
-              </button>
-            </div>
+            <Button size="lg" className="w-full shadow-lg shadow-[#FF6B35]/20" icon={Zap} onClick={generateShops}>
+              Clear & Seed 500 Shops
+            </Button>
           )}
 
-          {status === "wiping" && (
-            <div className="space-y-6">
-              <div className="flex items-center justify-center gap-3 text-red-600 font-bold">
-                <Loader2 className="animate-spin" size={24} />
-                <span>Wiping all Firestore collections...</span>
+          {(status === "seeding" || status === "clearing") && (
+            <div className="w-full space-y-6">
+              <div className="flex items-center justify-between font-bold text-sm mb-1">
+                <span className="text-[#FF6B35]">{status === "clearing" ? "Clearing Database..." : "Pushing Records..."}</span>
+                <span className="text-[#1A1F36]/40">{status === "clearing" ? "---" : `${progress} / 500`}</span>
               </div>
-            </div>
-          )}
-
-          {status === "clearing" && (
-            <div className="space-y-6">
-              <div className="flex items-center justify-center gap-3 text-red-600 font-bold">
-                <Loader2 className="animate-spin" size={24} />
-                <span>Deleting all existing shops...</span>
-              </div>
-            </div>
-          )}
-
-          {(status === "seeding" || status === "completed") && (
-            <div className="space-y-6">
-              <div className="relative h-4 bg-gray-100 rounded-full overflow-hidden">
+              <div className="h-4 w-full bg-[#FAFAF8] rounded-full overflow-hidden border border-[#1A1F36]/[0.04]">
                 <div 
-                  className="absolute top-0 left-0 h-full bg-[#FF6B35] transition-all duration-300"
-                  style={{ width: `${(progress.current / progress.total) * 100}%` }}
+                  className="h-full bg-gradient-to-r from-[#FF6B35] to-[#FF8C61] transition-all duration-300"
+                  style={{ width: status === "clearing" ? "100%" : `${(progress / 500) * 100}%` }}
                 />
               </div>
-              <div className="flex items-center justify-center gap-3 text-[#FF6B35] font-bold">
-                <Loader2 className="animate-spin" size={20} />
-                <span>Inserting {progress.current} of {progress.total} shops...</span>
-              </div>
             </div>
           )}
 
-          {status === "completed" && (
-            <div className="bg-green-50 p-8 rounded-3xl border border-green-100 space-y-4">
-              <div className="w-12 h-12 bg-green-500 text-white rounded-full flex items-center justify-center mx-auto">
-                <CheckCircle2 size={24} />
+          {status === "finished" && (
+            <div className="w-full space-y-6 animate-in zoom-in duration-500">
+              <div className="p-5 bg-green-50 text-green-600 rounded-3xl flex flex-col items-center gap-2 font-bold">
+                <Check size={24} />
+                <span>Platform is now clean & populated!</span>
               </div>
-              <div className="space-y-1">
-                <h3 className="text-xl font-bold text-green-900">Successfully Seeded!</h3>
-                <p className="text-green-700">50 shops have been added to Gujarat and Rajasthan.</p>
-              </div>
-              <button 
-                onClick={() => window.location.href = "/"}
-                className="px-6 py-2 bg-green-600 text-white rounded-xl font-bold hover:bg-green-700"
-              >
-                Go to Search
-              </button>
+              <Button variant="dark" size="lg" className="w-full" onClick={() => window.location.href = '/explore'}>
+                Launch Marketplace
+              </Button>
             </div>
           )}
-
-          {status === "error" && (
-            <div className="bg-red-50 p-8 rounded-3xl border border-red-100 space-y-4 text-red-700">
-              <AlertCircle className="mx-auto" size={40} />
-              <p className="font-bold">An error occurred during seeding. Check console for details.</p>
-              <button 
-                onClick={() => setStatus("idle")}
-                className="text-red-900 underline font-bold"
-              >
-                Try Again
-              </button>
-            </div>
-          )}
-        </div>
-
-        <div className="mt-12 grid grid-cols-2 gap-6">
-          <div className="bg-white/60 backdrop-blur p-6 rounded-2xl border border-black/[0.04]">
-            <h4 className="font-bold text-[#1A1F36] mb-2">Gujarat (25 Shops)</h4>
-            <ul className="text-xs text-gray-500 space-y-1">
-              <li>• Ahmedabad</li>
-              <li>• Surat</li>
-              <li>• Vadodara</li>
-              <li>• Rajkot</li>
-              <li>• Bhavnagar</li>
-            </ul>
-          </div>
-          <div className="bg-white/60 backdrop-blur p-6 rounded-2xl border border-black/[0.04]">
-            <h4 className="font-bold text-[#1A1F36] mb-2">Rajasthan (25 Shops)</h4>
-            <ul className="text-xs text-gray-500 space-y-1">
-              <li>• Jaipur</li>
-              <li>• Jodhpur</li>
-              <li>• Udaipur</li>
-              <li>• Ajmer</li>
-              <li>• Bikaner</li>
-            </ul>
-          </div>
         </div>
       </div>
     </div>

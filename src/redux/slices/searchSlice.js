@@ -11,6 +11,8 @@ const initialState = {
     type: "all",
     cityFallback: ""
   },
+  userCoords: null, // { lat, lng }
+  userLocationName: "", // "Gota, Ahmedabad"
   results: [],
   suggestions: [],
   recentSearches: [],
@@ -28,6 +30,10 @@ const searchSlice = createSlice({
     },
     setParsed: (state, action) => {
       state.parsed = { ...state.parsed, ...action.payload };
+    },
+    setUserCoords: (state, action) => {
+      state.userCoords = action.payload.coords;
+      state.userLocationName = action.payload.name || "";
     },
     setSuggestions: (state, action) => {
       state.suggestions = action.payload;
@@ -60,5 +66,5 @@ const searchSlice = createSlice({
   }
 });
 
-export const { setQuery, setParsed, setSuggestions, addRecentSearch, clearSearch } = searchSlice.actions;
+export const { setQuery, setParsed, setUserCoords, setSuggestions, addRecentSearch, clearSearch } = searchSlice.actions;
 export default searchSlice.reducer;

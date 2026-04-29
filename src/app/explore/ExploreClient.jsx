@@ -9,7 +9,7 @@ import {
   setSearch, setCity, setCategory, setArea, setState,
   resetFilters, setAllFilters
 } from "@/redux/slices/filterSlice";
-import { setParsed } from "@/redux/slices/searchSlice";
+import { setParsed, setUserCoords } from "@/redux/slices/searchSlice";
 import { fetchSearchResults } from "@/redux/thunks/searchThunks";
 import ShopCard from "@/components/Shop/ShopCard";
 import { slugify } from "@/lib/slugify";
@@ -23,6 +23,9 @@ import Input from "@/components/UI/Input";
 import Select from "@/components/UI/Select";
 import SmartSearch from "@/components/Search/SmartSearch";
 import DiscoveryView from "@/components/Search/DiscoveryView";
+import { getNearestLocation, updateLocationCache } from "@/lib/db";
+import LocationModal from "@/components/UI/LocationModal";
+import FilterModal from "@/components/Search/FilterModal";
 
 export default function ExploreClient() {
   const router = useRouter();
@@ -41,21 +44,30 @@ export default function ExploreClient() {
     state: localState,
     nearby: isNearbyActive
   } = useSelector((state) => state.filters);
+  const { userCoords } = useSelector((state) => state.search);
 
   // Local UI State
   const [showFilters, setShowFilters] = useState(false);
   const [viewMode, setViewMode] = useState("grid");
   const [isDetecting, setIsDetecting] = useState(false);
   const [visibleCount, setVisibleCount] = useState(5);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [detectedData, setDetectedData] = useState(null);
+  const [pendingCoords, setPendingCoords] = useState(null);
+  const [localSubtitle, setLocalSubtitle] = useState("Nearby Shops");
+  const { sortBy, tags } = useSelector((state) => state.filters);
+  const activeFilterCount = (sortBy !== 'relevance' ? 1 : 0) + Object.values(tags).filter(Boolean).length;
 
   // Helper for dynamic title
   const getDynamicTitle = () => {
-    const q = searchParams.get("q");
-    const city = searchParams.get("city");
-    const category = searchParams.get("category");
-    const area = searchParams.get("area");
+    const q = localSearch;
+    const city = localCity;
+    const category = localCategory;
+    const area = localArea;
 
     if (q) return `Results for "${q}"`;
+    if (!category && !city && !area && isNearbyActive) return "Shops Near Me";
 
     let parts = [];
     if (category) {
@@ -76,21 +88,82 @@ export default function ExploreClient() {
   };
   const titleText = getDynamicTitle();
 
-  const [localSubtitle, setLocalSubtitle] = useState("");
-
   useEffect(() => {
+    if (!localCity && !isNearbyActive) {
+      setLocalSubtitle("");
+      dispatch(setUserCoords({ coords: null, name: "" })); // Clear coordinates if not nearby
+      return;
+    }
+    
     const lastCity = localStorage.getItem('last_city');
     const lastArea = localStorage.getItem('last_area');
-    if (lastArea && lastCity) {
-      setLocalSubtitle(`${lastArea} ${lastCity}`);
-    } else if (lastCity) {
-      setLocalSubtitle(lastCity);
+    const lastPin = localStorage.getItem('last_pincode');
+    const lastLat = localStorage.getItem('last_lat');
+    const lastLng = localStorage.getItem('last_lng');
+    
+    // Only use cached coords if nearby is active
+    if (isNearbyActive && lastLat && lastLng) {
+      dispatch(setUserCoords({ 
+        coords: { lat: parseFloat(lastLat), lng: parseFloat(lastLng) }, 
+        name: lastArea || lastCity 
+      }));
     }
-  }, []);
+
+    if (localCity && lastCity && localCity.toLowerCase() === lastCity.toLowerCase()) {
+      let sub = lastArea && lastArea !== "current" ? lastArea : "";
+      if (sub && lastCity) sub += `, ${lastCity}`;
+      else if (lastCity) sub = lastCity;
+      if (sub && lastPin) sub += ` ${lastPin}`;
+      setLocalSubtitle(sub);
+    } else if (localCity) {
+      setLocalSubtitle(`${localArea ? localArea + ', ' : ''}${localCity}`);
+    } else if (isNearbyActive && lastCity) {
+       setLocalSubtitle(`${lastArea ? lastArea + ', ' : ''}${lastCity}`);
+    }
+  }, [localCity, localArea, isNearbyActive]);
 
   useEffect(() => {
     document.title = `${titleText} | ShopSetu Marketplace`;
   }, [titleText]);
+
+  const applyLocation = (city, area, pincode, village, lat, lng) => {
+    const cleanCity = city.replace(/ District| Division/g, "");
+    const cleanArea = area ? area.replace(/ District| Division/g, "") : "";
+
+    localStorage.setItem('last_city', cleanCity);
+    if (cleanArea) localStorage.setItem('last_area', cleanArea);
+
+    if (pincode) localStorage.setItem('last_pincode', pincode);
+    else localStorage.removeItem('last_pincode');
+
+    if (village) localStorage.setItem('last_village', village);
+    else localStorage.removeItem('last_village');
+
+    localStorage.setItem('last_lat', lat);
+    localStorage.setItem('last_lng', lng);
+
+    const displayLocation = cleanArea
+      ? `${cleanArea}, ${cleanCity}${pincode ? ' ' + pincode : ''}`
+      : `${cleanCity}${pincode ? ' ' + pincode : ''}`;
+
+    setLocalSubtitle(displayLocation);
+    dispatch(setUserCoords({ 
+      coords: { lat, lng }, 
+      name: cleanArea || cleanCity 
+    }));
+
+    // Auto-update Redux filters to match
+    dispatch(setCity(cleanCity));
+    if (cleanArea) dispatch(setArea(cleanArea));
+
+    // Save to Cache for future users
+    updateLocationCache(cleanArea || cleanCity, lat, lng, {
+      city: cleanCity,
+      area: cleanArea,
+      pincode: pincode || "",
+      village: village || ""
+    });
+  };
 
   const detectLocation = () => {
     if (!navigator.geolocation) return;
@@ -99,50 +172,52 @@ export default function ExploreClient() {
       async (position) => {
         try {
           const { latitude, longitude } = position.coords;
-          const res = await fetch(
-            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`,
-            {
-              headers: { "User-Agent": "ShopSetu_Marketplace_App" }
-            }
-          );
 
-          if (res.status === 429) {
-            throw new Error("Location service is busy. Please try again in a few seconds.");
+          // 1. SMART CHECK: Is there a cached location within 2km?
+          const nearest = await getNearestLocation(latitude, longitude, 2000);
+
+          if (nearest) {
+            const areaName = nearest.area || nearest.name;
+            console.log("Smart Discovery: Match found in database for", areaName);
+            applyLocation(
+              nearest.city || nearest.name,
+              nearest.area || "",
+              nearest.pincode || "",
+              nearest.village || "",
+              latitude,
+              longitude
+            );
+            setIsDetecting(false);
+            return;
           }
+
+          console.log("Smart Discovery: No nearby match found. Starting discovery...");
+          const res = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&accept-language=en`,
+            { headers: { "User-Agent": "ShopSetu_Marketplace_App" } }
+          );
 
           const data = await res.json();
           const address = data.address || {};
-          const city = address.city || address.town || address.village || address.state_district;
-          const area = address.suburb || address.neighbourhood || address.residential || address.industrial;
 
-          if (city) {
-            const cleanCity = city.replace(/ District| Division/g, "");
-            const cleanArea = area ? area.replace(/ District| Division/g, "") : "";
+          const city = address.city || address.city_district || address.state_district || address.town || address.village || "";
+          const area = address.suburb || address.neighbourhood || address.residential || "";
+          const village = address.village || address.hamlet || "";
+          const pincode = address.postcode || "";
 
-            dispatch(setCity(cleanCity));
-            if (cleanArea) dispatch(setArea(cleanArea));
-
-            const params = new URLSearchParams(searchParams.toString());
-            params.set("city", slugify(cleanCity));
-            if (cleanArea) params.set("area", slugify(cleanArea));
-            params.set("nearby", "true");
-
-            router.replace(`${pathname}?${params.toString()}`, { scroll: false });
-
-            // Also update localStorage for persistent context
-            localStorage.setItem('last_city', cleanCity);
-            if (cleanArea) localStorage.setItem('last_area', cleanArea);
-          }
+          setDetectedData({ city, area, village, pincode });
+          setPendingCoords({ lat: latitude, lng: longitude });
+          setIsModalOpen(true);
         } catch (error) {
           console.error("Location error:", error);
-          alert(error.message.includes("busy") ? error.message : "Could not detect your location precisely.");
+          alert("Could not detect your location precisely.");
         } finally {
           setIsDetecting(false);
         }
       },
-      (error) => {
+      () => {
         setIsDetecting(false);
-        alert("Location access denied. Please enable location permissions in your browser.");
+        alert("Location access denied.");
       }
     );
   };
@@ -165,14 +240,12 @@ export default function ExploreClient() {
   };
 
   useEffect(() => {
-    // Only auto-detect on initial load if nearby is true and no city is set
     if (searchParams.get("nearby") === "true" && !searchParams.get("city") && !isDetecting) {
       detectLocation();
     }
-  }, []); // Run once on mount
+  }, []);
 
   useEffect(() => {
-    // Sync URL params to Redux on mount
     dispatch(setAllFilters({
       search: searchParams.get("q") || "",
       state: searchParams.get("state") || "",
@@ -184,9 +257,8 @@ export default function ExploreClient() {
 
     dispatch(fetchApprovedShops());
     dispatch(fetchCategories());
-  }, []); // Run once on mount
+  }, []);
 
-  // Sync with Smart Search Results
   useEffect(() => {
     const q = searchParams.get("q") || "";
     const city = searchParams.get("city") || "";
@@ -202,7 +274,7 @@ export default function ExploreClient() {
 
     dispatch(setParsed(parsed));
     dispatch(fetchSearchResults(parsed));
-  }, [searchParams, dispatch]);
+  }, [searchParams, dispatch, userCoords]);
 
   const handleSearch = (shouldCloseFilters = false) => {
     const params = new URLSearchParams();
@@ -217,7 +289,6 @@ export default function ExploreClient() {
     if (shouldCloseFilters) setShowFilters(false);
   };
 
-  // Live Search Effect (Debounced)
   useEffect(() => {
     const timer = setTimeout(() => {
       const currentQ = searchParams.get("q") || "";
@@ -226,7 +297,6 @@ export default function ExploreClient() {
       const currentCat = searchParams.get("category") || "";
       const currentA = searchParams.get("area") || "";
 
-      // Check if any local state differs from URL params
       if (
         localSearch !== currentQ ||
         localState !== currentS ||
@@ -240,7 +310,6 @@ export default function ExploreClient() {
     return () => clearTimeout(timer);
   }, [localSearch, localState, localCity, localCategory, localArea, searchParams]);
 
-  // Reset pagination when search/filters change
   useEffect(() => {
     setVisibleCount(5);
   }, [localSearch, localState, localCity, localCategory, localArea]);
@@ -254,7 +323,6 @@ export default function ExploreClient() {
     <div className="min-h-screen bg-[#FAFAF8]">
       <Navbar />
 
-      {/* SMART SEARCH BAR (Mobile/Tablet Only) */}
       <div className="sticky top-16 z-40 py-2 px-3 md:px-6 transition-all lg:hidden bg-[#FAFAF8]/95 backdrop-blur-sm">
         <div className="max-w-7xl mx-auto flex items-center gap-3 md:gap-6 group">
           <div className="flex-1 w-full transition-all duration-300">
@@ -270,6 +338,19 @@ export default function ExploreClient() {
             >
               <span className="hidden md:inline">{isNearbyActive ? "Near Me Active" : "Near Me"}</span>
             </Button>
+            <Button
+              variant={activeFilterCount > 0 ? "primary" : "ghost"}
+              onClick={() => setIsFilterOpen(true)}
+              icon={SlidersHorizontal}
+              className="px-3 md:px-5 relative"
+            >
+              <span className="hidden md:inline">Filters</span>
+              {activeFilterCount > 0 && (
+                <span className="absolute -top-1 -right-1 w-5 h-5 bg-[#1A1F36] text-white text-[10px] flex items-center justify-center rounded-full border-2 border-white">
+                  {activeFilterCount}
+                </span>
+              )}
+            </Button>
             <Button variant="ghost" onClick={handleReset} icon={RotateCcw} className="px-3 md:px-5">
               <span className="hidden md:inline">Reset</span>
             </Button>
@@ -277,8 +358,45 @@ export default function ExploreClient() {
         </div>
       </div>
 
-      {/* MAIN CONTENT */}
-      <DiscoveryView title={titleText} subtitle={localSubtitle} />
+      <DiscoveryView 
+        title={titleText} 
+        subtitle={isNearbyActive ? localSubtitle : ""} 
+        onSubtitleClick={() => {
+          setDetectedData({
+            city: localCity || localStorage.getItem('last_city') || "",
+            area: localArea || localStorage.getItem('last_area') || "",
+            pincode: localStorage.getItem('last_pincode') || "",
+            village: "",
+            lat: userCoords?.lat || null,
+            lng: userCoords?.lng || null
+          });
+          setIsModalOpen(true);
+        }}
+      />
+
+      <FilterModal 
+        isOpen={isFilterOpen} 
+        onClose={() => setIsFilterOpen(false)} 
+      />
+
+      <LocationModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        detectedLocation={detectedData}
+        onConfirm={(confirmed, isManual, mapCoords) => {
+          const finalLat = mapCoords ? mapCoords.lat : (pendingCoords ? pendingCoords.lat : null);
+          const finalLng = mapCoords ? mapCoords.lng : (pendingCoords ? pendingCoords.lng : null);
+          
+          applyLocation(
+            confirmed.city,
+            confirmed.area,
+            isManual ? confirmed.pincode : "",
+            isManual ? confirmed.village : "",
+            finalLat,
+            finalLng
+          );
+        }}
+      />
     </div>
   );
 }

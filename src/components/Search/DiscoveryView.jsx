@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { useRouter } from "next/navigation";
 import ShopCard from "@/components/Shop/ShopCard";
@@ -13,7 +13,9 @@ import Button from "@/components/UI/Button";
 import { setSearch } from "@/redux/slices/filterSlice";
 import { generateDiscoveryUrl } from "@/lib/urlArchitect";
 
-const DiscoveryView = ({ title, subtitle }) => {
+import ShopCardSkeleton from "@/components/UI/ShopCardSkeleton";
+
+const DiscoveryView = ({ title, subtitle, onSubtitleClick }) => {
   const dispatch = useDispatch();
   const router = useRouter();
   const { results: filteredShops, loading: shopsLoading, parsed } = useSelector((state) => state.search);
@@ -21,6 +23,7 @@ const DiscoveryView = ({ title, subtitle }) => {
   const [clusters, setClusters] = useState([]);
   const [viewMode, setViewMode] = useState("grid");
   const [visibleCount, setVisibleCount] = useState(6);
+  const observerRef = useRef(null);
 
   useEffect(() => {
     const fetchClusters = async () => {
@@ -30,9 +33,9 @@ const DiscoveryView = ({ title, subtitle }) => {
     fetchClusters();
   }, []);
 
-  const handleClusterClick = (clusterName) => {
-    // Generate clean URL based on cluster and current location
-    const url = generateDiscoveryUrl("", parsed?.location, "all", clusterName);
+  const handleClusterClick = (clusterName, clusterLocation) => {
+    // Generate clean URL based on cluster and its own location instead of the user's search location
+    const url = generateDiscoveryUrl("", clusterLocation || "", "all", clusterName);
     router.push(url);
   };
 
@@ -40,18 +43,38 @@ const DiscoveryView = ({ title, subtitle }) => {
     setVisibleCount(6);
   }, [filteredShops]);
 
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && visibleCount < filteredShops.length) {
+          setVisibleCount((prev) => prev + 6);
+        }
+      },
+      { threshold: 1.0 }
+    );
+
+    if (observerRef.current) {
+      observer.observe(observerRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, [visibleCount, filteredShops.length]);
+
   return (
     <main className="max-w-7xl mx-auto px-4 md:px-8 py-8 md:py-22">
-      <header className="mb-6 flex flex-col md:flex-row md:items-end justify-between gap-4">
+      <header className="mb-6 mt-10 sm:mt-0 flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
-          <p className="text-[11px] font-bold text-[#FF6B35] uppercase tracking-[0.12em] mb-2">Verified Businesses</p>
           <h1 className="text-2xl md:text-4xl font-bold text-[#1A1F36] tracking-tight">
             {title}
           </h1>
           {subtitle && (
-            <div className="flex items-center gap-1.5 mt-2 text-[#FF6B35] font-semibold text-[13px]">
-              <MapPin size={14} />
+            <div 
+              onClick={onSubtitleClick}
+              className="flex items-center gap-1.5 mt-2 text-[#FF6B35] font-semibold text-[13px] hover:underline cursor-pointer group w-fit"
+            >
+              <MapPin size={14} className="group-hover:scale-110 transition-transform" />
               <span>{subtitle}</span>
+              <span className="text-[10px] text-[#FF6B35]/70 ml-1 font-normal opacity-0 group-hover:opacity-100 transition-opacity">(Click to change)</span>
             </div>
           )}
           <p className="text-[15px] text-[#1A1F36]/50 mt-1">
@@ -76,7 +99,7 @@ const DiscoveryView = ({ title, subtitle }) => {
         </div>
       </header>
 
-      {!shopsLoading && filteredShops.length > 0 && (
+      {(clusters.length > 0) && (
         <ClusterSlider
           clusters={clusters}
           shops={allShops}
@@ -86,16 +109,9 @@ const DiscoveryView = ({ title, subtitle }) => {
       )}
 
       {shopsLoading ? (
-        <div className={`grid gap-6 ${viewMode === "grid" ? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3" : "grid-cols-1"}`}>
+        <div className={viewMode === "grid" ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8" : "space-y-6"}>
           {[1, 2, 3, 4, 5, 6].map((i) => (
-            <div key={i} className="bg-white rounded-2xl border border-[#1A1F36]/[0.06] p-6 animate-pulse">
-              <div className="flex justify-between mb-4">
-                <div className="w-12 h-12 rounded-xl bg-gray-100" />
-                <div className="w-20 h-6 rounded-full bg-gray-100" />
-              </div>
-              <div className="w-3/4 h-5 rounded bg-gray-100 mb-3" />
-              <div className="w-full h-10 rounded-xl bg-gray-100" />
-            </div>
+            <ShopCardSkeleton key={i} variant={viewMode} />
           ))}
         </div>
       ) : filteredShops.length > 0 ? (
@@ -114,19 +130,15 @@ const DiscoveryView = ({ title, subtitle }) => {
             ))}
           </div>
 
-          {visibleCount < filteredShops.length && (
-            <div className="mt-8 flex justify-center">
-              <Button
-                variant="outline"
-                size="lg"
-                onClick={() => setVisibleCount(prev => prev + 6)}
-                className="px-12 py-6 text-[14px] font-bold border-2 hover:bg-[#1A1F36] hover:text-white transition-all shadow-lg hover:shadow-[#1A1F36]/20 group"
-              >
-                Show More Shops
-                <ChevronDown size={18} className="ml-2 group-hover:translate-y-1 transition-transform" />
-              </Button>
-            </div>
-          )}
+          {/* Infinite Scroll Trigger */}
+          <div ref={observerRef} className="h-20 flex items-center justify-center">
+            {visibleCount < filteredShops.length && (
+              <div className="flex items-center gap-2 text-[#FF6B35] font-bold text-[13px]">
+                <div className="w-4 h-4 border-2 border-[#FF6B35] border-t-transparent rounded-full animate-spin" />
+                <span>Discovering more...</span>
+              </div>
+            )}
+          </div>
         </>
       ) : (
         <div className="bg-white rounded-3xl border border-[#1A1F36]/[0.07] py-24 px-6 flex flex-col items-center text-center gap-5 max-w-2xl mx-auto shadow-md">

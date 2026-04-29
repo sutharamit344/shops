@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { getShopsByOwner, isUserAdmin } from "@/lib/db";
+import { useSelector } from "react-redux";
 import Navbar from "@/components/Navbar";
 import Card from "@/components/UI/Card";
 import Button from "@/components/UI/Button";
@@ -14,10 +15,12 @@ import {
   TrendingUp, LayoutDashboard, Settings, HelpCircle,
   LogOut, ChevronDown, Shield, Star, Calendar, Mail, User,
   X, ShoppingBag, ListFilter, Image as ImageIcon, Share2,
-  ArrowLeft, ChevronLeft
+  ArrowLeft, ChevronLeft,
+  ArrowRight, Heart
 } from "lucide-react";
 
 import ShopHistoryDialog from "@/components/Shop/HistoryDialog";
+import ShopCard from "@/components/Shop/ShopCard";
 
 const UserDashboard = () => {
   const { user, loading: authLoading, loginWithGoogle, logout } = useAuth();
@@ -98,8 +101,12 @@ const UserDashboard = () => {
     shop.category?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  const { favorites } = useSelector((state) => state.auth);
+  const { items: allShops } = useSelector((state) => state.shops);
+
   const sidebarItems = [
     { id: "businesses", label: "My Businesses", icon: Store, count: shops.length },
+    { id: "saved", label: "Saved Shops", icon: Heart, count: favorites.length },
     { id: "profile", label: "My Profile", icon: User },
     ...(isAdmin ? [{ id: "admin", label: "Admin Panel", icon: Shield, href: "/admin" }] : []),
   ];
@@ -186,13 +193,11 @@ const UserDashboard = () => {
           <nav className={`space-y-1.5 w-full ${isSidebarCollapsed ? "flex flex-col items-center" : ""}`}>
             {sidebarItems.map((item) => {
               const isActive = activeTab === item.id;
-              const baseStyles = `flex items-center justify-between rounded-2xl text-[14px] font-bold transition-all duration-300 ${
-                isSidebarCollapsed ? "w-12 h-12 justify-center" : "w-full px-4 py-3.5"
-              } ${
-                isActive
+              const baseStyles = `flex items-center justify-between rounded-2xl text-[14px] font-bold transition-all duration-300 ${isSidebarCollapsed ? "w-12 h-12 justify-center" : "w-full px-4 py-3.5"
+                } ${isActive
                   ? "bg-[#1A1F36] text-white shadow-md shadow-[#1A1F36]/20"
                   : "text-[#1A1F36]/40 hover:bg-[#FAFAF8] hover:text-[#1A1F36]"
-              }`;
+                }`;
 
               return item.href ? (
                 <Link key={item.id} href={item.href} className={baseStyles} title={isSidebarCollapsed ? item.label : ""}>
@@ -209,7 +214,7 @@ const UserDashboard = () => {
 
           <div className="mt-auto space-y-6 w-full">
             <div className={`pt-6 border-t border-[#1A1F36]/[0.06] ${isSidebarCollapsed ? "flex flex-col items-center" : ""}`}>
-               <button onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)} className={`flex items-center rounded-xl text-[#1A1F36]/30 hover:bg-[#FAFAF8] hover:text-[#1A1F36] transition-all ${isSidebarCollapsed ? "w-12 h-12 justify-center" : "w-full px-4 py-3 gap-3"}`}>
+              <button onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)} className={`flex items-center rounded-xl text-[#1A1F36]/30 hover:bg-[#FAFAF8] hover:text-[#1A1F36] transition-all ${isSidebarCollapsed ? "w-12 h-12 justify-center" : "w-full px-4 py-3 gap-3"}`}>
                 {isSidebarCollapsed ? <ChevronRight size={18} /> : <><ChevronLeft size={18} /><span className="text-[13px] font-bold animate-in fade-in">Collapse Menu</span></>}
               </button>
             </div>
@@ -344,6 +349,44 @@ const UserDashboard = () => {
               )}
             </div>
           )}
+          {activeTab === "saved" && (
+            <div className="animate-in fade-in duration-700 slide-in-from-bottom-4">
+              <header className="mb-12">
+                <div className="inline-flex items-center gap-2.5 px-4 py-1.5 bg-red-50 rounded-full mb-6 border border-red-100">
+                  <Heart size={14} className="text-red-500 fill-current" />
+                  <span className="text-[10px] font-bold text-red-500 uppercase tracking-widest">Personal Favorites</span>
+                </div>
+                <h1 className="text-3xl md:text-5xl font-extrabold text-[#1A1F36] tracking-tight mb-4">Saved Shops</h1>
+                <p className="text-[17px] text-[#1A1F36]/40 font-medium max-w-xl">Quickly access the local businesses you love and follow.</p>
+              </header>
+
+              {favorites.length === 0 ? (
+                <Card className="py-24 text-center border-dashed border-[#1A1F36]/[0.1]">
+                  <div className="w-20 h-20 bg-[#FAFAF8] rounded-3xl flex items-center justify-center mx-auto mb-8 text-[#1A1F36]/10">
+                    <Heart size={40} />
+                  </div>
+                  <h2 className="text-2xl font-bold text-[#1A1F36] mb-3">No saved shops</h2>
+                  <p className="text-[16px] text-[#1A1F36]/40 max-w-sm mx-auto font-medium">
+                    Start exploring the marketplace and heart the shops you want to save for later.
+                  </p>
+                  <Link href="/explore" className="inline-block mt-10">
+                    <Button variant="primary" size="lg" icon={Search}>Explore Shops</Button>
+                  </Link>
+                </Card>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
+                  {allShops
+                    .filter(shop => favorites.includes(shop.id))
+                    .map(shop => (
+                      <div key={shop.id} className="h-full">
+                        <ShopCard shop={shop} variant="grid" />
+                      </div>
+                    ))
+                  }
+                </div>
+              )}
+            </div>
+          )}
 
           {activeTab === "profile" && (
             <div className="animate-in fade-in duration-700 slide-in-from-bottom-4 max-w-4xl">
@@ -384,9 +427,9 @@ const UserDashboard = () => {
                         ))}
                       </div>
                     </div>
-                    
+
                     <div className="pt-6">
-                       <Button variant="outline" className="bg-white border-red-100 text-red-500 hover:bg-red-50 hover:border-red-200" onClick={logout} icon={LogOut}>Logout Securely</Button>
+                      <Button variant="outline" className="bg-white border-red-100 text-red-500 hover:bg-red-50 hover:border-red-200" onClick={logout} icon={LogOut}>Logout Securely</Button>
                     </div>
                   </div>
                 </div>

@@ -20,6 +20,7 @@ import {
   MapPin,
   ChevronRight,
   Phone,
+  Award,
 } from "lucide-react";
 import { slugify } from "@/lib/slugify";
 import Button from "@/components/UI/Button";
@@ -227,6 +228,77 @@ export default function Home() {
               </Link>
             ))}
           </div>
+        </div>
+      </section>
+
+      {/* ── SEARCH GUIDE ───────────────────────────────────────── */}
+      <section className="py-24 px-6 md:px-12 max-w-7xl mx-auto w-full">
+        <div className="text-center mb-16">
+          <p className="text-[11px] font-bold text-[#FF6B35] uppercase tracking-[0.15em] mb-4">
+            Search Like a Pro
+          </p>
+          <h2 className="text-[32px] md:text-[48px] font-bold text-[#1A1F36] leading-tight tracking-tight">
+            How to find exactly what you need
+          </h2>
+          <p className="text-[16px] text-[#1A1F36]/50 mt-4 max-w-2xl mx-auto font-medium">
+            Our smart search understands natural language. Use these structures
+            for the best results.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {[
+            {
+              title: "Category + Location",
+              example: '"Bakery in Thaltej"',
+              desc: "Best for finding specific types of shops in a particular neighborhood.",
+              icon: MapPin,
+              color: "bg-blue-50 text-blue-500",
+            },
+            {
+              title: "Intent Based",
+              example: '"Salon near me"',
+              desc: "Uses your real-time GPS to find the closest verified businesses.",
+              icon: Navigation,
+              color: "bg-emerald-50 text-emerald-500",
+            },
+            {
+              title: "Direct Hubs",
+              example: '"Food Park"',
+              desc: "Search for market names or specialized business clusters directly.",
+              icon: Award,
+              color: "bg-amber-50 text-amber-500",
+            },
+            {
+              title: "Top Rated",
+              example: '"Best Cafe in Gota"',
+              desc: "Finds high-rated businesses in your area with verified reviews.",
+              icon: Star,
+              color: "bg-purple-50 text-purple-500",
+            },
+          ].map((item, i) => (
+            <Card
+              key={i}
+              className="p-8 border-[#1A1F36]/[0.04] hover:border-[#FF6B35]/20 transition-all group"
+            >
+              <div
+                className={`w-12 h-12 rounded-2xl flex items-center justify-center mb-6 ${item.color}`}
+              >
+                <item.icon size={22} />
+              </div>
+              <h3 className="text-[17px] font-bold text-[#1A1F36] mb-2">
+                {item.title}
+              </h3>
+              <div className="bg-[#FAFAF8] rounded-xl px-4 py-3 mb-4 border border-black/[0.03]">
+                <code className="text-[13px] font-bold text-[#FF6B35]">
+                  {item.example}
+                </code>
+              </div>
+              <p className="text-[13px] text-[#1A1F36]/50 leading-relaxed font-medium">
+                {item.desc}
+              </p>
+            </Card>
+          ))}
         </div>
       </section>
 

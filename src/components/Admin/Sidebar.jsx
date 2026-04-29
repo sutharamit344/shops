@@ -6,7 +6,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { 
   ShieldCheck, LayoutDashboard, Store, Tag, 
   History, LogOut, ArrowLeft, ExternalLink, Settings, X,
-  ChevronLeft, ChevronRight
+  ChevronLeft, ChevronRight, Database
 } from "lucide-react";
 
 const Sidebar = ({ activeTab, onTabChange, isOpen, onClose, isCollapsed, onToggleCollapse }) => {
@@ -16,6 +16,7 @@ const Sidebar = ({ activeTab, onTabChange, isOpen, onClose, isCollapsed, onToggl
     { id: 'dashboard', label: 'Overview', icon: LayoutDashboard },
     { id: 'shops', label: 'Businesses', icon: Store },
     { id: 'categories', label: 'Categories', icon: Tag },
+    { id: 'database', label: 'Database', icon: Database },
     { id: 'activity', label: 'Global Logs', icon: History }
   ];
 

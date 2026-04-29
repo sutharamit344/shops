@@ -189,10 +189,12 @@ const ShopProfileClient = ({ shop }) => {
                   <h1 className="text-2xl font-bold text-[#0F0F0F] tracking-tight">
                     {shop.name}
                   </h1>
-                  <div className="flex items-center gap-1 px-2 py-0.5 bg-[#FF6B35]/10 rounded-lg">
-                    <ShieldCheck size={12} className="text-[#FF6B35]" />
-                    <span className="text-[9px] font-semibold text-[#FF6B35]">Verified</span>
-                  </div>
+                  {shop.isVerified && (
+                    <div className="flex items-center gap-1 px-2 py-0.5 bg-blue-50 rounded-lg border border-blue-100">
+                      <ShieldCheck size={12} className="text-blue-500" />
+                      <span className="text-[9px] font-bold text-blue-600 uppercase tracking-tight">Verified</span>
+                    </div>
+                  )}
                 </div>
 
                 <div className="flex flex-wrap items-center gap-4 text-[12px] text-[#666] mb-3">
@@ -510,17 +512,19 @@ const ShopProfileClient = ({ shop }) => {
             </div>
 
             {/* Verified Badge */}
-            <div className="bg-gray-50 rounded-xl p-4 border border-black/[0.06] mb-6">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-[#25D366]/10 flex items-center justify-center">
-                  <ShieldCheck size={18} className="text-[#25D366]" />
-                </div>
-                <div>
-                  <p className="text-[13px] font-semibold text-[#0F0F0F]">Verified Business</p>
-                  <p className="text-[11px] text-[#666]">Identity and location verified by ShopSetu</p>
+            {shop.isVerified && (
+              <div className="bg-blue-50 rounded-xl p-4 border border-blue-100 mb-6">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center">
+                    <ShieldCheck size={18} className="text-blue-500" />
+                  </div>
+                  <div>
+                    <p className="text-[13px] font-bold text-blue-900">Verified Business</p>
+                    <p className="text-[11px] text-blue-700 font-medium leading-tight">Identity and physical location verified by ShopSetu</p>
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
           </div>
         )}
 

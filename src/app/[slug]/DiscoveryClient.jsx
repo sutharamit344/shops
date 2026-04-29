@@ -1,19 +1,22 @@
 "use client";
 
 import React, { useEffect } from "react";
-import { useDispatch } from "react-redux";
-import { setParsed, setQuery } from "@/redux/slices/searchSlice";
+import { useDispatch, useSelector } from "react-redux";
+import { setParsed, setQuery, setUserCoords } from "@/redux/slices/searchSlice";
 import { fetchSearchResults } from "@/redux/thunks/searchThunks";
 import { fetchApprovedShops } from "@/redux/thunks/shopThunks";
 import { fetchCategories } from "@/redux/thunks/categoryThunks";
 import DiscoveryView from "@/components/Search/DiscoveryView";
 import SmartSearch from "@/components/Search/SmartSearch";
 import Navbar from "@/components/Navbar";
+import LocationModal from "@/components/UI/LocationModal";
 
 export default function DiscoveryClient({ slug, parsed }) {
   const dispatch = useDispatch();
+  const userCoords = useSelector((state) => state.search.userCoords);
   const [localTitle, setLocalTitle] = React.useState("");
   const [localSubtitle, setLocalSubtitle] = React.useState("");
+  const [isModalOpen, setIsModalOpen] = React.useState(false);
 
   useEffect(() => {
     const hydrate = async () => {
@@ -30,11 +33,23 @@ export default function DiscoveryClient({ slug, parsed }) {
       // Check for personalized location info
       const lastCity = localStorage.getItem('last_city');
       const lastArea = localStorage.getItem('last_area');
-      if (lastArea && lastCity) {
-        setLocalSubtitle(`${lastArea} ${lastCity}`);
-      } else if (lastCity) {
-        setLocalSubtitle(lastCity);
+      const lastPin = localStorage.getItem('last_pincode');
+      
+      let sub = "";
+      const safeArea = lastArea && lastArea !== "current" ? lastArea : "";
+      const safeCity = lastCity && lastCity !== "current" ? lastCity : "";
+
+      if (safeArea && safeCity) {
+        sub = `${safeArea}, ${safeCity}`;
+      } else if (safeCity) {
+        sub = safeCity;
       }
+      
+      if (sub && lastPin) {
+        sub += ` ${lastPin}`;
+      }
+      
+      setLocalSubtitle(sub);
 
       // Fetch data
       await Promise.all([
@@ -57,7 +72,41 @@ export default function DiscoveryClient({ slug, parsed }) {
         </div>
       </div>
 
-      <DiscoveryView title={localTitle || "Shops"} subtitle={localSubtitle} />
+      <DiscoveryView 
+        title={localTitle || "Shops"} 
+        subtitle={localSubtitle} 
+        onSubtitleClick={() => setIsModalOpen(true)}
+      />
+
+      <LocationModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        detectedLocation={{
+          city: typeof window !== 'undefined' ? localStorage.getItem('last_city') || "" : "",
+          area: typeof window !== 'undefined' ? localStorage.getItem('last_area') || "" : "",
+          pincode: typeof window !== 'undefined' ? localStorage.getItem('last_pincode') || "" : "",
+          lat: userCoords?.lat || null,
+          lng: userCoords?.lng || null
+        }}
+        onConfirm={(confirmed, isManual, mapCoords) => {
+          if (typeof window !== 'undefined') {
+            localStorage.setItem('last_city', confirmed.city || "");
+            localStorage.setItem('last_area', confirmed.area || "");
+            localStorage.setItem('last_pincode', confirmed.pincode || "");
+          }
+          
+          if (mapCoords && mapCoords.lat && mapCoords.lng) {
+            dispatch(setUserCoords({ lat: mapCoords.lat, lng: mapCoords.lng }));
+          }
+
+          let sub = confirmed.area ? `${confirmed.area}, ${confirmed.city}` : confirmed.city;
+          if (confirmed.pincode) sub += ` ${confirmed.pincode}`;
+          setLocalSubtitle(sub);
+          
+          // Re-fetch using new location context
+          dispatch(fetchSearchResults(parsed));
+        }}
+      />
     </div>
   );
 }

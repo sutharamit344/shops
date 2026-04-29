@@ -7,6 +7,11 @@ const initialState = {
   category: "",
   area: "",
   nearby: false,
+  sortBy: "relevance", // relevance, distance, rating
+  tags: {
+    openNow: false,
+    verified: false,
+  }
 };
 
 const filterSlice = createSlice({
@@ -23,12 +28,19 @@ const filterSlice = createSlice({
     setAllFilters: (state, action) => {
       return { ...state, ...action.payload };
     },
+    setSortBy: (state, action) => {
+      state.sortBy = action.payload;
+    },
+    toggleTag: (state, action) => {
+      const tagName = action.payload;
+      state.tags[tagName] = !state.tags[tagName];
+    },
   },
 });
 
 export const { 
   setSearch, setState, setCity, setCategory, setArea, setNearby, 
-  resetFilters, setAllFilters 
+  resetFilters, setAllFilters, setSortBy, toggleTag 
 } = filterSlice.actions;
 
 export default filterSlice.reducer;

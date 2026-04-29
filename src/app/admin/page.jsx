@@ -12,6 +12,7 @@ import AdminShopCard from "@/components/Admin/ShopCard";
 
 import CategoryManager from "@/components/Admin/CategoryManager";
 import GlobalActivity from "@/components/Admin/GlobalActivity";
+import DatabaseManager from "@/components/Admin/DatabaseManager";
 import Sidebar from "@/components/Admin/Sidebar";
 import Pagination from "@/components/UI/Pagination";
 import { ShieldCheck, RefreshCw, AlertCircle, ShieldAlert, LayoutDashboard, Tag, LogOut, Loader2, History, Search, Store, ArrowRight, CheckCircle2, Clock, ChevronLeft, ChevronRight, Menu } from "lucide-react";
@@ -527,6 +528,10 @@ const AdminDashboard = () => {
                   })()}
                 </div>
               )}
+            </div>
+          ) : activeMainTab === "database" ? (
+            <div className="mx-auto max-w-7xl w-full">
+              <DatabaseManager />
             </div>
           ) : activeMainTab === "categories" ? (
             <div className="mx-auto max-w-7xl w-full">

@@ -12,6 +12,8 @@ import { getSuggestions } from "@/lib/searchEngine";
 import { fetchCategories, fetchClusters } from "@/redux/thunks/categoryThunks";
 import { fetchApprovedShops } from "@/redux/thunks/shopThunks";
 
+import { getCachedLocation, updateLocationCache } from "@/lib/db";
+
 const SmartSearch = () => {
   const dispatch = useDispatch();
   const router = useRouter();
@@ -29,42 +31,6 @@ const SmartSearch = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(-1);
   const containerRef = useRef(null);
-
-  // Geolocation detection
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-
-    const savedCity = localStorage.getItem('last_city');
-    const savedArea = localStorage.getItem('last_area');
-    if ((!savedCity || !savedArea) && navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(async (position) => {
-        try {
-          const { latitude, longitude } = position.coords;
-          // Use BigDataCloud for precise area detection (free tier)
-          const res = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=en`);
-          const data = await res.json();
-
-          if (data.city) {
-            localStorage.setItem('last_city', data.city);
-          }
-          if (data.locality) {
-            localStorage.setItem('last_area', data.locality);
-          }
-        } catch (e) {
-          // Fallback to IP-based if GPS fails
-          try {
-            const res = await fetch(`https://ipapi.co/json/`);
-            const data = await res.json();
-            if (data.city) {
-              localStorage.setItem('last_city', data.city);
-            }
-          } catch (err) {
-            console.error("Location detection failed", err);
-          }
-        }
-      });
-    }
-  }, []);
 
   // Close suggestions on click outside
   useEffect(() => {
@@ -326,7 +292,7 @@ const SmartSearch = () => {
     return () => clearTimeout(timer);
   }, [query, isOpen, categories, shops, recentSearches, dispatch]);
 
-  const handleSearch = (selectedItem) => {
+  const handleSearch = async (selectedItem) => {
     const searchText = typeof selectedItem === 'string' ? selectedItem : (selectedItem?.text || query);
     if (!searchText) return;
 
@@ -338,6 +304,32 @@ const SmartSearch = () => {
     }
 
     const parsed = parseSmartQuery(searchText, clusters.map(c => c.name));
+
+    // SMART CACHE LOGIC
+    if (parsed.location && parsed.location !== "current") {
+      try {
+        const cached = await getCachedLocation(parsed.location);
+        if (!cached) {
+          // Fetch from Nominatim (Free) and Save to Cache
+          const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(parsed.location)}&limit=1`);
+          const geoData = await res.json();
+          if (geoData && geoData[0]) {
+            const lat = parseFloat(geoData[0].lat);
+            const lng = parseFloat(geoData[0].lon);
+            await updateLocationCache(parsed.location, lat, lng);
+
+            // Note: Nominatim doesn't provide structured address components 
+            // as easily as Google, so we keep the city detection simple.
+            localStorage.setItem('last_city', parsed.location.split(',').pop().trim());
+          }
+        } else {
+          // Existing cache hit - update local context
+          localStorage.setItem('last_city', cached.name.split(',').pop().trim());
+        }
+      } catch (e) {
+        console.error("Cache update failed:", e);
+      }
+    }
 
     const url = generateDiscoveryUrl(parsed.category, parsed.location, parsed.type, parsed.clusterType);
 
