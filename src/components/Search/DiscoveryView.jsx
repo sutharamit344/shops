@@ -99,7 +99,7 @@ const DiscoveryView = ({ title, subtitle, onSubtitleClick }) => {
         </div>
       </header>
 
-      {(clusters.length > 0) && (
+      {!shopsLoading && filteredShops.length > 0 && (
         <ClusterSlider
           clusters={clusters}
           shops={allShops}

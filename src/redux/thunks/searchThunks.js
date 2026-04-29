@@ -17,8 +17,6 @@ const getDistance = (lat1, lon1, lat2, lon2) => {
   return R * c;
 };
 
-import { normalizeForSearch } from "@/lib/searchUtils";
-
 export const fetchSearchResults = createAsyncThunk(
   "search/fetchResults",
   async ({ category, location, type, clusterType }, { getState }) => {
@@ -29,13 +27,27 @@ export const fetchSearchResults = createAsyncThunk(
       getClusters(),
     ]);
 
+    // ... existing normalization code ...
+    const normalize = (s) => {
+      if (!s) return "";
+      return slugify(s)
+        .replace(/-/g, " ")
+        .replace(/\band\b/g, "")
+        .replace(/\bservices\b/g, "service")
+        .replace(/\bshops\b/g, "shop")
+        .replace(/\bshop\b/g, "")
+        .replace(/\bservice\b/g, "")
+        .replace(/\s+/g, " ")
+        .trim();
+    };
+
     let finalClusterType = clusterType;
     let finalCategory = category;
 
     if (!finalClusterType && category) {
-      const normalizedInputCat = normalizeForSearch(category);
+      const normalizedInputCat = normalize(category);
       const match = allClusters.find(
-        (c) => normalizeForSearch(c.name) === normalizedInputCat,
+        (c) => normalize(c.name) === normalizedInputCat,
       );
       if (match) {
         finalClusterType = match.name;
@@ -43,13 +55,12 @@ export const fetchSearchResults = createAsyncThunk(
       }
     }
 
-    const normalizedQueryCat = normalizeForSearch(finalCategory || "", true);
-    const normalizedCluster = normalizeForSearch(finalClusterType || "");
+    const normalizedQueryCat = normalize(finalCategory || "");
+    const normalizedCluster = normalize(finalClusterType || "");
 
     const filtered = allShops.filter((shop) => {
-      const shopCat = normalizeForSearch(shop.category || "");
-      const shopCluster = normalizeForSearch(shop.clusterType || "");
-      const shopNameNormalized = normalizeForSearch(shop.name || "");
+      const shopCat = normalize(shop.category || "");
+      const shopCluster = normalize(shop.clusterType || "");
 
       let matchCategory = false;
 
@@ -61,70 +72,54 @@ export const fetchSearchResults = createAsyncThunk(
           shopCat === normalizedQueryCat ||
           shopCluster === normalizedQueryCat ||
           shopCat.includes(normalizedQueryCat) ||
-          normalizedQueryCat.includes(shopCat) ||
-          shopNameNormalized.includes(normalizedQueryCat);
+          normalizedQueryCat.includes(shopCat);
       }
 
       let matchLocation = true;
-      const isNearby = type === "nearby" || (getState().filters && getState().filters.nearby);
-      let targetCity = "";
-
       if (location) {
-        targetCity = location;
+        let targetCity = location;
         if (location === "current") {
-          // If nearby mode is active, we MUST have a location.
-          // If not active, we ignore "current" to allow global title search.
-          if (isNearby) {
+          // Strict: Only use local fallbacks if the user is explicitly in "Nearby" mode.
+          if (type === "nearby") {
             if (userCoords && userCoords.lat && userCoords.lng) {
-              targetCity = ""; // Use coordinates for sorting instead of strict city match
+              targetCity = "";
             } else {
-              targetCity = typeof window !== "undefined" ? localStorage.getItem("last_city") : "";
+              targetCity =
+                typeof window !== "undefined"
+                  ? localStorage.getItem("last_city")
+                  : "";
             }
           } else {
-            targetCity = ""; // Global search
+            targetCity = ""; // Ignore "current" if not in nearby mode
           }
         }
 
         if (targetCity && targetCity !== "current") {
           const normalizedLoc = slugify(targetCity);
           const locParts = targetCity.toLowerCase().split(/\s+/).map(slugify);
-          
-          const shopCitySlug = slugify(shop.city || "");
-          const shopAreaSlug = slugify(shop.area || "");
-          const shopVillageSlug = slugify(shop.village || "");
 
           if (locParts.length > 1) {
+            const shopCitySlug = slugify(shop.city || "");
+            const shopAreaSlug = slugify(shop.area || "");
             matchLocation = locParts.some(
               (part) =>
                 (part.length > 2 &&
                   (shopCitySlug.includes(part) ||
-                    shopAreaSlug.includes(part) ||
-                    shopVillageSlug.includes(part))) ||
+                    shopAreaSlug.includes(part))) ||
                 shopCitySlug === part ||
-                shopAreaSlug === part ||
-                shopVillageSlug === part
+                shopAreaSlug === part,
             );
           } else {
+            const shopCitySlug = slugify(shop.city || "");
+            const shopAreaSlug = slugify(shop.area || "");
             matchLocation =
               shopCitySlug === normalizedLoc ||
               shopAreaSlug === normalizedLoc ||
-              shopVillageSlug === normalizedLoc ||
               (normalizedLoc.length > 3 &&
                 (shopCitySlug.includes(normalizedLoc) ||
                   shopAreaSlug.includes(normalizedLoc)));
           }
         }
-      }
-
-      // If nearby is ON but we have NO location match (and we are filtering by location), 
-      // it should be false. But if it's OFF, we allow global results for title searches.
-      if (isNearby && location === "current" && !targetCity && (!userCoords || !userCoords.lat)) {
-         // This case shouldn't happen often but if it does, fallback to last_city if available
-         const lastCity = typeof window !== "undefined" ? localStorage.getItem("last_city") : "";
-         if (lastCity) {
-            const shopCitySlug = slugify(shop.city || "");
-            if (shopCitySlug !== slugify(lastCity)) matchLocation = false;
-         }
       }
 
       // 3. Apply Tags

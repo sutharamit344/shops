@@ -48,16 +48,12 @@ export function parseSmartQuery(query, knownClusters = []) {
 
   const queryTokens = normalized.split(/\s+/).filter(Boolean);
 
-  // 2. Pre-process "Best" / "Top" / "Good" intent
+  // 2. Pre-process "Best" intent
   let isBestSearch = false;
   let processingQuery = normalized;
-  const prefixes = ["best ", "top ", "good ", "all ", "premium "];
-  for (const prefix of prefixes) {
-    if (normalized.startsWith(prefix)) {
-      isBestSearch = true;
-      processingQuery = normalized.replace(prefix, "").trim();
-      break;
-    }
+  if (normalized.startsWith("best ")) {
+    isBestSearch = true;
+    processingQuery = normalized.replace(/^best\s+/, "").trim();
   }
 
   // 3. Cluster Detection (Exact & Token-Based)
@@ -88,8 +84,8 @@ export function parseSmartQuery(query, knownClusters = []) {
   }
 
   // 4. Pattern: "{category} near me"
-  if (processingQuery.includes("near me")) {
-    let category = processingQuery.replace("near me", "").trim();
+  if (normalized.includes("near me")) {
+    let category = normalized.replace("near me", "").trim();
     // Strip trailing "in" if user typed "cafe in near me"
     if (category.endsWith(" in")) {
       category = category.slice(0, -3).trim();
@@ -98,17 +94,16 @@ export function parseSmartQuery(query, knownClusters = []) {
   }
 
   // 5. Pattern: "{category} in {location}"
-  if (processingQuery.includes(" in ")) {
-    const parts = processingQuery.split(" in ");
-    const category = parts[0].trim().replace(/\s+(shops|shop)$/, "");
+  if (normalized.includes(" in ")) {
+    const parts = normalized.split(" in ");
+    const category = parts[0].trim();
     const location = parts.slice(1).join(" in ").trim();
     return { category, location, clusterType: "", type: "location" };
   }
 
   // Fallback: Treat as category by default
-  const cleanCategory = processingQuery.replace(/\s+(shops|shop)$/, "");
   return {
-    category: cleanCategory,
+    category: normalized,
     location: "",
     clusterType: "",
     type: "category",

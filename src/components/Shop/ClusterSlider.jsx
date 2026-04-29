@@ -3,7 +3,6 @@
 import React, { useRef, useState, useMemo, useEffect } from "react";
 import { useSelector } from "react-redux";
 import { Award, ChevronRight, ChevronLeft, Store, MapPin } from "lucide-react";
-import { normalizeForSearch } from "@/lib/searchUtils";
 
 const ClusterSlider = ({ clusters = [], shops = [], onClusterClick, parsed }) => {
   const { userCoords, userLocationName } = useSelector((state) => state.search);
@@ -19,16 +18,16 @@ const ClusterSlider = ({ clusters = [], shops = [], onClusterClick, parsed }) =>
   const clusterData = useMemo(() => {
     return clusters
       .filter(cluster => {
-        const clusterName = normalizeForSearch(cluster.name);
-        const clusterCat = normalizeForSearch(cluster.category || "");
-        
-        // 1. Don't show the cluster that is currently being searched if it's an explicit cluster search
-        if (currentCluster && clusterName === normalizeForSearch(currentCluster)) return false;
+        const clusterName = cluster.name.toLowerCase().trim();
+        // 1. Don't show the cluster that is currently being searched (either by explicit type or by keyword)
+        if (currentCluster && clusterName === currentCluster) return false;
+        if (currentCategory && clusterName === currentCategory) return false;
 
-        // 2. Show clusters if category matches or if the cluster name contains the query
+        // 2. Show clusters if category matches or if the cluster contains relevant shops
         if (currentCategory) {
-          const normCat = normalizeForSearch(currentCategory, true);
-          return clusterCat.includes(normCat) || normCat.includes(clusterCat) || clusterName.includes(normCat);
+          const cat = (cluster.category || "").toLowerCase();
+          const name = (cluster.name || "").toLowerCase();
+          return cat.includes(currentCategory) || currentCategory.includes(cat) || name.includes(currentCategory);
         }
         return true;
       })
@@ -125,16 +124,13 @@ const ClusterSlider = ({ clusters = [], shops = [], onClusterClick, parsed }) =>
 
   const visibleClusters = clusterData.slice(0, visibleLimit);
 
-  // Dynamic Location Title
-  const displayLocation = userLocationName || (typeof window !== 'undefined' ? localStorage.getItem('last_area') || localStorage.getItem('last_city') : "") || "You";
-
   return (
     <div className="relative mb-6 group">
       <div className="flex items-center justify-between mb-4 px-1">
         <div>
           <h2 className="text-[16px] md:text-lg font-bold text-[#1A1F36] flex items-center gap-2">
             <Award size={18} className="text-[#FF6B35]" />
-            Clusters Nearby {displayLocation}
+            Clusters Nearby {userLocationName || "You"}
           </h2>
           <p className="text-[11px] md:text-[12px] text-[#1A1F36]/40">Explore specialized markets and hubs</p>
         </div>
