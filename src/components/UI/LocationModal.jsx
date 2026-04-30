@@ -66,7 +66,7 @@ const LocationModal = ({ isOpen, onClose, detectedLocation, onConfirm }) => {
     try {
       const res = await fetch(
         `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latlng.lat}&lon=${latlng.lng}&accept-language=en`,
-        { headers: { "User-Agent": "ShopSetu_Marketplace_App" } }
+        { headers: { "User-Agent": "ShopBajar/1.0 (contact: sutharamit344@gmail.com)" } }
       );
       const data = await res.json();
       const address = data.address || {};

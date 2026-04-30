@@ -2,9 +2,11 @@ import React from "react";
 import Link from "next/link";
 import { Shield, Lock, Eye, FileText, ChevronLeft, Globe, Mail, Phone, AlertTriangle } from "lucide-react";
 
+import { BRAND } from "@/lib/config";
+
 export const metadata = {
-  title: "Privacy Policy | ShopSetu",
-  description: "Learn how ShopSetu protects your data and maintains your privacy.",
+  title: `Privacy Policy | ${BRAND}`,
+  description: `Learn how ${BRAND} protects your data and maintains your privacy.`,
 };
 
 const Section = ({ icon: Icon, title, children }) => (
@@ -33,7 +35,7 @@ export default function PrivacyPolicy() {
           </Link>
           <h1 className="text-5xl md:text-6xl font-extrabold tracking-tighter mb-6 leading-tight">Privacy Policy</h1>
           <p className="text-white/60 text-lg max-w-2xl font-medium leading-relaxed">
-            Protecting your digital identity is fundamental to our mission at ShopSetu. Read how we secure your data.
+            Protecting your digital identity is fundamental to our mission at {BRAND}. Read how we secure your data.
           </p>
           <div className="mt-10 flex flex-wrap items-center gap-4 text-[10px] font-bold uppercase tracking-widest text-[#FF6B35]">
             <span className="px-4 py-2 bg-[#FF6B35]/15 rounded-full border border-[#FF6B35]/20 backdrop-blur-md">Last Updated: April 25, 2026</span>
@@ -48,7 +50,7 @@ export default function PrivacyPolicy() {
 
           <Section icon={Shield} title="1. Introduction & Commitment">
             <p className="mb-4">
-              ShopSetu ("we," "us," or "our") operates a digital marketplace platform connecting local shop owners with customers in Bharat. We understand that your privacy is critical, and we are committed to being transparent about the data we collect and how we use it.
+              {BRAND} ("we," "us," or "our") operates a digital marketplace platform connecting local shop owners with customers in Bharat. We understand that your privacy is critical, and we are committed to being transparent about the data we collect and how we use it.
             </p>
             <p>
               By using our platform, you consent to the data practices described in this policy. We comply with the Information Technology Act, 2000 of India and align our practices with global standards for data protection.
@@ -101,7 +103,7 @@ export default function PrivacyPolicy() {
           </Section>
 
           <Section icon={Eye} title="6. User Rights">
-            <p className="mb-4">You have full control over your data on ShopSetu:</p>
+            <p className="mb-4">You have full control over your data on {BRAND}:</p>
             <ul className="list-disc space-y-3 pl-5">
               <li><span className="font-bold text-[#1A1F36]">Access & Update:</span> You can edit your shop and profile data at any time via your dashboard.</li>
               <li><span className="font-bold text-[#1A1F36]">Deletion:</span> You may request the deletion of your account and all associated shop data by contacting our support team.</li>
@@ -117,7 +119,7 @@ export default function PrivacyPolicy() {
 
           <Section icon={AlertTriangle} title="8. Children's Privacy">
             <p>
-              ShopSetu is intended for business owners and adult users. We do not knowingly collect personal information from children under the age of 13. If we become aware that a child has provided us with personal data, we will delete it immediately.
+              {BRAND} is intended for business owners and adult users. We do not knowingly collect personal information from children under the age of 13. If we become aware that a child has provided us with personal data, we will delete it immediately.
             </p>
           </Section>
 
@@ -130,13 +132,13 @@ export default function PrivacyPolicy() {
           <div className="pt-16 border-t border-[#1A1F36]/[0.07]">
             <h2 className="text-2xl font-bold text-[#1A1F36] mb-8 tracking-tight">Contact Information</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              <a href="mailto:support@shopsetu.com" className="flex items-center gap-5 p-6 bg-[#FAFAF8] rounded-3xl border border-[#1A1F36]/[0.05] hover:border-[#FF6B35]/30 transition-all group">
+              <a href="mailto:support@shopbajar.com" className="flex items-center gap-5 p-6 bg-[#FAFAF8] rounded-3xl border border-[#1A1F36]/[0.05] hover:border-[#FF6B35]/30 transition-all group">
                 <div className="w-12 h-12 rounded-2xl bg-white shadow-sm flex items-center justify-center text-[#FF6B35] group-hover:scale-110 transition-transform">
                   <Mail size={22} />
                 </div>
                 <div>
                   <p className="text-[10px] font-bold text-[#999] uppercase tracking-widest mb-1">Support Email</p>
-                  <p className="font-bold text-[#1A1F36] text-[15px]">support@shopsetu.com</p>
+                  <p className="font-bold text-[#1A1F36] text-[15px]">support@shopbajar.com</p>
                 </div>
               </a>
             </div>
@@ -147,7 +149,7 @@ export default function PrivacyPolicy() {
 
       {/* Footer */}
       <footer className="py-24 text-center border-t border-[#1A1F36]/[0.06] bg-white">
-        <p className="text-[#1A1F36]/20 text-[10px] font-bold uppercase tracking-[0.3em]">ShopSetu Marketplace Authority • 2026</p>
+        <p className="text-[#1A1F36]/20 text-[10px] font-bold uppercase tracking-[0.3em]">{BRAND} Marketplace Authority • 2026</p>
       </footer>
     </div>
   );

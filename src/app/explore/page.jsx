@@ -1,6 +1,8 @@
 import React, { Suspense } from "react";
 import ExploreClient from "./ExploreClient";
 
+import { BRAND, DOMAIN } from "@/lib/config";
+
 export async function generateMetadata({ searchParams }) {
   const sp = await searchParams;
   const query = sp.q;
@@ -29,15 +31,22 @@ export async function generateMetadata({ searchParams }) {
   }
 
   const baseTitle = titleParts.length === 1 && titleParts[0] === "Explore Shops" ? "Marketplace" : titleParts.join(' ');
-  const title = `${baseTitle} | ShopSetu`;
-  const description = `Discover and connect with verified ${category || 'businesses'} in ${city || 'your area'}. ShopSetu helps you find local services easily.`;
+  const title = `${baseTitle} | ${BRAND}`;
+  const description = `Discover and connect with verified ${category || 'businesses'} in ${city || 'your area'}. ${BRAND} helps you find local services easily.`;
+
+  const canonicalPath = "/explore" + (category ? `?category=${category}` : "") + (city ? `&city=${city}` : "");
 
   return {
     title,
     description,
+    alternates: {
+      canonical: `${DOMAIN}${canonicalPath}`,
+    },
     openGraph: {
       title,
       description,
+      url: `${DOMAIN}/explore`,
+      siteName: BRAND,
     }
   };
 }

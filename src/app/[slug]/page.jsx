@@ -3,6 +3,8 @@ import { parseDiscoverySlug } from "@/lib/urlArchitect";
 
 export const dynamic = "force-dynamic";
 
+import { BRAND, DOMAIN } from "@/lib/config";
+
 export async function generateMetadata({ params }) {
   const { slug } = await params;
   const parsed = parseDiscoverySlug(slug);
@@ -15,9 +17,19 @@ export async function generateMetadata({ params }) {
   else if (location) title = `Best ${category} in ${location}`;
   else title = `${category.charAt(0).toUpperCase() + category.slice(1)}`;
 
+  const fullTitle = `${title} | ${BRAND} Marketplace`;
+
   return {
-    title: `${title} | ShopSetu Marketplace`,
-    description: `Discover top ${category} in your area. Smart discovery for local shops.`
+    title: fullTitle,
+    description: `Discover top ${category} in your area. Smart discovery for local shops on ${BRAND}.`,
+    alternates: {
+      canonical: `${DOMAIN}/${slug}`,
+    },
+    openGraph: {
+      title: fullTitle,
+      url: `${DOMAIN}/${slug}`,
+      siteName: BRAND,
+    }
   };
 }
 

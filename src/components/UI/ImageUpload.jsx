@@ -56,10 +56,10 @@ const ImageUpload = ({
       setPreview(null);
     } catch (error) {
       console.error(error);
-      showAlert({ 
-        title: "Upload Failed", 
-        message: "We encountered an issue while uploading your image. Please try again.", 
-        type: "error" 
+      showAlert({
+        title: "Upload Failed",
+        message: "We encountered an issue while uploading your image. Please try again.",
+        type: "error"
       });
       setPreview(currentImage);
     } finally {

@@ -18,12 +18,12 @@ const ShopHeader = ({ name, phone, shareUrl, logo, isSticky, onQRClick }) => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const whatsappUrl = `https://wa.me/91${phone}?text=Hi%20I%20found%20your%20shop%20on%20ShopSetu`;
+  const whatsappUrl = `https://wa.me/91${phone}?text=Hi%20I%20found%20your%20shop%20on%20ShopBajar`;
 
   const handleShare = async () => {
     const shareData = {
       title: name,
-      text: `Check out ${name} on ShopSetu!`,
+      text: `Check out ${name} on ShopBajar!`,
       url: shareUrl || (typeof window !== "undefined" ? window.location.href : ""),
     };
 

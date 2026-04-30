@@ -16,65 +16,79 @@ const ClusterSlider = ({ clusters = [], shops = [], onClusterClick, parsed }) =>
   const currentLocation = (parsed?.location || "").toLowerCase().trim();
 
   const clusterData = useMemo(() => {
-    return clusters
-      .filter(cluster => {
-        const clusterName = cluster.name.toLowerCase().trim();
-        // 1. Don't show the cluster that is currently being searched (either by explicit type or by keyword)
-        if (currentCluster && clusterName === currentCluster) return false;
-        if (currentCategory && clusterName === currentCategory) return false;
+    // Determine current location context
+    const urlLoc = currentLocation && currentLocation !== "all" ? currentLocation : null;
+    const gpsLoc = userLocationName ? userLocationName.split(',')[0].trim().toLowerCase() : null;
+    const activeContext = (urlLoc === "current" ? gpsLoc : urlLoc) || gpsLoc;
 
-        // 2. Show clusters if category matches or if the cluster contains relevant shops
-        if (currentCategory) {
-          const cat = (cluster.category || "").toLowerCase();
-          const name = (cluster.name || "").toLowerCase();
-          return cat.includes(currentCategory) || currentCategory.includes(cat) || name.includes(currentCategory);
-        }
-        return true;
-      })
-      .map(cluster => {
-        const matchingShops = shops.filter(shop => shop.clusterType === cluster.name);
-        const count = matchingShops.filter(shop => {
-          if (currentLocation && currentLocation !== "all") {
-            const shopCity = (shop.city || "").toLowerCase().trim();
-            const shopArea = (shop.area || "").toLowerCase().trim();
-            return shopCity === currentLocation || shopArea === currentLocation;
-          }
-          return true;
-        }).length;
+    // Build a lookup map from cluster name -> cluster doc (for id, category metadata)
+    const clusterDocMap = {};
+    clusters.forEach(c => { clusterDocMap[c.name] = c; });
 
-        const representativeShop = matchingShops[0];
-        return {
-          ...cluster,
-          count,
-          area: representativeShop?.area || "",
-          city: representativeShop?.city || "",
-          lat: cluster.lat || representativeShop?.lat || null,
-          lng: cluster.lng || representativeShop?.lng || null
+    // Filter shops to the current location context first
+    let relevantShops = shops;
+    if (activeContext) {
+      relevantShops = shops.filter(s =>
+        (s.area || "").toLowerCase() === activeContext ||
+        (s.city || "").toLowerCase() === activeContext
+      );
+    }
+
+    // Group relevant shops by (clusterType + area) to get accurate localized counts
+    const groups = {};
+    relevantShops.forEach(shop => {
+      const clusterName = shop.clusterType;
+      if (!clusterName) return;
+      const shopArea = (shop.area || "").toLowerCase();
+      const shopCity = (shop.city || "").toLowerCase();
+      // Skip clusters being searched
+      if (currentCluster && clusterName.toLowerCase() === currentCluster) return;
+      if (currentCategory) {
+        const doc = clusterDocMap[clusterName];
+        const cat = (doc?.category || "").toLowerCase();
+        const nm = clusterName.toLowerCase();
+        if (!cat.includes(currentCategory) && !currentCategory.includes(cat) && !nm.includes(currentCategory)) return;
+      }
+
+      const key = `${clusterName}__${shopArea}__${shopCity}`;
+      if (!groups[key]) {
+        const doc = clusterDocMap[clusterName] || {};
+        groups[key] = {
+          id: doc.id || key,
+          name: clusterName,
+          category: doc.category || shop.category || "",
+          area: shop.area || "",
+          city: shop.city || "",
+          lat: doc.lat || shop.lat || null,
+          lng: doc.lng || shop.lng || null,
+          count: 0,
         };
-      })
+      }
+      groups[key].count += 1;
+    });
+
+    return Object.values(groups)
       .filter(c => c.count > 0)
       .sort((a, b) => {
         if (typeof window !== 'undefined') {
-          const lastCity = localStorage.getItem('last_city');
-          const lastArea = localStorage.getItem('last_area');
-
+          const lastArea = (localStorage.getItem('last_area') || "").toLowerCase();
+          const lastCity = (localStorage.getItem('last_city') || "").toLowerCase();
           if (lastArea) {
-            const aAreaMatch = a.area && a.area.toLowerCase() === lastArea.toLowerCase();
-            const bAreaMatch = b.area && b.area.toLowerCase() === lastArea.toLowerCase();
-            if (aAreaMatch && !bAreaMatch) return -1;
-            if (!aAreaMatch && bAreaMatch) return 1;
+            const aMatch = a.area.toLowerCase() === lastArea;
+            const bMatch = b.area.toLowerCase() === lastArea;
+            if (aMatch && !bMatch) return -1;
+            if (!aMatch && bMatch) return 1;
           }
-
           if (lastCity) {
-            const aCityMatch = a.city && a.city.toLowerCase() === lastCity.toLowerCase();
-            const bCityMatch = b.city && b.city.toLowerCase() === lastCity.toLowerCase();
-            if (aCityMatch && !bCityMatch) return -1;
-            if (!aCityMatch && bCityMatch) return 1;
+            const aMatch = a.city.toLowerCase() === lastCity;
+            const bMatch = b.city.toLowerCase() === lastCity;
+            if (aMatch && !bMatch) return -1;
+            if (!aMatch && bMatch) return 1;
           }
         }
         return b.count - a.count;
       });
-  }, [clusters, shops, currentCategory, currentCluster, currentLocation]);
+  }, [clusters, shops, currentCategory, currentCluster, currentLocation, userLocationName]);
 
   useEffect(() => {
     setVisibleLimit(4);
@@ -124,13 +138,32 @@ const ClusterSlider = ({ clusters = [], shops = [], onClusterClick, parsed }) =>
 
   const visibleClusters = clusterData.slice(0, visibleLimit);
 
+  const getTitle = () => {
+    if (parsed?.type === "nearby") return "Clusters Nearby You";
+
+    // 1. If explicit cluster searched
+    if (parsed?.clusterType) {
+      const clusterName = parsed.clusterType.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+      return `Clusters Nearby ${clusterName}`;
+    }
+
+    // 2. If location searched (area or city)
+    if (parsed?.location && parsed?.location !== "all") {
+      const locationName = parsed.location.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+      return `Clusters Nearby ${locationName}`;
+    }
+
+    // Default fallback
+    return `Clusters Nearby ${userLocationName || "You"}`;
+  };
+
   return (
     <div className="relative mb-6 group">
       <div className="flex items-center justify-between mb-4 px-1">
         <div>
           <h2 className="text-[16px] md:text-lg font-bold text-[#1A1F36] flex items-center gap-2">
             <Award size={18} className="text-[#FF6B35]" />
-            Clusters Nearby {userLocationName || "You"}
+            {getTitle()}
           </h2>
           <p className="text-[11px] md:text-[12px] text-[#1A1F36]/40">Explore specialized markets and hubs</p>
         </div>

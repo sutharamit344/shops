@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://shopbajar.com/sitemap.xml

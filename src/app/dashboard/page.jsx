@@ -21,6 +21,8 @@ import {
 
 import ShopHistoryDialog from "@/components/Shop/HistoryDialog";
 import ShopCard from "@/components/Shop/ShopCard";
+import Image from "next/image";
+import { BRAND } from "@/lib/config";
 
 const UserDashboard = () => {
   const { user, loading: authLoading, loginWithGoogle, logout } = useAuth();
@@ -127,7 +129,7 @@ const UserDashboard = () => {
                   <Store size={16} className="text-white" />
                 </div>
                 <span className="text-[18px] font-bold tracking-tight text-[#1A1F36]">
-                  Shop<span className="text-[#FF6B35]">Setu</span>
+                  Shop<span className="text-[#FF6B35]">Bajar</span>
                 </span>
               </Link>
               <button onClick={() => setMobileMenuOpen(false)} className="w-9 h-9 rounded-xl bg-[#FAFAF8] flex items-center justify-center text-[#1A1F36]/40 hover:text-[#1A1F36]">
@@ -159,8 +161,16 @@ const UserDashboard = () => {
             <div className="mt-auto pt-8 border-t border-[#1A1F36]/[0.06]">
               <div className="bg-[#FAFAF8] rounded-2xl p-4 mb-6 border border-[#1A1F36]/[0.03]">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-white border border-[#1A1F36]/[0.06] flex items-center justify-center font-bold text-[#1A1F36] shadow-sm">
-                    {user.photoURL ? <img src={user.photoURL} className="w-full h-full object-cover rounded-xl" /> : user.email?.charAt(0).toUpperCase()}
+                  <div className="w-10 h-10 rounded-xl bg-white border border-[#1A1F36]/[0.06] flex items-center justify-center font-bold text-[#1A1F36] shadow-sm relative overflow-hidden">
+                    {user.photoURL ? (
+                      <Image 
+                        src={user.photoURL} 
+                        alt="Profile" 
+                        fill 
+                        className="object-cover" 
+                        sizes="40px"
+                      />
+                    ) : user.email?.charAt(0).toUpperCase()}
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-[13px] font-bold text-[#1A1F36] truncate">{user.displayName || "Owner"}</p>
@@ -185,7 +195,7 @@ const UserDashboard = () => {
             </div>
             {!isSidebarCollapsed && (
               <span className="text-[18px] font-bold tracking-tight text-[#1A1F36] animate-in fade-in duration-500">
-                Shop<span className="text-[#FF6B35]">Setu</span>
+                Shop<span className="text-[#FF6B35]">Bajar</span>
               </span>
             )}
           </Link>
@@ -222,8 +232,16 @@ const UserDashboard = () => {
             {!isSidebarCollapsed && (
               <div className="bg-[#FAFAF8] rounded-2xl p-4 border border-[#1A1F36]/[0.03] animate-in fade-in">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-white border border-[#1A1F36]/[0.06] flex items-center justify-center font-bold text-[#1A1F36] shadow-sm shrink-0 overflow-hidden">
-                    {user.photoURL ? <img src={user.photoURL} className="w-full h-full object-cover" /> : user.email?.charAt(0).toUpperCase()}
+                  <div className="w-10 h-10 rounded-xl bg-white border border-[#1A1F36]/[0.06] flex items-center justify-center font-bold text-[#1A1F36] shadow-sm shrink-0 overflow-hidden relative">
+                    {user.photoURL ? (
+                      <Image 
+                        src={user.photoURL} 
+                        alt="Profile" 
+                        fill 
+                        className="object-cover" 
+                        sizes="40px"
+                      />
+                    ) : user.email?.charAt(0).toUpperCase()}
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-[13px] font-bold text-[#1A1F36] truncate">{user.displayName || "Owner"}</p>
@@ -245,7 +263,7 @@ const UserDashboard = () => {
         <header className="lg:hidden h-16 bg-white border-b border-[#1A1F36]/[0.06] px-6 flex items-center justify-between sticky top-0 z-30">
           <Link href="/" className="flex items-center gap-2.5">
             <div className="w-7 h-7 rounded-lg bg-[#FF6B35] flex items-center justify-center"><Store size={14} className="text-white" /></div>
-            <span className="text-[15px] font-bold tracking-tight text-[#1A1F36]">ShopSetu</span>
+            <span className="text-[15px] font-bold tracking-tight text-[#1A1F36]">ShopBajar</span>
           </Link>
           <button onClick={() => setMobileMenuOpen(true)} className="w-9 h-9 rounded-xl bg-[#FAFAF8] flex items-center justify-center text-[#1A1F36]/40"><User size={18} /></button>
         </header>
@@ -320,8 +338,19 @@ const UserDashboard = () => {
                   {filteredShops.map(shop => (
                     <Card key={shop.id} className="p-6 md:p-8 hover:border-[#FF6B35]/30 group transition-all duration-500">
                       <div className="flex flex-col md:flex-row gap-6 items-start md:items-center">
-                        <div className="w-20 h-20 rounded-[24px] bg-[#FAFAF8] shrink-0 overflow-hidden border border-[#1A1F36]/[0.06] shadow-sm">
-                          {shop.logo ? <img src={shop.logo} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" /> : <div className="w-full h-full flex items-center justify-center text-[#FF6B35] text-2xl font-bold">{shop.name.charAt(0)}</div>}
+                        <div className="w-20 h-20 rounded-[24px] bg-[#FAFAF8] shrink-0 overflow-hidden border border-[#1A1F36]/[0.06] shadow-sm relative">
+                          {shop.logo ? (
+                            <Image 
+                              src={shop.logo.includes(" ") ? shop.logo.replace(/\s/g, "%20") : shop.logo} 
+                              alt={shop.name} 
+                              fill 
+                              unoptimized
+                              className="object-cover group-hover:scale-110 transition-transform duration-700" 
+                              sizes="80px"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-[#FF6B35] text-2xl font-bold">{shop.name.charAt(0)}</div>
+                          )}
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex flex-wrap items-center gap-3 mb-2">
@@ -335,7 +364,7 @@ const UserDashboard = () => {
                             <span className="flex items-center gap-2"><MapPin size={14} /> {shop.city}</span>
                             {shop.status === 'approved' && <><span className="flex items-center gap-2 text-[#1A1F36]/60"><Eye size={14} /> {shop.views || 0} Views</span><span className="flex items-center gap-2 text-[#FF6B35]"><MessageSquare size={14} /> {shop.leads || 0} Leads</span></>}
                           </div>
-                          <p className="text-[14px] text-[#1A1F36]/40 line-clamp-1 font-medium">{shop.description || "Professional merchant storefront on ShopSetu."}</p>
+                          <p className="text-[14px] text-[#1A1F36]/40 line-clamp-1 font-medium">{shop.description || "Professional merchant storefront on ShopBajar."}</p>
                         </div>
                         <div className="flex items-center w-full md:w-auto mt-4 md:mt-0">
                           <Link href={`/dashboard/manage?id=${shop.id}`} className="w-full md:w-auto">
@@ -397,8 +426,16 @@ const UserDashboard = () => {
 
               <Card className="p-10">
                 <div className="flex flex-col md:flex-row gap-10 items-start">
-                  <div className="w-32 h-32 rounded-[32px] bg-[#FAFAF8] flex items-center justify-center text-4xl font-bold text-[#FF6B35] border border-[#1A1F36]/[0.08] shadow-md overflow-hidden shrink-0">
-                    {user.photoURL ? <img src={user.photoURL} className="w-full h-full object-cover" /> : user.displayName?.charAt(0) || "M"}
+                  <div className="w-32 h-32 rounded-[32px] bg-[#FAFAF8] flex items-center justify-center text-4xl font-bold text-[#FF6B35] border border-[#1A1F36]/[0.08] shadow-md overflow-hidden shrink-0 relative">
+                    {user.photoURL ? (
+                      <Image 
+                        src={user.photoURL} 
+                        alt={user.displayName} 
+                        fill 
+                        className="object-cover" 
+                        sizes="128px"
+                      />
+                    ) : user.displayName?.charAt(0) || "M"}
                   </div>
                   <div className="flex-1 w-full space-y-10">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">

@@ -7,6 +7,7 @@ import { getShopById, updateShop, getShopRatings, deleteShopRating } from "@/lib
 import { useModal } from "@/hooks/useModal";
 import { getProfileCompletion } from "@/lib/shopUtils";
 import Navbar from "@/components/Navbar";
+import Image from "next/image";
 import ImageUpload from "@/components/UI/ImageUpload";
 import {
   ArrowLeft,
@@ -53,6 +54,7 @@ import Input from "@/components/UI/Input";
 import Textarea from "@/components/UI/Textarea";
 import Button from "@/components/UI/Button";
 import { slugify } from "@/lib/slugify";
+import { getWeeklyViewStats } from "@/lib/shopUtils";
 
 function ShopDashboardContent() {
   const searchParams = useSearchParams();
@@ -506,20 +508,30 @@ function ShopDashboardContent() {
                   <div className="px-2 py-1 bg-gray-50 rounded-lg text-[9px] font-semibold text-[#666]">Last 7 Days</div>
                 </div>
                 <div className="h-40 flex items-end gap-2">
-                  {[40, 70, 45, 90, 65, 80, 55].map((h, i) => (
-                    <div key={i} className="flex-1 relative group">
-                      <div
-                        className="w-full bg-[#FF6B35]/20 hover:bg-[#FF6B35] transition-all rounded-lg"
-                        style={{ height: `${h}%` }}
-                      />
-                      <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-[#0F0F0F] text-white text-[9px] px-2 py-1 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
-                        {h * 10} views
-                      </div>
-                    </div>
-                  ))}
+                  {(() => {
+                    const stats = getWeeklyViewStats(shop);
+                    const maxViews = Math.max(...stats.map(s => s.views), 1);
+                    return stats.map((s, i) => {
+                      const heightPct = Math.max((s.views / maxViews) * 100, 4);
+                      const isToday = i === stats.length - 1;
+                      return (
+                        <div key={i} className="flex-1 relative group">
+                          <div
+                            className={`w-full transition-all rounded-lg ${isToday ? 'bg-[#FF6B35]' : 'bg-[#FF6B35]/20 hover:bg-[#FF6B35]/60'}`}
+                            style={{ height: `${heightPct}%` }}
+                          />
+                          <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-[#0F0F0F] text-white text-[9px] px-2 py-1 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10">
+                            {s.views} view{s.views !== 1 ? 's' : ''}
+                          </div>
+                        </div>
+                      );
+                    });
+                  })()}
                 </div>
                 <div className="flex justify-between mt-3 text-[9px] font-medium text-[#999]">
-                  <span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span>
+                  {getWeeklyViewStats(shop).map((s, i) => (
+                    <span key={i} className={i === 6 ? 'text-[#FF6B35] font-bold' : ''}>{s.day}</span>
+                  ))}
                 </div>
               </div>
 
@@ -778,9 +790,16 @@ function ShopDashboardContent() {
                               <div className="p-4 grid grid-cols-1 sm:grid-cols-2 gap-3 animate-in slide-in-from-top-2 duration-200">
                                 {category.items?.map((item, iIdx) => (
                                   <div key={iIdx} className="flex items-center gap-3 p-3 rounded-xl bg-gray-50/30 hover:bg-white hover:shadow-sm transition-all group/item">
-                                    <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden border border-black/[0.04]">
+                                    <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden border border-black/[0.04] relative">
                                       {item.image ? (
-                                        <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+                                        <Image
+                                          src={item.image.includes(" ") ? item.image.replace(/\s/g, "%20") : item.image}
+                                          alt={item.name}
+                                          fill
+                                          unoptimized
+                                          className="object-cover"
+                                          sizes="48px"
+                                        />
                                       ) : (
                                         <ShoppingBag size={16} className="text-[#999]" />
                                       )}
@@ -997,7 +1016,14 @@ function ShopDashboardContent() {
             <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 gap-4 mb-8">
               {shop.gallery?.map((url, i) => (
                 <div key={i} className="aspect-square relative group rounded-xl overflow-hidden border border-black/[0.06] shadow-sm bg-white">
-                  <img src={url} alt={`Gallery ${i}`} className="w-full h-full object-cover" />
+                  <Image
+                    src={url.includes(" ") ? url.replace(/\s/g, "%20") : url}
+                    alt={`Gallery ${i}`}
+                    fill
+                    unoptimized
+                    className="object-cover"
+                    sizes="(max-width: 640px) 50vw, 20vw"
+                  />
                   <button
                     onClick={() => handleDeletePhoto(i)}
                     className="absolute top-1.5 right-1.5 w-6 h-6 bg-black/60 rounded-lg flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-500"
@@ -1043,7 +1069,7 @@ function ShopDashboardContent() {
 
           </div>
         )}
-         {activeView === "reviews" && (
+        {activeView === "reviews" && (
           <div className="bg-white rounded-xl border border-black/[0.06] p-6">
             <div className="flex items-center justify-between mb-8">
               <div>

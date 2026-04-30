@@ -52,12 +52,15 @@ export function getBusinessStatus(shop) {
   close.setHours(closeH, closeM, 0, 0);
 
   if (now >= open && now <= close) {
-    // Closing within 30 minutes — show "Closing Soon"
+    // Closing within 60 minutes — show "Closing Soon" with countdown
     const diffMs = close - now;
-    if (diffMs > 0 && diffMs <= 30 * 60 * 1000) {
+    const minutesLeft = Math.floor(diffMs / (60 * 1000));
+    
+    if (diffMs > 0 && diffMs <= 60 * 60 * 1000) {
       return {
         isOpen: true,
-        label: "Closing Soon",
+        label: minutesLeft <= 1 ? "Closing Now" : `Closing in ${minutesLeft}m`,
+        closingInMinutes: minutesLeft,
         colorClass: "text-amber-500",
         dotClass: "bg-amber-400",
       };
@@ -92,6 +95,7 @@ export function getBusinessStatus(shop) {
 
 /**
  * Atomically increments the shop's view counter in Firestore.
+ * Also writes a daily bucket (daily_views.YYYY_MM_DD) for trend analytics.
  * Uses sessionStorage to ensure only one increment per browser session per shop.
  * @param {string} shopId
  */
@@ -103,10 +107,48 @@ export async function incrementViews(shopId) {
 
   try {
     const shopRef = doc(db, "shops", shopId);
-    await updateDoc(shopRef, { views: increment(1) });
+    const today = new Date().toISOString().split("T")[0].replace(/-/g, "_"); // e.g. 2026_04_30
+    await updateDoc(shopRef, {
+      views: increment(1),
+      [`daily_views.${today}`]: increment(1),
+    });
     if (typeof window !== "undefined") sessionStorage.setItem(sessionKey, "1");
   } catch {
     // Silently fail — view counter is non-critical
+  }
+}
+
+/**
+ * Extracts the last 7 days of view data from a shop's daily_views map.
+ * Returns an array of { day: "Mon", views: 12, date: "2026_04_30" } objects.
+ * @param {object} shop
+ * @returns {Array<{ day: string, views: number, date: string }>}
+ */
+export function getWeeklyViewStats(shop) {
+  const stats = [];
+  const now = new Date();
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date(now);
+    d.setDate(d.getDate() - i);
+    const key = d.toISOString().split("T")[0].replace(/-/g, "_");
+    const day = d.toLocaleDateString("en-US", { weekday: "short" });
+    stats.push({ day, views: shop?.daily_views?.[key] || 0, date: key });
+  }
+  return stats;
+}
+
+/**
+ * Atomically increments the shop's leads counter in Firestore.
+ * A "lead" is any direct customer intent action: WhatsApp click, phone call.
+ * @param {string} shopId
+ */
+export async function incrementLeads(shopId) {
+  if (!shopId) return;
+  try {
+    const shopRef = doc(db, "shops", shopId);
+    await updateDoc(shopRef, { leads: increment(1) });
+  } catch {
+    // Silently fail — lead counter is non-critical
   }
 }
 

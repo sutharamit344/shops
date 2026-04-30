@@ -4,7 +4,7 @@ import { Phone, MessageSquare, MapPin } from 'lucide-react';
 import Button from '@/components/UI/Button';
 
 const ShopContact = ({ phone, area, city, name }) => {
-  const whatsappUrl = `https://wa.me/91${phone}?text=Hi%20I%20found%20${name}%20on%20ShopSetu`;
+  const whatsappUrl = `https://wa.me/91${phone}?text=Hi%20I%20found%20${name}%20on%20ShopBajar`;
 
   return (
     <section className="py-0 h-full">

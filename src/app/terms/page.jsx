@@ -2,9 +2,11 @@ import React from "react";
 import Link from "next/link";
 import { Gavel, Scale, AlertTriangle, UserCheck, ChevronLeft, HelpCircle, Mail, MessageSquare, Shield, Globe } from "lucide-react";
 
+import { BRAND } from "@/lib/config";
+
 export const metadata = {
-  title: "Terms & Conditions | ShopSetu",
-  description: "Read the rules and guidelines for using the ShopSetu platform.",
+  title: `Terms & Conditions | ${BRAND}`,
+  description: `Read the rules and guidelines for using the ${BRAND} platform.`,
 };
 
 const Section = ({ icon: Icon, title, children }) => (
@@ -33,7 +35,7 @@ export default function TermsAndConditions() {
           </Link>
           <h1 className="text-5xl md:text-6xl font-extrabold tracking-tighter mb-6 leading-tight">Terms & Conditions</h1>
           <p className="text-white/60 text-lg max-w-2xl font-medium leading-relaxed">
-            Legal framework and operational guidelines for using the ShopSetu digital ecosystem.
+            Legal framework and operational guidelines for using the {BRAND} digital ecosystem.
           </p>
           <div className="mt-10 flex flex-wrap items-center gap-4 text-[10px] font-bold uppercase tracking-widest text-[#FF6B35]">
             <span className="px-4 py-2 bg-[#FF6B35]/15 rounded-full border border-[#FF6B35]/20 backdrop-blur-md">Effective: April 25, 2026</span>
@@ -48,7 +50,7 @@ export default function TermsAndConditions() {
 
           <Section icon={Scale} title="1. Agreement to Terms">
             <p className="mb-4">
-              Welcome to ShopSetu. By accessing our platform, you agree to be bound by these Terms & Conditions. These terms constitute a legally binding agreement between you ("User" or "Merchant") and ShopSetu Technologies Pvt Ltd regarding your use of our marketplace.
+              Welcome to {BRAND}. By accessing our platform, you agree to be bound by these Terms & Conditions. These terms constitute a legally binding agreement between you ("User" or "Merchant") and {BRAND} Technologies Pvt Ltd regarding your use of our marketplace.
             </p>
             <p>
               If you do not agree with any part of these terms, you are prohibited from using or accessing the platform.
@@ -68,7 +70,7 @@ export default function TermsAndConditions() {
             <ul className="list-disc space-y-3 pl-5">
               <li>Copying, distributing, or disclosing any part of the service in any medium.</li>
               <li>Using any automated system (robots, spiders, etc.) to access the service.</li>
-              <li>Attempting to interfere with the servers or network security of ShopSetu.</li>
+              <li>Attempting to interfere with the servers or network security of {BRAND}.</li>
               <li>Listing products or services that are illegal under Indian law or infringe on the rights of others.</li>
               <li>Impersonating another person or entity or misrepresenting your affiliation.</li>
             </ul>
@@ -78,25 +80,25 @@ export default function TermsAndConditions() {
             <ul className="list-disc space-y-3 pl-5">
               <li><span className="font-bold text-[#1A1F36]">Merchant Ownership:</span> Sellers are solely responsible for the content of their listings, including descriptions, pricing, and images.</li>
               <li><span className="font-bold text-[#1A1F36]">Accuracy Guarantee:</span> Merchants must ensure that their product/service info is accurate and not misleading to customers.</li>
-              <li><span className="font-bold text-[#1A1F36]">Audit Rights:</span> ShopSetu reserves the right to review, edit, or remove any content that violates these terms or our quality standards.</li>
+              <li><span className="font-bold text-[#1A1F36]">Audit Rights:</span> {BRAND} reserves the right to review, edit, or remove any content that violates these terms or our quality standards.</li>
             </ul>
           </Section>
 
           <Section icon={MessageSquare} title="5. Lead Generation & Communication">
             <p>
-              ShopSetu facilitates connections via WhatsApp and other channels. We are not a party to the actual transactions between buyers and sellers. We do not guarantee the completion of any transaction or the conduct of any user.
+              {BRAND} facilitates connections via WhatsApp and other channels. We are not a party to the actual transactions between buyers and sellers. We do not guarantee the completion of any transaction or the conduct of any user.
             </p>
           </Section>
 
           <Section icon={Shield} title="6. Intellectual Property">
             <p>
-              The ShopSetu platform, including its original content (excluding user-generated shop content), features, and functionality, are and will remain the exclusive property of ShopSetu Technologies. Our trademarks and brand assets may not be used without prior written consent.
+              The {BRAND} platform, including its original content (excluding user-generated shop content), features, and functionality, are and will remain the exclusive property of {BRAND} Technologies. Our trademarks and brand assets may not be used without prior written consent.
             </p>
           </Section>
 
           <Section icon={HelpCircle} title="7. Limitation of Liability">
             <p>
-              In no event shall ShopSetu, nor its directors, employees, or partners, be liable for any indirect, incidental, or consequential damages resulting from your use of the platform. We provide the service on an "as is" and "as available" basis without any warranties of any kind.
+              In no event shall {BRAND}, nor its directors, employees, or partners, be liable for any indirect, incidental, or consequential damages resulting from your use of the platform. We provide the service on an "as is" and "as available" basis without any warranties of any kind.
             </p>
           </Section>
 
@@ -121,13 +123,13 @@ export default function TermsAndConditions() {
           <div className="pt-16 border-t border-[#1A1F36]/[0.07]">
             <h2 className="text-2xl font-bold text-[#1A1F36] mb-8 tracking-tight">Contact Information</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              <a href="mailto:legal@shopsetu.com" className="flex items-center gap-5 p-6 bg-[#FAFAF8] rounded-3xl border border-[#1A1F36]/[0.05] hover:border-[#FF6B35]/30 transition-all group">
+              <a href="mailto:legal@shopbajar.com" className="flex items-center gap-5 p-6 bg-[#FAFAF8] rounded-3xl border border-[#1A1F36]/[0.05] hover:border-[#FF6B35]/30 transition-all group">
                 <div className="w-12 h-12 rounded-2xl bg-white shadow-sm flex items-center justify-center text-[#FF6B35] group-hover:scale-110 transition-transform">
                   <Mail size={22} />
                 </div>
                 <div>
                   <p className="text-[10px] font-bold text-[#999] uppercase tracking-widest mb-1">Legal Inquiries</p>
-                  <p className="font-bold text-[#1A1F36] text-[15px]">legal@shopsetu.com</p>
+                  <p className="font-bold text-[#1A1F36] text-[15px]">legal@shopbajar.com</p>
                 </div>
               </a>
             </div>
@@ -138,7 +140,7 @@ export default function TermsAndConditions() {
 
       {/* Footer */}
       <footer className="py-24 text-center border-t border-[#1A1F36]/[0.06] bg-white">
-        <p className="text-[#1A1F36]/20 text-[10px] font-bold uppercase tracking-[0.3em]">ShopSetu Marketplace Authority • 2026</p>
+        <p className="text-[#1A1F36]/20 text-[10px] font-bold uppercase tracking-[0.3em]">{BRAND} Marketplace Authority • 2026</p>
       </footer>
     </div>
   );

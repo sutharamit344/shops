@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { BRAND } from "@/lib/config";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Navbar from "@/components/Navbar";
@@ -307,7 +308,7 @@ export default function Home() {
         <div className="mb-20 flex flex-col md:flex-row md:items-end justify-between gap-8">
           <div className="max-w-2xl">
             <p className="text-[11px] font-bold text-[#FF6B35] uppercase tracking-[0.15em] mb-4">
-              The ShopSetu Advantage
+              The {BRAND} Advantage
             </p>
             <h2 className="text-[40px] md:text-[52px] font-bold text-[#1A1F36] leading-[1] tracking-tight">
               Everything your shop needs to grow online
@@ -473,7 +474,13 @@ export default function Home() {
                 <Store size={16} className="text-white" />
               </div>
               <span className="text-[18px] font-bold tracking-tight text-[#1A1F36]">
-                Shop<span className="text-[#FF6B35]">Setu</span>
+                {BRAND.startsWith("Shop") ? (
+                  <>
+                    Shop<span className="text-[#FF6B35]">{BRAND.replace("Shop", "")}</span>
+                  </>
+                ) : (
+                  BRAND
+                )}
               </span>
             </Link>
             <p className="text-[14px] text-[#1A1F36]/50 leading-relaxed max-w-sm font-medium">
@@ -524,7 +531,7 @@ export default function Home() {
 
         <div className="border-t border-[#1A1F36]/[0.06] px-6 md:px-12 py-8 flex flex-col md:flex-row items-center justify-between gap-4">
           <p className="text-[12px] font-bold text-[#1A1F36]/20">
-            © 2026 ShopSetu Technologies Pvt Ltd.
+            © 2026 {BRAND} Technologies Pvt Ltd.
           </p>
           <div className="flex items-center gap-6">
             <span className="text-[11px] font-bold text-[#1A1F36]/40 uppercase tracking-widest cursor-default">

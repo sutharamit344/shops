@@ -1,7 +1,7 @@
 {
-  "name": "ShopSetu",
-  "short_name": "ShopSetu",
-  "description": "Create a digital shop page and connect with customers via WhatsApp.",
+  "name": "ShopBajar",
+  "short_name": "ShopBajar",
+  "description": "Find shops, services, and businesses near you",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#FDFBF7",

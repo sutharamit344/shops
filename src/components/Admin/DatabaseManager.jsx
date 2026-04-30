@@ -5,7 +5,9 @@ import { collection, addDoc, getDocs, writeBatch, serverTimestamp, getCountFromS
 import { db } from "@/lib/db";
 import { slugify } from "@/lib/slugify";
 import Button from "@/components/UI/Button";
-import { Loader2, Check, Zap, ShieldCheck, Trash2, Database, BarChart3, Package, MapPin, Tag, RefreshCw, ShieldAlert } from "lucide-react";
+import { Loader2, Check, Zap, ShieldCheck, Trash2, Database, BarChart3, Package, MapPin, Tag, RefreshCw, ShieldAlert, Navigation, GitBranch } from "lucide-react";
+import { seedShopCoords } from "@/lib/seedShopCoords";
+import { migrateClusterLocations } from "@/lib/migrateClusterLocations";
 
 const AREAS = [
   { name: "Gota", lat: 23.1058, lng: 72.5413, pincode: "382481" },
@@ -44,6 +46,10 @@ const DatabaseManager = () => {
   const [loading, setLoading] = useState(true);
   const [status, setStatus] = useState("idle");
   const [progress, setProgress] = useState({ current: 0, total: 0 });
+  const [migrationStatus, setMigrationStatus] = useState("idle"); // "idle" | "running" | "done"
+  const [migrationLog, setMigrationLog] = useState([]);
+  const [clusterMigStatus, setClusterMigStatus] = useState("idle");
+  const [clusterMigLog, setClusterMigLog] = useState([]);
 
   const fetchStats = async () => {
     setLoading(true);
@@ -216,6 +222,39 @@ const DatabaseManager = () => {
     }
   };
 
+  const handleGeocodeMigration = async () => {
+    setMigrationStatus("running");
+    setMigrationLog([]);
+    await seedShopCoords((event) => {
+      if (event.type === "start") {
+        setMigrationLog([`🔍 Found ${event.total} shops without coordinates...`]);
+      } else if (event.type === "success") {
+        setMigrationLog((prev) => [`✓ ${event.shop} → ${event.coords.lat.toFixed(4)}, ${event.coords.lng.toFixed(4)}`, ...prev.slice(0, 9)]);
+      } else if (event.type === "fail" || event.type === "skip") {
+        setMigrationLog((prev) => [`✗ ${event.shop} — no result`, ...prev.slice(0, 9)]);
+      } else if (event.type === "done") {
+        setMigrationLog((prev) => [`✅ Done! ${event.results.success} geocoded, ${event.results.failed} failed, ${event.results.skipped} skipped.`, ...prev]);
+        setMigrationStatus("done");
+        fetchStats();
+      }
+    });
+  };
+
+  const handleClusterMigration = async () => {
+    setClusterMigStatus("running");
+    setClusterMigLog([]);
+    await migrateClusterLocations((event) => {
+      if (event.type === "success") {
+        setClusterMigLog((prev) => [`✓ "${event.cluster}" → ${event.location.area}, ${event.location.city} (${event.count} shops)`, ...prev.slice(0, 9)]);
+      } else if (event.type === "error") {
+        setClusterMigLog((prev) => [`✗ "${event.cluster}" — ${event.error}`, ...prev.slice(0, 9)]);
+      } else if (event.type === "done") {
+        setClusterMigLog((prev) => [`✅ Done! ${event.results.updated} clusters updated, ${event.results.skipped} skipped.`, ...prev]);
+        setClusterMigStatus("done");
+      }
+    });
+  };
+
   return (
     <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
       <div className="flex items-center justify-between">
@@ -263,6 +302,62 @@ const DatabaseManager = () => {
         ))}
       </div>
 
+      {/* Migration Tools */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Geocode Shops */}
+        <div className="bg-white rounded-3xl border border-[#1A1F36]/[0.06] p-7 shadow-sm space-y-5">
+          <div className="flex items-center gap-4">
+            <div className="w-11 h-11 rounded-2xl bg-blue-50 text-blue-500 flex items-center justify-center flex-shrink-0">
+              <Navigation size={20} />
+            </div>
+            <div>
+              <h3 className="text-[16px] font-bold text-[#1A1F36]">Geocode Missing Shops</h3>
+              <p className="text-[12px] text-[#999]">Add lat/lng to all approved shops without coordinates using Nominatim.</p>
+            </div>
+          </div>
+          <div className="h-28 bg-gray-50 rounded-2xl p-3 overflow-y-auto font-mono text-[10px] text-[#1A1F36]/60 space-y-0.5">
+            {migrationLog.length > 0 ? migrationLog.map((log, i) => (
+              <div key={i} className={log.startsWith("✅") ? "text-green-600 font-bold" : log.startsWith("✗") ? "text-red-500" : ""}>{log}</div>
+            )) : <div className="text-[#999] italic">Logs will appear here...</div>}
+          </div>
+          <button
+            onClick={handleGeocodeMigration}
+            disabled={migrationStatus === "running"}
+            className="w-full h-11 bg-blue-600 text-white rounded-xl font-bold text-[13px] flex items-center justify-center gap-2 hover:bg-blue-700 transition-all disabled:opacity-50"
+          >
+            {migrationStatus === "running" ? <><Loader2 size={16} className="animate-spin" /> Geocoding... (1 req/sec)</> :
+             migrationStatus === "done" ? <><Check size={16} /> Done!</> : "Run Geocoding Job"}
+          </button>
+        </div>
+
+        {/* Migrate Cluster Locations */}
+        <div className="bg-white rounded-3xl border border-[#1A1F36]/[0.06] p-7 shadow-sm space-y-5">
+          <div className="flex items-center gap-4">
+            <div className="w-11 h-11 rounded-2xl bg-purple-50 text-purple-500 flex items-center justify-center flex-shrink-0">
+              <GitBranch size={20} />
+            </div>
+            <div>
+              <h3 className="text-[16px] font-bold text-[#1A1F36]">Migrate Cluster Locations</h3>
+              <p className="text-[12px] text-[#999]">Backfill area, city, and lat/lng onto cluster documents from their assigned shops.</p>
+            </div>
+          </div>
+          <div className="h-28 bg-gray-50 rounded-2xl p-3 overflow-y-auto font-mono text-[10px] text-[#1A1F36]/60 space-y-0.5">
+            {clusterMigLog.length > 0 ? clusterMigLog.map((log, i) => (
+              <div key={i} className={log.startsWith("✅") ? "text-green-600 font-bold" : log.startsWith("✗") ? "text-red-500" : ""}>{log}</div>
+            )) : <div className="text-[#999] italic">Logs will appear here...</div>}
+          </div>
+          <button
+            onClick={handleClusterMigration}
+            disabled={clusterMigStatus === "running"}
+            className="w-full h-11 bg-purple-600 text-white rounded-xl font-bold text-[13px] flex items-center justify-center gap-2 hover:bg-purple-700 transition-all disabled:opacity-50"
+          >
+            {clusterMigStatus === "running" ? <><Loader2 size={16} className="animate-spin" /> Migrating...</> :
+             clusterMigStatus === "done" ? <><Check size={16} /> Done!</> : "Run Cluster Migration"}
+          </button>
+        </div>
+      </div>
+
+      {/* Seed + Progress */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Seed Actions */}
         <div className="bg-white p-10 rounded-[40px] border border-[#1A1F36]/[0.06] shadow-sm space-y-8">

@@ -18,7 +18,7 @@ const ShopForm = ({ initialData, onSubmit, isEdit = false, isLoading = false, er
   const [currentStep, setCurrentStep] = useState(1);
   const [localError, setLocalError] = useState(null);
   const [uploadStatus, setUploadStatus] = useState("");
-  const totalSteps = 3;
+  const totalSteps = 2;
 
   const [formData, setFormData] = useState({
     name: "",
@@ -39,13 +39,14 @@ const ShopForm = ({ initialData, onSubmit, isEdit = false, isLoading = false, er
     building: "",
     village: "",
     socialLinks: [],
-    logo: "",
     coverImage: "",
     clusterType: "",
     pincode: "",
     lat: null,
     lng: null
   });
+
+  const STORAGE_KEY = "shop_form_draft";
 
   const [logoFile, setLogoFile] = useState(null);
   const [logoPreview, setLogoPreview] = useState("");
@@ -58,13 +59,39 @@ const ShopForm = ({ initialData, onSubmit, isEdit = false, isLoading = false, er
   const [dbClusters, setDbClusters] = useState([]);
   const [proposedCluster, setProposedCluster] = useState("");
   const [pincodeAreas, setPincodeAreas] = useState([]);
+  const [draftLoadedAtMount, setDraftLoadedAtMount] = useState(false);
 
 
   const steps = [
     { title: "Basics", desc: "Identity" },
-    { title: "Location", desc: "Contact" },
-    { title: "Branding", desc: "Look & Feel" }
+    { title: "Location", desc: "Contact" }
   ];
+
+  // Load draft on mount
+  useEffect(() => {
+    if (!isEdit) {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        try {
+          const draft = JSON.parse(saved);
+          setFormData(prev => ({ ...prev, ...draft }));
+          setDraftLoadedAtMount(true);
+          // Handle complex states derived from draft
+          if (draft.category === "OTHER_PROPOSE") setShowNewCategoryInput(true);
+          if (draft.clusterType === "CUSTOM") setShowCustomCluster(true);
+        } catch (e) {
+          console.error("Failed to parse draft", e);
+        }
+      }
+    }
+  }, [isEdit]);
+
+  // Save draft on change
+  useEffect(() => {
+    if (!isEdit && formData.name) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(formData));
+    }
+  }, [formData, isEdit]);
 
   useEffect(() => {
     const fetchPincodeDetails = async () => {
@@ -74,11 +101,11 @@ const ShopForm = ({ initialData, onSubmit, isEdit = false, isLoading = false, er
           setUploadStatus("Searching location for PIN Code...");
           const res = await fetch(`https://api.postalpincode.in/pincode/${pin}`);
           const data = await res.json();
-          
+
           if (data && data[0] && data[0].Status === "Success") {
             const offices = data[0].PostOffice;
             setPincodeAreas(offices.map(o => o.Name));
-            
+
             const first = offices[0];
             setFormData(prev => ({
               ...prev,
@@ -156,7 +183,12 @@ const ShopForm = ({ initialData, onSubmit, isEdit = false, isLoading = false, er
     if (name === "clusterType") {
       setShowCustomCluster(value === "CUSTOM");
     }
-    setFormData({ ...formData, [name]: value });
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const clearDraft = () => {
+    localStorage.removeItem(STORAGE_KEY);
+    window.location.reload();
   };
 
   const nextStep = () => {
@@ -181,7 +213,19 @@ const ShopForm = ({ initialData, onSubmit, isEdit = false, isLoading = false, er
 
   const internalSubmit = async (e) => {
     if (e) e.preventDefault();
-    if (currentStep < totalSteps) return;
+    
+    // If user hits 'Enter' on Step 1, move to Step 2 instead of submitting
+    if (currentStep < totalSteps) {
+      nextStep();
+      return;
+    }
+
+    // On the final step, we only want to submit if the user explicitly clicked the button,
+    // not if they just hit 'Enter' in an input field (which can be accidental).
+    // We check if the event is a 'submit' and has a submitter.
+    if (e && e.type === 'submit' && !e.nativeEvent.submitter) {
+      return;
+    }
 
     setLocalError(null);
     setUploadStatus("Processing uploads...");
@@ -213,7 +257,7 @@ const ShopForm = ({ initialData, onSubmit, isEdit = false, isLoading = false, er
       let finalCluster = formData.clusterType;
       if (formData.clusterType === "CUSTOM" && proposedCluster.trim()) {
         finalCluster = proposedCluster.trim();
-        await proposeCluster(finalCluster, finalCategory);
+        await proposeCluster(finalCluster, finalCategory, formData.area, formData.city);
       }
 
       let cleanMapEmbed = formData.mapEmbed || "";
@@ -245,7 +289,7 @@ const ShopForm = ({ initialData, onSubmit, isEdit = false, isLoading = false, er
         ...formData,
         mapEmbed: cleanMapEmbed,
         category: finalCategory,
-        clusterType: finalClusterType,
+        clusterType: finalCluster,
         logo: logoUrl,
         coverImage: coverUrl,
         lat,
@@ -254,6 +298,10 @@ const ShopForm = ({ initialData, onSubmit, isEdit = false, isLoading = false, er
         proposedCategory: formData.category === "OTHER_PROPOSE",
         proposedCluster: formData.clusterType === "CUSTOM"
       });
+
+      if (!isEdit) {
+        localStorage.removeItem(STORAGE_KEY);
+      }
 
     } catch (err) {
       console.error(err);
@@ -267,6 +315,24 @@ const ShopForm = ({ initialData, onSubmit, isEdit = false, isLoading = false, er
 
   return (
     <div className="w-full p-4 md:p-8">
+      {/* ── DRAFT NOTICE ─────────────────────────────────────── */}
+      {draftLoadedAtMount && currentStep === 1 && (
+        <div className="max-w-xl mx-auto mb-8 bg-amber-50 border border-amber-200 rounded-2xl p-4 flex items-center justify-between gap-4 animate-in fade-in slide-in-from-top-2 duration-500">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg bg-amber-100 flex items-center justify-center text-amber-600">
+              <Zap size={16} />
+            </div>
+            <p className="text-[13px] font-medium text-amber-900">We found a saved draft. You can continue or start over.</p>
+          </div>
+          <button 
+            type="button"
+            onClick={clearDraft}
+            className="text-[11px] font-bold text-amber-700 uppercase tracking-wider hover:text-amber-900 transition-colors"
+          >
+            Clear Draft
+          </button>
+        </div>
+      )}
       {/* ── PROGRESS STEPS ─────────────────────────────────────── */}
       <div className="max-w-xl mx-auto mb-16 relative">
         <div className="absolute top-5 left-0 w-full h-[2px] bg-[#1A1F36]/[0.06] -z-0">
@@ -294,7 +360,7 @@ const ShopForm = ({ initialData, onSubmit, isEdit = false, isLoading = false, er
         </div>
       </div>
 
-      <form onSubmit={internalSubmit} className="space-y-10">
+      <form onSubmit={(e) => e.preventDefault()} className="space-y-10">
         {/* ── ERROR DISPLAY ─────────────────────────────────────── */}
         {displayError && (
           <div className="bg-red-50 rounded-2xl p-5 flex items-start gap-4 border border-red-100 animate-in shake duration-300">
@@ -309,6 +375,7 @@ const ShopForm = ({ initialData, onSubmit, isEdit = false, isLoading = false, er
         )}
 
         {/* ── STEP 1: BASICS ─────────────────────────────────────── */}
+        {/* ... (keep step 1 content) ... */}
         {currentStep === 1 && (
           <div className="space-y-8 animate-in fade-in duration-500 slide-in-from-bottom-2">
             <div>
@@ -317,6 +384,18 @@ const ShopForm = ({ initialData, onSubmit, isEdit = false, isLoading = false, er
             </div>
 
             <div className="space-y-8">
+              <div className="w-full">
+                <ImageUpload
+                  label="Background Cover Image"
+                  onSelect={(file) => {
+                    setCoverFile(file);
+                    setCoverPreview(file ? URL.createObjectURL(file) : "");
+                  }}
+                  currentImage={coverPreview}
+                  helpText="Recommended size: 1200x400. This will appear as the banner on your shop profile."
+                />
+              </div>
+
               <div className="flex flex-col md:flex-row gap-8 items-start">
                 <div className="shrink-0">
                   <ImageUpload
@@ -337,24 +416,38 @@ const ShopForm = ({ initialData, onSubmit, isEdit = false, isLoading = false, er
                     onChange={handleChange}
                     placeholder="e.g., Sharma Premium Groceries"
                     required
-                    helpText="This will define your unique ShopSetu URL"
+                    helpText="This will define your unique ShopBajar URL"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <Select
-                  label="Market Category"
-                  name="category"
-                  value={formData.category}
-                  onChange={handleChange}
-                  required
-                  options={[
-                    { value: "", label: "Select a category", disabled: true },
-                    ...dbCategories.map(c => ({ value: c, label: c })),
-                    { value: "OTHER_PROPOSE", label: "➕ Propose new category..." }
-                  ]}
-                />
+                <div className="space-y-4">
+                  <Select
+                    label="Market Category"
+                    name="category"
+                    value={formData.category}
+                    onChange={handleChange}
+                    required
+                    options={[
+                      { value: "", label: "Select a category", disabled: true },
+                      ...dbCategories.map(c => ({ value: c, label: c })),
+                      { value: "OTHER_PROPOSE", label: "➕ Propose new category..." }
+                    ]}
+                  />
+                  {showNewCategoryInput && (
+                    <div className="animate-in slide-in-from-top-2 duration-300">
+                      <Input
+                        label="New Category Suggestion"
+                        value={proposedCategory}
+                        onChange={(e) => setProposedCategory(e.target.value)}
+                        placeholder="e.g., Organic Lifestyle"
+                        required
+                        helpText="We will review and add this to our directory"
+                      />
+                    </div>
+                  )}
+                </div>
 
                 <Select
                   label="Service Model"
@@ -371,36 +464,37 @@ const ShopForm = ({ initialData, onSubmit, isEdit = false, isLoading = false, er
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <Select
-                  label="Cluster / Group Name"
-                  name="clusterType"
-                  value={showCustomCluster ? "CUSTOM" : formData.clusterType}
-                  onChange={handleChange}
-                  options={[
-                    { value: "", label: "Select a cluster", disabled: true },
-                    ...dbClusters
-                      .filter(c => !formData.category || c.category === formData.category)
-                      .map(c => ({ value: c.name, label: c.name })),
-                    { value: "CUSTOM", label: "➕ Custom Cluster..." }
-                  ]}
-                  helpText="Groups your business with similar local hubs"
-                />
+                <div className="space-y-4">
+                  <Select
+                    label="Cluster / Group Name"
+                    name="clusterType"
+                    value={showCustomCluster ? "CUSTOM" : formData.clusterType}
+                    onChange={handleChange}
+                    options={[
+                      { value: "", label: "Select a cluster", disabled: true },
+                      ...dbClusters
+                        .filter(c => !formData.category || c.category === formData.category)
+                        .map(c => ({ value: c.name, label: c.name })),
+                      { value: "CUSTOM", label: "➕ Custom Cluster..." }
+                    ]}
+                    helpText="Groups your business with similar local hubs"
+                  />
+                  {showCustomCluster && (
+                    <div className="animate-in slide-in-from-top-2 duration-300">
+                      <Input
+                        label="Custom Cluster Name"
+                        value={proposedCluster}
+                        onChange={(e) => setProposedCluster(e.target.value)}
+                        placeholder="e.g., Organic Food Park"
+                        required
+                      />
+                    </div>
+                  )}
+                </div>
                 <div className="flex items-end">
                   <p className="text-[11px] text-[#1A1F36]/40 font-medium mb-3">Helping users find you in "hub" searches like 'Electronics Market'.</p>
                 </div>
               </div>
-
-              {showCustomCluster && (
-                <div className="p-6 bg-[#FAFAF8] rounded-2xl border border-[#1A1F36]/[0.04] animate-in zoom-in duration-300">
-                  <Input
-                    label="Custom Cluster Name"
-                    value={proposedCluster}
-                    onChange={(e) => setProposedCluster(e.target.value)}
-                    placeholder="e.g., Organic Food Park"
-                    required
-                  />
-                </div>
-              )}
 
               <Textarea
                 label="Store Description"
@@ -412,19 +506,6 @@ const ShopForm = ({ initialData, onSubmit, isEdit = false, isLoading = false, er
                 rows={3}
                 helpText="A brief overview of your business for search results."
               />
-
-              {showNewCategoryInput && (
-                <div className="p-6 bg-[#FAFAF8] rounded-2xl border border-[#1A1F36]/[0.04] animate-in zoom-in duration-300">
-                  <Input
-                    label="New Category Suggestion"
-                    value={proposedCategory}
-                    onChange={(e) => setProposedCategory(e.target.value)}
-                    placeholder="e.g., Organic Lifestyle"
-                    required
-                  />
-                  <p className="text-[11px] text-[#1A1F36]/40 mt-2 font-medium">We will review your suggestion and add it to our global directory.</p>
-                </div>
-              )}
             </div>
           </div>
         )}
@@ -448,12 +529,12 @@ const ShopForm = ({ initialData, onSubmit, isEdit = false, isLoading = false, er
                       const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`);
                       const data = await res.json();
                       const addr = data.address || {};
-                      
+
                       // Priority for City: Major City > District > State District > Town/Village
                       const city = addr.city || addr.city_district || addr.state_district || addr.town || addr.village || "";
                       const area = addr.suburb || addr.neighbourhood || addr.residential || "";
                       const village = addr.village || addr.hamlet || addr.isolated_dwelling || "";
-                      
+
                       setFormData(prev => ({
                         ...prev,
                         city: city.replace(/ District| Division/g, ""),
@@ -489,6 +570,9 @@ const ShopForm = ({ initialData, onSubmit, isEdit = false, isLoading = false, er
                 required
                 icon={Phone}
                 helpText="Customers will reach out to you on this number"
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") e.preventDefault();
+                }}
               />
 
               {/* Specific Address */}
@@ -548,7 +632,7 @@ const ShopForm = ({ initialData, onSubmit, isEdit = false, isLoading = false, er
                 />
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pb-6 border-b border-black/[0.04]">
                 <div className="grid grid-cols-2 gap-4">
                   <Input
                     label="City"
@@ -568,84 +652,16 @@ const ShopForm = ({ initialData, onSubmit, isEdit = false, isLoading = false, er
                   />
                 </div>
               </div>
-            </div>
-          </div>
-        )}
 
-        {/* ── STEP 3: BRANDING ───────────────────────────────────── */}
-        {currentStep === 3 && (
-          <div className="space-y-8 animate-in fade-in duration-500 slide-in-from-bottom-2">
-            <div>
-              <h2 className="text-2xl font-extrabold text-[#1A1F36] tracking-tight mb-2">Visual Branding</h2>
-              <p className="text-[15px] text-[#1A1F36]/50 font-medium">Personalize your shop page with your brand colors and cover image.</p>
-            </div>
-
-            <div className="space-y-6">
-              <ImageUpload
-                label="Background Cover Image"
-                onSelect={(file) => {
-                  setCoverFile(file);
-                  setCoverPreview(file ? URL.createObjectURL(file) : "");
-                }}
-                currentImage={coverPreview}
-                helpText="Recommended size: 1200x400. This will appear as the banner on your shop profile."
-              />
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              <Card className="p-6 bg-[#FAFAF8] border-none shadow-none">
-                <label className="text-[11px] font-bold text-[#1A1F36]/40 uppercase tracking-[0.15em] mb-4 block">Brand Primary Color</label>
-                <div className="flex gap-4 items-center mb-4">
-                  <input
-                    type="color"
-                    name="primaryColor"
-                    value={formData.primaryColor}
-                    onChange={handleChange}
-                    className="w-16 h-16 rounded-[20px] border-4 border-white cursor-pointer shadow-md p-0 overflow-hidden"
-                  />
-                  <div className="flex-1">
-                    <Input
-                      name="primaryColor"
-                      value={formData.primaryColor}
-                      onChange={handleChange}
-                      className="bg-white"
-                    />
+              <div className="p-8 bg-[#1A1F36] rounded-3xl text-white relative overflow-hidden shadow-2xl">
+                <div className="absolute top-0 right-0 p-8 opacity-10"><ShieldCheck size={120} /></div>
+                <div className="relative z-10 max-w-lg">
+                  <h3 className="text-[11px] font-bold text-[#FF6B35] uppercase tracking-[0.2em] mb-4">Final Review</h3>
+                  <p className="text-[16px] font-bold mb-6">By submitting, you agree that your business follows our local marketplace guidelines.</p>
+                  <div className="flex items-center gap-4 text-[13px] font-bold opacity-60">
+                    <div className="flex items-center gap-2"><CheckCircle2 size={16} className="text-[#25D366]" /> <span>Free Forever</span></div>
+                    <div className="flex items-center gap-2"><CheckCircle2 size={16} className="text-[#25D366]" /> <span>SEO Optimised</span></div>
                   </div>
-                </div>
-                <p className="text-[11px] text-[#1A1F36]/40 font-medium leading-relaxed">Used for buttons, category badges, and premium accents throughout your storefront.</p>
-              </Card>
-
-              <Card className="p-6 bg-[#FAFAF8] border-none shadow-none">
-                <label className="text-[11px] font-bold text-[#1A1F36]/40 uppercase tracking-[0.15em] mb-4 block">Navigation Theme</label>
-                <div className="flex gap-4 items-center mb-4">
-                  <input
-                    type="color"
-                    name="secondaryColor"
-                    value={formData.secondaryColor}
-                    onChange={handleChange}
-                    className="w-16 h-16 rounded-[20px] border-4 border-white cursor-pointer shadow-md p-0 overflow-hidden"
-                  />
-                  <div className="flex-1">
-                    <Input
-                      name="secondaryColor"
-                      value={formData.secondaryColor}
-                      onChange={handleChange}
-                      className="bg-white"
-                    />
-                  </div>
-                </div>
-                <p className="text-[11px] text-[#1A1F36]/40 font-medium leading-relaxed">Used for sidebar, headings, and high-contrast structural elements.</p>
-              </Card>
-            </div>
-
-            <div className="p-8 bg-[#1A1F36] rounded-3xl text-white relative overflow-hidden shadow-2xl">
-              <div className="absolute top-0 right-0 p-8 opacity-10"><ShieldCheck size={120} /></div>
-              <div className="relative z-10 max-w-lg">
-                <h3 className="text-[11px] font-bold text-[#FF6B35] uppercase tracking-[0.2em] mb-4">Final Review</h3>
-                <p className="text-[16px] font-bold mb-6">By submitting, you agree that your business follows our local marketplace guidelines.</p>
-                <div className="flex items-center gap-4 text-[13px] font-bold opacity-60">
-                  <div className="flex items-center gap-2"><CheckCircle2 size={16} className="text-[#25D366]" /> <span>Free Forever</span></div>
-                  <div className="flex items-center gap-2"><CheckCircle2 size={16} className="text-[#25D366]" /> <span>SEO Optimised</span></div>
                 </div>
               </div>
             </div>
@@ -680,7 +696,8 @@ const ShopForm = ({ initialData, onSubmit, isEdit = false, isLoading = false, er
               </Button>
             ) : (
               <Button
-                type="submit"
+                type="button"
+                onClick={() => internalSubmit()}
                 variant="primary"
                 size="xl"
                 disabled={isLoading || uploadStatus}

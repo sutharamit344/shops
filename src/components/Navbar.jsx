@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useSelector, useDispatch } from "react-redux";
 import { loginWithGoogle, logout } from "@/redux/thunks/authThunks";
@@ -14,6 +15,8 @@ import Button from "@/components/UI/Button";
 import SmartSearch from "@/components/Search/SmartSearch";
 import { setCity, setArea, setAllFilters, resetFilters } from "@/redux/slices/filterSlice";
 import { slugify } from "@/lib/slugify";
+
+import { BRAND } from "@/lib/config";
 
 const Navbar = () => {
   const dispatch = useDispatch();
@@ -47,7 +50,7 @@ const Navbar = () => {
           const { latitude, longitude } = position.coords;
           const res = await fetch(
             `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`,
-            { headers: { "User-Agent": "ShopSetu_Marketplace_App" } }
+            { headers: { "User-Agent": `${BRAND}/1.0 (contact: sutharamit344@gmail.com)` } }
           );
           const data = await res.json();
           const address = data.address || {};
@@ -67,8 +70,12 @@ const Navbar = () => {
             params.set("nearby", "true");
 
             router.push(`/explore?${params.toString()}`);
+            
+            // CACHE LOCATION
             localStorage.setItem('last_city', cleanCity);
             if (cleanArea) localStorage.setItem('last_area', cleanArea);
+            localStorage.setItem('last_lat', latitude.toString());
+            localStorage.setItem('last_lng', longitude.toString());
           }
         } catch (error) {
           console.error("Location error:", error);
@@ -113,7 +120,13 @@ const Navbar = () => {
           <Store size={18} className="text-white" />
         </div>
         <span className="text-[16px] font-black tracking-tighter text-[#1A1F36]">
-          Shop<span className="text-[#FF6B35]">Setu</span>
+          {BRAND.startsWith("Shop") ? (
+            <>
+              Shop<span className="text-[#FF6B35]">{BRAND.replace("Shop", "")}</span>
+            </>
+          ) : (
+            BRAND
+          )}
         </span>
       </Link>
 
@@ -147,9 +160,17 @@ const Navbar = () => {
         </div>
 
         {user ? (
-          <Link href="/dashboard" className="flex items-center gap-3 hover:opacity-80 transition-all p-1.5 pr-5 bg-[#1A1F36]/[0.03] border border-[#1A1F36]/[0.06] rounded-full">
+          <Link href="/dashboard" className="flex items-center gap-3 hover:opacity-80 transition-all p-1.5 pr-5 bg-[#1A1F36]/[0.03] border border-[#1A1F36]/[0.06] rounded-full relative">
             {user.photoURL ? (
-              <img src={user.photoURL} alt="Profile" className="w-7 h-7 rounded-full object-cover border border-[#1A1F36]/10" />
+              <div className="w-7 h-7 rounded-full overflow-hidden border border-[#1A1F36]/10 relative">
+                <Image 
+                  src={user.photoURL} 
+                  alt="Profile" 
+                  fill 
+                  className="object-cover" 
+                  sizes="28px"
+                />
+              </div>
             ) : (
               <div className="w-7 h-7 rounded-full bg-[#1A1F36] text-white flex items-center justify-center text-[11px] font-bold">
                 {user.email?.charAt(0).toUpperCase()}

@@ -96,7 +96,12 @@ export default function DiscoveryClient({ slug, parsed }) {
           }
           
           if (mapCoords && mapCoords.lat && mapCoords.lng) {
-            dispatch(setUserCoords({ lat: mapCoords.lat, lng: mapCoords.lng }));
+            localStorage.setItem('last_lat', mapCoords.lat.toString());
+            localStorage.setItem('last_lng', mapCoords.lng.toString());
+            dispatch(setUserCoords({ 
+              coords: { lat: mapCoords.lat, lng: mapCoords.lng }, 
+              name: confirmed.area || confirmed.city || ""
+            }));
           }
 
           let sub = confirmed.area ? `${confirmed.area}, ${confirmed.city}` : confirmed.city;

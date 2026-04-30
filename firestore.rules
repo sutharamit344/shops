@@ -6,8 +6,7 @@ service cloud.firestore {
     function isAdmin() {
       return request.auth != null && 
         (request.auth.token.email == 'sutharamit344@gmail.com' || 
-         request.auth.token.email == 'webiestindiasolution@gmail.com' ||
-         request.auth.token.email == 'admin@shopsetu.com');
+         request.auth.token.email == 'webiestindiasolution@gmail.com');
     }
 
     match /shops/{shopId} {

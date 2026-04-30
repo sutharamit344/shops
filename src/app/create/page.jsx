@@ -111,7 +111,7 @@ const CreateShopPage = () => {
             Create your shop page
           </h1>
           <p className="text-[17px] text-[#1A1F36]/40 max-w-lg mx-auto font-medium">
-            Fill in the details below to launch your professional business profile on ShopSetu.
+            Fill in the details below to launch your professional business profile on ShopBajar.
           </p>
         </div>
 

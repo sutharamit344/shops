@@ -2,9 +2,11 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useSelector, useDispatch } from "react-redux";
 import { toggleFavoriteInDb } from "@/redux/thunks/authThunks";
+import { incrementLeads } from "@/lib/shopUtils";
 import { slugify } from "@/lib/slugify";
 import { generateShopUrl } from "@/lib/urlArchitect";
 import Card from "@/components/UI/Card";
@@ -14,6 +16,7 @@ import {
   Share2, ShieldCheck, Copy, Check, Shield, Award, Heart
 } from "lucide-react";
 import Button from "@/components/UI/Button";
+import { BRAND } from "@/lib/config";
 
 const ShopCard = ({ shop, variant = "grid", showActions = false }) => {
   const router = useRouter();
@@ -51,14 +54,16 @@ const ShopCard = ({ shop, variant = "grid", showActions = false }) => {
   const handleWhatsApp = (e, phone) => {
     e.preventDefault();
     e.stopPropagation();
+    incrementLeads(shop.id);
     const clean = phone?.toString().replace(/\D/g, "") || "";
-    const url = `https://wa.me/${clean.startsWith("91") ? clean : `91${clean}`}?text=Hi%20I%20found%20your%20shop%20on%20ShopSetu`;
+    const url = `https://wa.me/${clean.startsWith("91") ? clean : `91${clean}`}?text=Hi%20I%20found%20your%20shop%20on%20${BRAND}`;
     window.open(url, "_blank", "noopener,noreferrer");
   };
 
   const handleCall = (e, phone) => {
     e.preventDefault();
     e.stopPropagation();
+    incrementLeads(shop.id);
     const clean = phone?.toString().replace(/\D/g, "") || "";
     window.location.href = `tel:${clean}`;
   };
@@ -81,7 +86,7 @@ const ShopCard = ({ shop, variant = "grid", showActions = false }) => {
     const url = `${window.location.origin}${generateShopUrl(shop)}`;
     if (navigator.share) {
       try {
-        await navigator.share({ title: shop.name, text: `Check out ${shop.name} on ShopSetu`, url });
+        await navigator.share({ title: shop.name, text: `Check out ${shop.name} on ${BRAND}`, url });
       } catch { }
     } else {
       await navigator.clipboard.writeText(url);
@@ -115,8 +120,15 @@ const ShopCard = ({ shop, variant = "grid", showActions = false }) => {
           {/* Logo */}
           <div className="relative flex-shrink-0">
             {shop.logo ? (
-              <div className="w-14 h-14 md:w-16 md:h-16 rounded-xl overflow-hidden border border-[#1A1F36]/[0.06] group-hover/card:scale-105 transition-transform duration-300">
-                <img src={shop.logo} alt={shop.name} className="w-full h-full object-cover" loading="lazy" />
+              <div className="w-14 h-14 md:w-16 md:h-16 rounded-xl overflow-hidden border border-[#1A1F36]/[0.06] group-hover/card:scale-105 transition-transform duration-300 relative">
+                <Image 
+                  src={shop.logo.includes(" ") ? shop.logo.replace(/\s/g, "%20") : shop.logo} 
+                  alt={shop.name} 
+                  fill
+                  unoptimized
+                  className="object-cover" 
+                  sizes="(max-width: 768px) 56px, 64px"
+                />
               </div>
             ) : (
               <div className="w-14 h-14 md:w-16 md:h-16 rounded-xl bg-[#1A1F36] text-white flex items-center justify-center font-bold text-xl">
@@ -197,8 +209,15 @@ const ShopCard = ({ shop, variant = "grid", showActions = false }) => {
           <div className="flex items-start justify-between mb-4">
             <div className="relative">
               {shop.logo ? (
-                <div className="w-12 h-12 rounded-xl overflow-hidden border border-[#1A1F36]/[0.06] group-hover/card:scale-110 transition-transform duration-300">
-                  <img src={shop.logo} alt={shop.name} className="w-full h-full object-cover" loading="lazy" />
+                <div className="w-12 h-12 rounded-xl overflow-hidden border border-[#1A1F36]/[0.06] group-hover/card:scale-110 transition-transform duration-300 relative">
+                  <Image 
+                    src={shop.logo.includes(" ") ? shop.logo.replace(/\s/g, "%20") : shop.logo} 
+                    alt={shop.name} 
+                    fill
+                    unoptimized
+                    className="object-cover" 
+                    sizes="48px"
+                  />
                 </div>
               ) : (
                 <div className="w-12 h-12 rounded-xl bg-[#1A1F36] text-white flex items-center justify-center font-bold text-lg group-hover/card:scale-110 transition-transform duration-300">

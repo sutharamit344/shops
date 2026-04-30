@@ -32,7 +32,7 @@ export default function ThemeReferencePage() {
           </div>
           <h1 className="text-4xl font-extrabold tracking-tight leading-tight mb-2">UI Theme Reference</h1>
           <p className="text-white/50 text-sm font-medium max-w-xl">
-            This is the single source of truth for ShopSetu's visual design. Every color, component, spacing rule, and pattern used in the product lives on this page.
+            This is the single source of truth for ShopBajar's visual design. Every color, component, spacing rule, and pattern used in the product lives on this page.
           </p>
           <div className="mt-5 flex flex-wrap gap-2">
             {["Tailwind CSS", "Next.js App Router", "Plus Jakarta Sans", "Mobile-first"].map(tag => (
@@ -184,7 +184,7 @@ export default function ThemeReferencePage() {
 
       {/* FOOTER */}
       <footer className="py-10 border-t border-[#1A1F36]/[0.06] text-center">
-        <p className="text-[12px] text-[#1A1F36]/30 font-medium">ShopSetu UI Reference Guide · 2026</p>
+        <p className="text-[12px] text-[#1A1F36]/30 font-medium">ShopBajar UI Reference Guide · 2026</p>
       </footer>
     </div>
   );

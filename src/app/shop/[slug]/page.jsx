@@ -4,16 +4,28 @@ import ShopProfileClient from "@/components/Shop/ShopProfileClient";
 import Navbar from "@/components/Navbar";
 import { notFound } from "next/navigation";
 
+import { BRAND, DOMAIN } from "@/lib/config";
+
 export async function generateMetadata({ params }) {
   const { slug } = await params;
   const shop = await getShopBySlug(slug);
 
-  if (!shop) return { title: "Shop Not Found | ShopSetu" };
+  if (!shop) return { title: `Shop Not Found | ${BRAND}` };
+
+  const title = `${shop.name} - ${shop.category} in ${shop.city} | ${BRAND}`;
+  const description = shop.description || `View ${shop.name}, a verified ${shop.category} in ${shop.city}. Contact details, location, and reviews on ${BRAND}.`;
 
   return {
-    title: `${shop.name} | ${shop.category} in ${shop.city} | ShopSetu`,
-    description: shop.description || `View ${shop.name}, a verified ${shop.category} in ${shop.city}. Contact details, location, and reviews on ShopSetu.`,
+    title,
+    description,
+    alternates: {
+      canonical: `${DOMAIN}/shop/${slug}`,
+    },
     openGraph: {
+      title,
+      description,
+      url: `${DOMAIN}/shop/${slug}`,
+      siteName: BRAND,
       images: [shop.logo || "/og-image.png"],
     },
   };

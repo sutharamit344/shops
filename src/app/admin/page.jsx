@@ -268,6 +268,110 @@ const AdminDashboard = () => {
                 ))}
               </div>
 
+              {/* Analytics Breakdown */}
+              {!loading && approvedShops.length > 0 && (() => {
+                // City breakdown
+                const cityCount = approvedShops.reduce((acc, s) => {
+                  const city = s.city || "Unknown";
+                  acc[city] = (acc[city] || 0) + 1;
+                  return acc;
+                }, {});
+                const topCities = Object.entries(cityCount).sort((a, b) => b[1] - a[1]).slice(0, 6);
+
+                // Category breakdown
+                const catCount = approvedShops.reduce((acc, s) => {
+                  const cat = s.category || "Uncategorized";
+                  acc[cat] = (acc[cat] || 0) + 1;
+                  return acc;
+                }, {});
+                const topCats = Object.entries(catCount).sort((a, b) => b[1] - a[1]).slice(0, 6);
+
+                // Top performing shops by views
+                const topShops = [...approvedShops]
+                  .filter(s => s.views > 0 || s.leads > 0)
+                  .sort((a, b) => ((b.views || 0) + (b.leads || 0) * 3) - ((a.views || 0) + (a.leads || 0) * 3))
+                  .slice(0, 5);
+
+                const maxCity = topCities[0]?.[1] || 1;
+                const maxCat = topCats[0]?.[1] || 1;
+
+                return (
+                  <div className="space-y-6">
+                    <div className="flex items-center justify-between px-1">
+                      <h2 className="text-[20px] font-bold text-[#1A1F36] tracking-tight">Platform Analytics</h2>
+                      <span className="text-[10px] font-bold text-[#1A1F36]/30 uppercase tracking-widest">Live Data</span>
+                    </div>
+
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                      {/* Shops by City */}
+                      <div className="bg-white rounded-2xl border border-[#1A1F36]/[0.07] p-6 shadow-md">
+                        <h3 className="text-[11px] font-bold text-[#999] uppercase tracking-widest mb-5">Shops by City</h3>
+                        <div className="space-y-3">
+                          {topCities.map(([city, count]) => (
+                            <div key={city}>
+                              <div className="flex items-center justify-between mb-1">
+                                <span className="text-[13px] font-bold text-[#1A1F36]">{city}</span>
+                                <span className="text-[11px] font-bold text-[#FF6B35]">{count}</span>
+                              </div>
+                              <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                                <div
+                                  className="h-full bg-gradient-to-r from-[#FF6B35] to-[#FF6B35]/60 rounded-full transition-all duration-500"
+                                  style={{ width: `${(count / maxCity) * 100}%` }}
+                                />
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Category Breakdown */}
+                      <div className="bg-white rounded-2xl border border-[#1A1F36]/[0.07] p-6 shadow-md">
+                        <h3 className="text-[11px] font-bold text-[#999] uppercase tracking-widest mb-5">Top Categories</h3>
+                        <div className="space-y-3">
+                          {topCats.map(([cat, count]) => (
+                            <div key={cat}>
+                              <div className="flex items-center justify-between mb-1">
+                                <span className="text-[13px] font-bold text-[#1A1F36] truncate max-w-[140px]">{cat}</span>
+                                <span className="text-[11px] font-bold text-[#1A1F36]/60">{count}</span>
+                              </div>
+                              <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                                <div
+                                  className="h-full bg-gradient-to-r from-[#1A1F36] to-[#1A1F36]/50 rounded-full transition-all duration-500"
+                                  style={{ width: `${(count / maxCat) * 100}%` }}
+                                />
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Top Performing Shops */}
+                      <div className="bg-white rounded-2xl border border-[#1A1F36]/[0.07] p-6 shadow-md">
+                        <h3 className="text-[11px] font-bold text-[#999] uppercase tracking-widest mb-5">Top Engagement</h3>
+                        {topShops.length > 0 ? (
+                          <div className="space-y-4">
+                            {topShops.map((shop, i) => (
+                              <div key={shop.id} className="flex items-center gap-3">
+                                <span className="text-[11px] font-black text-[#1A1F36]/20 w-4">{i + 1}</span>
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-[13px] font-bold text-[#1A1F36] truncate">{shop.name}</p>
+                                  <p className="text-[10px] text-[#999] font-medium">{shop.views || 0} views · {shop.leads || 0} leads</p>
+                                </div>
+                                <div className="flex items-center gap-1 bg-[#FF6B35]/10 px-2 py-1 rounded-full">
+                                  <span className="text-[10px] font-black text-[#FF6B35]">{(shop.views || 0) + (shop.leads || 0) * 3}</span>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <p className="text-[13px] text-[#999] text-center mt-8">No engagement data yet.<br/>Shops need views or leads to appear here.</p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
+
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 w-full">
                 <div className="lg:col-span-2 space-y-6">
                   <div className="flex items-center justify-between px-2">

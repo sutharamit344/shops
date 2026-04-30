@@ -89,24 +89,23 @@ export default function ExploreClient() {
   const titleText = getDynamicTitle();
 
   useEffect(() => {
-    if (!localCity && !isNearbyActive) {
-      setLocalSubtitle("");
-      dispatch(setUserCoords({ coords: null, name: "" })); // Clear coordinates if not nearby
-      return;
-    }
-    
     const lastCity = localStorage.getItem('last_city');
     const lastArea = localStorage.getItem('last_area');
     const lastPin = localStorage.getItem('last_pincode');
     const lastLat = localStorage.getItem('last_lat');
     const lastLng = localStorage.getItem('last_lng');
     
-    // Only use cached coords if nearby is active
-    if (isNearbyActive && lastLat && lastLng) {
+    // PERSISTENT LOCATION: Load cached coords even if live GPS is off
+    if (lastLat && lastLng && !userCoords) {
       dispatch(setUserCoords({ 
         coords: { lat: parseFloat(lastLat), lng: parseFloat(lastLng) }, 
         name: lastArea || lastCity 
       }));
+    }
+
+    if (!localCity && !isNearbyActive) {
+      setLocalSubtitle("");
+      return;
     }
 
     if (localCity && lastCity && localCity.toLowerCase() === lastCity.toLowerCase()) {
@@ -123,7 +122,7 @@ export default function ExploreClient() {
   }, [localCity, localArea, isNearbyActive]);
 
   useEffect(() => {
-    document.title = `${titleText} | ShopSetu Marketplace`;
+    document.title = `${titleText} | ShopBajar Marketplace`;
   }, [titleText]);
 
   const applyLocation = (city, area, pincode, village, lat, lng) => {
@@ -194,7 +193,7 @@ export default function ExploreClient() {
           console.log("Smart Discovery: No nearby match found. Starting discovery...");
           const res = await fetch(
             `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&accept-language=en`,
-            { headers: { "User-Agent": "ShopSetu_Marketplace_App" } }
+            { headers: { "User-Agent": "ShopBajar/1.0 (contact: sutharamit344@gmail.com)" } }
           );
 
           const data = await res.json();

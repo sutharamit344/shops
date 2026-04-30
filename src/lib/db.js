@@ -54,13 +54,13 @@ export async function updateLocationCache(name, lat, lng, extraData = {}) {
     if (!name || !lat || !lng) return;
     const slug = slugify(name);
     const docRef = doc(db, LOCATION_CACHE, slug);
-    
+
     await runTransaction(db, async (transaction) => {
       const snap = await transaction.get(docRef);
       if (snap.exists()) {
         transaction.update(docRef, {
           ...extraData,
-          lastSearchedAt: serverTimestamp()
+          lastSearchedAt: serverTimestamp(),
         });
       } else {
         transaction.set(docRef, {
@@ -69,7 +69,7 @@ export async function updateLocationCache(name, lat, lng, extraData = {}) {
           lng,
           ...extraData,
           lastSearchedAt: serverTimestamp(),
-          createdAt: serverTimestamp()
+          createdAt: serverTimestamp(),
         });
       }
     });
@@ -88,13 +88,15 @@ export async function cleanupOldLocations() {
 
     const q = query(
       collection(db, LOCATION_CACHE),
-      where("lastSearchedAt", "<", sevenDaysAgo)
+      where("lastSearchedAt", "<", sevenDaysAgo),
     );
 
     const snap = await getDocs(q);
-    const deletePromises = snap.docs.map(d => deleteDoc(doc(db, LOCATION_CACHE, d.id)));
+    const deletePromises = snap.docs.map((d) =>
+      deleteDoc(doc(db, LOCATION_CACHE, d.id)),
+    );
     await Promise.all(deletePromises);
-    
+
     return { success: true, count: snap.size };
   } catch (error) {
     console.error("Error cleaning up locations:", error);
@@ -106,24 +108,40 @@ export async function cleanupOldLocations() {
  * Finds the nearest cached location within a specific radius (default 1km).
  * Uses client-side filtering on the most recent 100 entries.
  */
-export async function getNearestLocation(userLat, userLng, radiusInMeters = 2000) {
+export async function getNearestLocation(
+  userLat,
+  userLng,
+  radiusInMeters = 2000,
+) {
   try {
     // 1. Fetch Locations Cache and Approved Shops in parallel
     const [locationsSnap, shopsSnap] = await Promise.all([
-      getDocs(query(collection(db, LOCATION_CACHE), orderBy("lastSearchedAt", "desc"), limit(400))),
-      getDocs(query(collection(db, "shops"), where("status", "==", "approved"), limit(200)))
+      getDocs(
+        query(
+          collection(db, LOCATION_CACHE),
+          orderBy("lastSearchedAt", "desc"),
+          limit(400),
+        ),
+      ),
+      getDocs(
+        query(
+          collection(db, "shops"),
+          where("status", "==", "approved"),
+          limit(200),
+        ),
+      ),
     ]);
 
     const calculateDistance = (lat1, lon1, lat2, lon2) => {
       const R = 6371e3; // metres
-      const φ1 = lat1 * Math.PI/180;
-      const φ2 = lat2 * Math.PI/180;
-      const Δφ = (lat2-lat1) * Math.PI/180;
-      const Δλ = (lon2-lon1) * Math.PI/180;
-      const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
-                Math.cos(φ1) * Math.cos(φ2) *
-                Math.sin(Δλ/2) * Math.sin(Δλ/2);
-      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+      const φ1 = (lat1 * Math.PI) / 180;
+      const φ2 = (lat2 * Math.PI) / 180;
+      const Δφ = ((lat2 - lat1) * Math.PI) / 180;
+      const Δλ = ((lon2 - lon1) * Math.PI) / 180;
+      const a =
+        Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
+        Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
       return R * c;
     };
 
@@ -131,7 +149,7 @@ export async function getNearestLocation(userLat, userLng, radiusInMeters = 2000
     let minCacheDist = radiusInMeters;
 
     // Check Locations Cache
-    locationsSnap.docs.forEach(doc => {
+    locationsSnap.docs.forEach((doc) => {
       const data = standardizeData(doc);
       if (data.lat && data.lng) {
         const dist = calculateDistance(userLat, userLng, data.lat, data.lng);
@@ -146,13 +164,13 @@ export async function getNearestLocation(userLat, userLng, radiusInMeters = 2000
     let minShopDist = radiusInMeters;
 
     // Check Shops (Often more accurate!)
-    shopsSnap.docs.forEach(doc => {
+    shopsSnap.docs.forEach((doc) => {
       const data = doc.data();
       if (data.lat && data.lng) {
         const dist = calculateDistance(userLat, userLng, data.lat, data.lng);
         if (dist < minShopDist) {
           minShopDist = dist;
-          closestShop = { 
+          closestShop = {
             name: data.area || data.city,
             city: data.city,
             area: data.area,
@@ -160,7 +178,7 @@ export async function getNearestLocation(userLat, userLng, radiusInMeters = 2000
             pincode: data.pincode || "",
             lat: data.lat,
             lng: data.lng,
-            source: "shop"
+            source: "shop",
           };
         }
       }
@@ -182,9 +200,11 @@ export async function getNearestLocation(userLat, userLng, radiusInMeters = 2000
     }
 
     if (closest) {
-      console.log(`Smart Discovery: Closest match is ${closest.area || closest.name} from ${closest.source} at ${Math.round(finalDist)}m`);
+      console.log(
+        `Smart Discovery: Closest match is ${closest.area || closest.name} from ${closest.source} at ${Math.round(finalDist)}m`,
+      );
     }
-    
+
     return closest;
   } catch (error) {
     console.error("Error finding nearest location:", error);
@@ -199,19 +219,28 @@ async function resolveParameter(slug, type) {
   try {
     if (!slug) return slug;
     const cleanSlug = slug.toLowerCase().trim();
-    
+
     // For categories, check the categories collection first
-    if (type === 'category') {
+    if (type === "category") {
       const cats = await getCategories();
-      const match = cats.find(c => slugify(c.name) === cleanSlug);
+      const match = cats.find((c) => slugify(c.name) === cleanSlug);
       if (match) return match.name;
     }
 
     // For others, check approved shops
     const shops = await getApprovedShops();
-    const field = type === 'city' ? 'city' : type === 'area' ? 'area' : type === 'zone' ? 'zone' : 'category';
-    
-    const match = shops.find(s => s[field] && slugify(s[field]) === cleanSlug);
+    const field =
+      type === "city"
+        ? "city"
+        : type === "area"
+          ? "area"
+          : type === "zone"
+            ? "zone"
+            : "category";
+
+    const match = shops.find(
+      (s) => s[field] && slugify(s[field]) === cleanSlug,
+    );
     return match ? match[field] : slug.replace(/-/g, " ");
   } catch (error) {
     console.error(`Error resolving ${type} slug:`, error);
@@ -346,7 +375,7 @@ export async function getShopBySlug(slug, allowHidden = false) {
  */
 export async function getShopsByCategory(categorySlug) {
   try {
-    const category = await resolveParameter(categorySlug, 'category');
+    const category = await resolveParameter(categorySlug, "category");
     const q = query(
       collection(db, COLLECTION_NAME),
       where("category", "==", category),
@@ -368,7 +397,7 @@ export async function getShopsByCategory(categorySlug) {
  */
 export async function getShopsByCity(citySlug) {
   try {
-    const city = await resolveParameter(citySlug, 'city');
+    const city = await resolveParameter(citySlug, "city");
     const q = query(
       collection(db, COLLECTION_NAME),
       where("city", "==", city),
@@ -387,8 +416,8 @@ export async function getShopsByCity(citySlug) {
  */
 export async function getShopsByCityAndCategory(citySlug, categorySlug) {
   try {
-    const city = await resolveParameter(citySlug, 'city');
-    const category = await resolveParameter(categorySlug, 'category');
+    const city = await resolveParameter(citySlug, "city");
+    const category = await resolveParameter(categorySlug, "category");
     // 1. Try exact match
     const q = query(
       collection(db, COLLECTION_NAME),
@@ -436,8 +465,8 @@ export async function getShopsByCityAndCategory(citySlug, categorySlug) {
  */
 export async function getShopsByCityAndArea(citySlug, areaSlug) {
   try {
-    const city = await resolveParameter(citySlug, 'city');
-    const area = await resolveParameter(areaSlug, 'area');
+    const city = await resolveParameter(citySlug, "city");
+    const area = await resolveParameter(areaSlug, "area");
     const q = query(
       collection(db, COLLECTION_NAME),
       where("city", "==", city),
@@ -457,9 +486,9 @@ export async function getShopsByCityAndArea(citySlug, areaSlug) {
  */
 export async function getShopsByZoneInArea(citySlug, areaSlug, zoneSlug) {
   try {
-    const city = await resolveParameter(citySlug, 'city');
-    const area = await resolveParameter(areaSlug, 'area');
-    const zone = await resolveParameter(zoneSlug, 'zone');
+    const city = await resolveParameter(citySlug, "city");
+    const area = await resolveParameter(areaSlug, "area");
+    const zone = await resolveParameter(zoneSlug, "zone");
     const q = query(
       collection(db, COLLECTION_NAME),
       where("city", "==", city),
@@ -550,8 +579,8 @@ export const getApprovedShops = unstable_cache(
       return [];
     }
   },
-  ['approved-shops'],
-  { revalidate: 3600, tags: ['shops'] }
+  ["approved-shops"],
+  { revalidate: 3600, tags: ["shops"] },
 );
 
 export async function getUpdatedShops() {
@@ -681,8 +710,8 @@ export const getCategories = unstable_cache(
       return [];
     }
   },
-  ['categories'],
-  { revalidate: 3600, tags: ['categories'] }
+  ["categories"],
+  { revalidate: 3600, tags: ["categories"] },
 );
 
 /**
@@ -840,8 +869,8 @@ export const getClusters = unstable_cache(
       return [];
     }
   },
-  ['clusters'],
-  { revalidate: 3600, tags: ['clusters'] }
+  ["clusters"],
+  { revalidate: 3600, tags: ["clusters"] },
 );
 
 /**
@@ -867,12 +896,15 @@ export async function getPendingClusters() {
 /**
  * Proposes a new cluster.
  */
-export async function proposeCluster(name, category) {
+export async function proposeCluster(name, category, area = "", city = "", pincode = "", lat = null, lng = null) {
   try {
     const q = query(
-      collection(db, "clusters"), 
+      collection(db, "clusters"),
       where("name", "==", name),
-      where("category", "==", category)
+      where("category", "==", category),
+      where("area", "==", area),
+      where("city", "==", city),
+      where("pincode", "==", pincode)
     );
     const snap = await getDocs(q);
     if (!snap.empty) return { success: true, id: snap.docs[0].id };
@@ -880,13 +912,18 @@ export async function proposeCluster(name, category) {
     const docRef = await addDoc(collection(db, "clusters"), {
       name,
       category,
+      area,
+      city,
+      pincode,
+      lat,
+      lng,
       status: "pending",
       createdAt: serverTimestamp(),
     });
 
     await logActivity(
       "CLUSTER_PROPOSE",
-      `Proposed new cluster: ${name} for ${category}`,
+      `Proposed new cluster: ${name} for ${category} in ${area}, ${city} (${pincode})`,
       docRef.id,
       "cluster",
       "User",
@@ -1150,7 +1187,7 @@ export async function deleteShopRating(shopId, ratingId) {
         `Admin/Owner deleted a review from ${ratingData.userName}`,
         shopId,
         "shop",
-        "System/Owner"
+        "System/Owner",
       );
     });
 

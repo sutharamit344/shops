@@ -16,7 +16,9 @@ import ListingLayout from "@/components/Shop/ListingLayout";
 import Navbar from "@/components/Navbar";
 import Button from "@/components/UI/Button";
 import ShopSkeleton from "@/components/Shop/Skeleton";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, Store, MapPin, ArrowRight } from "lucide-react";
+import { BRAND } from "@/lib/config";
+import { slugify } from "@/lib/slugify";
 
 /**
  * Universal Fallback Router (not-found.js)
@@ -28,10 +30,11 @@ export default function NotFound() {
   const pathParts = (pathname || "").split("/").filter(Boolean);
 
   const [data, setData] = useState(null);
-  const [view, setView] = useState(null); // 'shop', 'category', 'loading', '404', 'error'
+  const [view, setView] = useState(null);
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState("");
   const [ratings, setRatings] = useState([]);
+  const [suggestedShops, setSuggestedShops] = useState([]);
 
   useEffect(() => {
     const route = async () => {
@@ -54,7 +57,7 @@ export default function NotFound() {
           if (shop) {
             setData(shop);
             setView("shop");
-            document.title = `${shop.name} | ShopSetu`;
+            document.title = `${shop.name} | ${BRAND}`;
             const recentRatings = await getShopRatings(shop.id);
             setRatings(recentRatings);
             setLoading(false);
@@ -71,14 +74,14 @@ export default function NotFound() {
           if (shops.length > 0) {
             setData({ city: slug, shops, type: 'city' });
             setView("listing");
-            document.title = `Best Shops in ${slug} | ShopSetu`;
+            document.title = `Best Shops in ${slug} | ${BRAND}`;
           } else {
             // Try Shop Profile
             const shop = await getShopBySlug(slug, isPreview);
             if (shop) {
               setData(shop);
               setView("shop");
-              document.title = `${shop.name} | ShopSetu`;
+              document.title = `${shop.name} | ${BRAND}`;
               const recentRatings = await getShopRatings(shop.id);
               setRatings(recentRatings);
             } else {
@@ -105,15 +108,15 @@ export default function NotFound() {
             setData({ city, label: slug, shops, type });
             setView("listing");
             document.title = type === 'category' 
-              ? `Best ${slug} in ${city} | ShopSetu`
-              : `Shops in ${slug}, ${city} | ShopSetu`;
+              ? `Best ${slug} in ${city} | ${BRAND}`
+              : `Shops in ${slug}, ${city} | ${BRAND}`;
           } else {
             // Try Shop Profile (using the second part as slug)
             const shop = await getShopBySlug(slug, isPreview);
             if (shop) {
               setData(shop);
               setView("shop");
-              document.title = `${shop.name} | ShopSetu`;
+              document.title = `${shop.name} | ${BRAND}`;
               const recentRatings = await getShopRatings(shop.id);
               setRatings(recentRatings);
             } else {
@@ -132,7 +135,7 @@ export default function NotFound() {
           if (shop) {
             setData(shop);
             setView("shop");
-            document.title = `${shop.name} - ${shop.category} in ${shop.city} | ShopSetu`;
+            document.title = `${shop.name} - ${shop.category} in ${shop.city} | ${BRAND}`;
             const recentRatings = await getShopRatings(shop.id);
             setRatings(recentRatings);
           } else {
@@ -141,7 +144,7 @@ export default function NotFound() {
             if (shops.length > 0) {
               setData({ city, area, label: slugOrZone, shops, type: 'zone' });
               setView("listing");
-              document.title = `${slugOrZone} in ${area}, ${city} | ShopSetu`;
+              document.title = `${slugOrZone} in ${area}, ${city} | ${BRAND}`;
             } else {
               setView("404");
             }
@@ -159,6 +162,19 @@ export default function NotFound() {
 
     route();
   }, [pathname]);
+
+  // When hitting a real 404, try to load nearby shops from last visited city
+  useEffect(() => {
+    if (view !== "404") return;
+    const lastCity = typeof window !== "undefined" ? localStorage.getItem("last_city") : null;
+    if (!lastCity) return;
+    getShopsByCity(lastCity).then(shops => {
+      // Pick up to 3 random approved shops
+      const approved = shops.filter(s => s.status === "approved");
+      const shuffled = approved.sort(() => Math.random() - 0.5).slice(0, 3);
+      setSuggestedShops(shuffled);
+    }).catch(() => {});
+  }, [view]);
 
   if (loading) {
     return (
@@ -205,18 +221,56 @@ export default function NotFound() {
 
   // Final 404
   return (
-    <div className="min-h-screen bg-cream flex flex-col items-center justify-center p-4">
+    <div className="min-h-screen bg-[#FAFAF8] flex flex-col">
       <Navbar />
-      <div className="text-center mt-20">
-        <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6 text-gray-400">
-          <AlertCircle size={40} />
+      <main className="flex-1 flex flex-col items-center justify-center px-4 pt-24 pb-16">
+        {/* Error Icon */}
+        <div className="w-24 h-24 bg-[#FF6B35]/10 rounded-3xl flex items-center justify-center mb-6">
+          <Store size={44} className="text-[#FF6B35]" />
         </div>
-        <h1 className="text-4xl font-black text-navy mb-4 uppercase tracking-tighter">404 - Not Found</h1>
-        <p className="text-gray-600 mb-8 max-w-md mx-auto">We couldn't find the shop or category you're looking for.</p>
-        <div className="flex gap-4">
-          <Link href="/"><Button variant="outline">Back to Home</Button></Link>
+        <h1 className="text-4xl font-black text-[#1A1F36] mb-3 tracking-tight">Page Not Found</h1>
+        <p className="text-[15px] text-[#666] mb-8 max-w-md text-center">
+          We couldn't find the shop or page you're looking for. It may have moved or been removed.
+        </p>
+        <div className="flex gap-3 flex-wrap justify-center mb-16">
+          <Link href="/explore">
+            <Button variant="dark" className="h-11 px-6">Browse Marketplace</Button>
+          </Link>
+          <Link href="/">
+            <Button variant="outline" className="h-11 px-6">Back to Home</Button>
+          </Link>
         </div>
-      </div>
+
+        {/* Suggested Shops Recovery Section */}
+        {suggestedShops.length > 0 && (
+          <div className="w-full max-w-3xl">
+            <div className="flex items-center gap-2 mb-5">
+              <MapPin size={16} className="text-[#FF6B35]" />
+              <h2 className="text-[14px] font-bold text-[#1A1F36]">You might like these nearby</h2>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              {suggestedShops.map(shop => (
+                <Link
+                  key={shop.id}
+                  href={`/shop/${slugify(shop.slug)}`}
+                  className="bg-white rounded-2xl border border-[#1A1F36]/[0.06] p-4 flex items-center gap-4 hover:border-[#FF6B35]/30 hover:shadow-md transition-all group"
+                >
+                  <div className="w-12 h-12 rounded-xl bg-[#FF6B35]/10 flex items-center justify-center flex-shrink-0 text-[#FF6B35] font-bold text-lg overflow-hidden">
+                    {shop.logo
+                      ? <img src={shop.logo.includes(" ") ? shop.logo.replace(/\s/g, "%20") : shop.logo} alt={shop.name} className="w-full h-full object-cover" />
+                      : shop.name?.charAt(0)}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[13px] font-bold text-[#1A1F36] truncate">{shop.name}</p>
+                    <p className="text-[11px] text-[#999] truncate">{shop.category}</p>
+                  </div>
+                  <ArrowRight size={14} className="text-[#ccc] group-hover:text-[#FF6B35] flex-shrink-0 transition-colors" />
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
+      </main>
     </div>
   );
 }

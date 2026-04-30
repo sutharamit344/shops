@@ -21,9 +21,11 @@ import {
 } from "lucide-react";
 import Dialog from "../UI/Dialog";
 import Link from "next/link";
-import { incrementViews } from "@/lib/shopUtils";
+import Image from "next/image";
+import { incrementViews, incrementLeads } from "@/lib/shopUtils";
 import { submitShopRating, getShopRatings } from "@/lib/db";
 import { slugify } from "@/lib/slugify";
+import { BRAND, DOMAIN } from "@/lib/config";
 import Button from "../UI/Button";
 import Card from "../UI/Card";
 import OpenNowBadge from "../UI/OpenNowBadge";
@@ -99,13 +101,14 @@ const ShopProfileClient = ({ shop }) => {
     : [];
 
   const handleShare = async () => {
-    const url = window.location.href;
+    const url = `${DOMAIN}/shop/${shop.slug}`;
+    const shareText = `Check out *${shop.name}* on ${BRAND}! A ${shop.category} in ${shop.area ? shop.area + ', ' : ''}${shop.city}.`;
     if (navigator.share) {
       try {
-        await navigator.share({ title: shop.name, url });
+        await navigator.share({ title: shop.name, text: shareText, url });
       } catch (err) { }
     } else {
-      await navigator.clipboard.writeText(url);
+      await navigator.clipboard.writeText(`${shareText}\n${url}`);
       setShowShareTooltip(true);
       setTimeout(() => setShowShareTooltip(false), 2000);
     }
@@ -114,7 +117,9 @@ const ShopProfileClient = ({ shop }) => {
   const handleWhatsAppOrder = (item) => {
     const itemToOrder = item || selectedItem;
     if (!itemToOrder || !shop.phone) return;
-    const message = `Hi, I found your shop *${shop.name}* on ShopSetu!\n\nI'm interested in: *${itemToOrder.name}*\nCategory: ${itemToOrder.category || 'General'}\n\nCan you please provide more details?`;
+    incrementLeads(shop.id);
+    const shopUrl = `${DOMAIN}/shop/${shop.slug}`;
+    const message = `Hi! I found your shop *${shop.name}* on ${BRAND}!\n\nI'm interested in: *${itemToOrder.name}*\nCategory: ${itemToOrder.category || 'General'}\n\nCan you please provide more details?\n\n🔗 ${shopUrl}`;
     const cleanPhone = shop.phone.replace(/\D/g, '');
     const whatsappUrl = `https://wa.me/91${cleanPhone}?text=${encodeURIComponent(message)}`;
     window.open(whatsappUrl, '_blank');
@@ -122,7 +127,10 @@ const ShopProfileClient = ({ shop }) => {
 
   const handleGeneralWhatsApp = () => {
     if (!shop.phone) return;
-    const message = `Hi, I found your shop *${shop.name}* on ShopSetu! I'd like to know more about your products and services.`;
+    incrementLeads(shop.id);
+    const shopUrl = `${DOMAIN}/shop/${shop.slug}`;
+    const location = [shop.area, shop.city].filter(Boolean).join(', ');
+    const message = `Hi! I found your shop *${shop.name}* on ${BRAND}! 🏪\n\n📍 ${location}\n\nI'd like to know more about your products and services.\n\n🔗 ${shopUrl}`;
     const cleanPhone = shop.phone.replace(/\D/g, '');
     const whatsappUrl = `https://wa.me/91${cleanPhone}?text=${encodeURIComponent(message)}`;
     window.open(whatsappUrl, '_blank');
@@ -134,7 +142,14 @@ const ShopProfileClient = ({ shop }) => {
       {/* Hero Banner */}
       <div className="relative h-56 md:h-72 w-full overflow-hidden bg-gradient-to-r from-[#FF6B35]/20 to-[#FF9A72]/20">
         {shop.coverImage ? (
-          <img src={shop.coverImage} alt={shop.name} className="w-full h-full object-cover" />
+          <Image 
+            src={shop.coverImage} 
+            alt={shop.name} 
+            fill 
+            priority
+            className="object-cover" 
+            sizes="100vw"
+          />
         ) : (
           <div className="w-full h-full flex items-center justify-center">
             <Store size={80} className="text-[#FF6B35]/20" />
@@ -174,9 +189,16 @@ const ShopProfileClient = ({ shop }) => {
           <div className="p-6">
             {/* Logo & Basic Info */}
             <div className="flex flex-col md:flex-row gap-5 mb-5">
-              <div className="w-20 h-20 rounded-xl bg-white border border-black/[0.06] overflow-hidden flex-shrink-0">
+              <div className="w-20 h-20 rounded-xl bg-white border border-black/[0.06] overflow-hidden flex-shrink-0 relative">
                 {shop.logo ? (
-                  <img src={shop.logo} alt={shop.name} className="w-full h-full object-cover" />
+                  <Image 
+                    src={shop.logo.includes(" ") ? shop.logo.replace(/\s/g, "%20") : shop.logo} 
+                    alt={shop.name} 
+                    fill 
+                    unoptimized
+                    className="object-cover" 
+                    sizes="80px"
+                  />
                 ) : (
                   <div className="w-full h-full bg-gradient-to-br from-[#FF6B35] to-[#FF9A72] flex items-center justify-center text-white text-2xl font-bold">
                     {shop.name?.charAt(0)}
@@ -238,7 +260,10 @@ const ShopProfileClient = ({ shop }) => {
               </button>
               {shop.phone && (
                 <button
-                  onClick={() => window.location.href = `tel:${shop.phone}`}
+                  onClick={() => {
+                    incrementLeads(shop.id);
+                    window.location.href = `tel:${shop.phone}`;
+                  }}
                   className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-[#0F0F0F] text-white text-[13px] font-semibold rounded-xl hover:bg-[#333] transition-all"
                 >
                   <Phone size={16} /> Call
@@ -297,9 +322,15 @@ const ShopProfileClient = ({ shop }) => {
                     onClick={() => setSelectedItem(item)}
                     className="bg-white rounded-xl border border-black/[0.06] p-4 flex items-center gap-4 cursor-pointer hover:border-[#FF6B35]/30 transition-all"
                   >
-                    <div className="w-14 h-14 rounded-lg bg-gray-50 flex items-center justify-center overflow-hidden flex-shrink-0">
+                    <div className="w-14 h-14 rounded-lg bg-gray-50 flex items-center justify-center overflow-hidden flex-shrink-0 relative">
                       {item.image ? (
-                        <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+                        <Image 
+                          src={item.image} 
+                          alt={item.name} 
+                          fill 
+                          className="object-cover" 
+                          sizes="56px"
+                        />
                       ) : (
                         <ShoppingBag size={22} className="text-[#ccc]" />
                       )}
@@ -338,9 +369,15 @@ const ShopProfileClient = ({ shop }) => {
                           onClick={() => setSelectedItem({ ...item, category: section.name || section.category })}
                           className="bg-white rounded-xl border border-black/[0.06] p-4 flex items-center gap-4 cursor-pointer hover:border-[#FF6B35]/30 transition-all group"
                         >
-                          <div className="w-14 h-14 rounded-lg bg-gray-50 flex items-center justify-center overflow-hidden flex-shrink-0">
+                          <div className="w-14 h-14 rounded-lg bg-gray-50 flex items-center justify-center overflow-hidden flex-shrink-0 relative">
                             {item.image ? (
-                              <img src={item.image} alt={item.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
+                              <Image 
+                                src={item.image} 
+                                alt={item.name} 
+                                fill 
+                                className="object-cover group-hover:scale-105 transition-transform" 
+                                sizes="56px"
+                              />
                             ) : (
                               <ShoppingBag size={22} className="text-[#ccc]" />
                             )}
@@ -520,7 +557,7 @@ const ShopProfileClient = ({ shop }) => {
                   </div>
                   <div>
                     <p className="text-[13px] font-bold text-blue-900">Verified Business</p>
-                    <p className="text-[11px] text-blue-700 font-medium leading-tight">Identity and physical location verified by ShopSetu</p>
+                    <p className="text-[11px] text-blue-700 font-medium leading-tight">Identity and physical location verified by ShopBajar</p>
                   </div>
                 </div>
               </div>
@@ -535,9 +572,15 @@ const ShopProfileClient = ({ shop }) => {
                 {shop.gallery.map((img, idx) => (
                   <div
                     key={idx}
-                    className="aspect-square rounded-xl overflow-hidden cursor-pointer hover:opacity-90 transition-all border border-black/[0.06]"
+                    className="aspect-square rounded-xl overflow-hidden cursor-pointer hover:opacity-90 transition-all border border-black/[0.06] relative"
                   >
-                    <img src={img} alt={`Gallery ${idx + 1}`} className="w-full h-full object-cover" />
+                    <Image 
+                      src={img} 
+                      alt={`Gallery ${idx + 1}`} 
+                      fill 
+                      className="object-cover" 
+                      sizes="(max-width: 768px) 50vw, 33vw"
+                    />
                   </div>
                 ))}
               </div>
@@ -697,7 +740,13 @@ const ShopProfileClient = ({ shop }) => {
           <div className="flex flex-col">
             <div className="relative aspect-square w-full bg-gray-50 overflow-hidden rounded-t-2xl">
               {selectedItem.image ? (
-                <img src={selectedItem.image} alt={selectedItem.name} className="w-full h-full object-cover" />
+                <Image 
+                  src={selectedItem.image} 
+                  alt={selectedItem.name} 
+                  fill 
+                  className="object-cover" 
+                  sizes="(max-width: 768px) 100vw, 448px"
+                />
               ) : (
                 <div className="w-full h-full flex items-center justify-center">
                   <ShoppingBag size={56} className="text-[#ccc]" />

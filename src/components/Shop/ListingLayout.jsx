@@ -72,7 +72,7 @@ const ListingLayout = ({ shops = [], title, subtitle, city, type }) => {
             <Link href="/about" className="hover:text-[#FF6B35] transition-colors">About</Link>
           </div>
           <p className="text-[11px] font-bold text-[#1A1F36]/20 uppercase tracking-widest">
-            © 2026 ShopSetu Bharat.
+            © 2026 ShopBajar Bharat.
           </p>
         </div>
       </footer>

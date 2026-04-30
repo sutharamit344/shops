@@ -17,6 +17,28 @@ const getDistance = (lat1, lon1, lat2, lon2) => {
   return R * c;
 };
 
+const getLevenshteinDistance = (a, b) => {
+  if (a.length === 0) return b.length;
+  if (b.length === 0) return a.length;
+  const matrix = [];
+  for (let i = 0; i <= b.length; i++) matrix[i] = [i];
+  for (let j = 0; j <= a.length; j++) matrix[0][j] = j;
+  for (let i = 1; i <= b.length; i++) {
+    for (let j = 1; j <= a.length; j++) {
+      if (b.charAt(i - 1) === a.charAt(j - 1)) {
+        matrix[i][j] = matrix[i - 1][j - 1];
+      } else {
+        matrix[i][j] = Math.min(
+          matrix[i - 1][j - 1] + 1,
+          matrix[i][j - 1] + 1,
+          matrix[i - 1][j] + 1
+        );
+      }
+    }
+  }
+  return matrix[b.length][a.length];
+};
+
 export const fetchSearchResults = createAsyncThunk(
   "search/fetchResults",
   async ({ category, location, type, clusterType }, { getState }) => {
@@ -65,14 +87,24 @@ export const fetchSearchResults = createAsyncThunk(
       let matchCategory = false;
 
       if (normalizedCluster) {
-        matchCategory = shopCluster === normalizedCluster;
+        matchCategory = 
+          shopCluster === normalizedCluster || 
+          getLevenshteinDistance(shopCluster, normalizedCluster) <= 2;
       } else {
+        const isFuzzyMatch = (s1, s2) => {
+          if (!s1 || !s2) return false;
+          if (s1 === s2 || s1.includes(s2) || s2.includes(s1)) return true;
+          // Only attempt fuzzy if strings are long enough
+          if (s1.length > 3 && s2.length > 3) {
+            return getLevenshteinDistance(s1, s2) <= 2;
+          }
+          return false;
+        };
+
         matchCategory =
           !category ||
-          shopCat === normalizedQueryCat ||
-          shopCluster === normalizedQueryCat ||
-          shopCat.includes(normalizedQueryCat) ||
-          normalizedQueryCat.includes(shopCat);
+          isFuzzyMatch(shopCat, normalizedQueryCat) ||
+          isFuzzyMatch(shopCluster, normalizedQueryCat);
       }
 
       let matchLocation = true;

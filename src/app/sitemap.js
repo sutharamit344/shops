@@ -1,8 +1,10 @@
 import { getApprovedShops, getCategories } from "@/lib/db";
 import { slugify } from "@/lib/slugify";
 
+import { BRAND, DOMAIN } from "@/lib/config";
+
 export default async function sitemap() {
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://shopsetu.com";
+  const baseUrl = DOMAIN;
 
   // 1. Static Routes
   const staticRoutes = [

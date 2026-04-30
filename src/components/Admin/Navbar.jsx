@@ -50,7 +50,7 @@ const AdminNavbar = ({ activeTab, onTabChange }) => {
                 <ShieldCheck size={18} className="text-white" />
               </div>
               <div className="flex flex-col">
-                <span className="text-[15px] font-bold text-[#0F0F0F] tracking-tight">ShopSetu <span className="text-[#FF6B35]">Admin</span></span>
+                <span className="text-[15px] font-bold text-[#0F0F0F] tracking-tight">ShopBajar <span className="text-[#FF6B35]">Admin</span></span>
                 <span className="text-[9px] font-bold text-[#999] uppercase tracking-widest leading-none">Authority Control</span>
               </div>
             </Link>
