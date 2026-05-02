@@ -142,7 +142,7 @@ const AdminDashboard = () => {
   if (authLoading || isAdmin === null) {
     return (
       <div className="min-h-screen bg-[#FAFAF8] flex flex-col items-center justify-center p-6 text-center">
-        <Loader2 className="w-10 h-10 text-[#FF6B35] animate-spin mb-4" />
+        <Loader2 className="w-10 h-10 text-[#FF6A00] animate-spin mb-4" />
         <p className="text-[11px] font-bold text-[#1A1F36]/30 uppercase tracking-[0.2em]">Authority Check in Progress...</p>
       </div>
     );
@@ -169,7 +169,7 @@ const AdminDashboard = () => {
     return (
       <div className="min-h-screen bg-[#FAFAF8] flex flex-col items-center justify-center p-6">
         <div className="w-full max-w-md bg-white rounded-[32px] border border-[#1A1F36]/[0.06] p-10 shadow-md shadow-[#1A1F36]/[0.02]">
-          <div className="w-16 h-16 bg-[#FF6B35] rounded-2xl flex items-center justify-center mb-8 shadow-md shadow-[#FF6B35]/20 mx-auto">
+          <div className="w-16 h-16 bg-[#FF6A00] rounded-2xl flex items-center justify-center mb-8 shadow-md shadow-[#FF6A00]/20 mx-auto">
             <ShieldCheck size={32} className="text-white" />
           </div>
           <h2 className="text-2xl font-bold text-[#1A1F36] text-center mb-2 tracking-tight">Admin Gate</h2>
@@ -184,7 +184,7 @@ const AdminDashboard = () => {
                 autoFocus
                 onChange={(e) => setPin(e.target.value)}
                 placeholder="••••"
-                className="w-full h-14 bg-gray-50 border border-[#1A1F36]/[0.07] rounded-2xl px-6 text-center text-2xl tracking-[1em] outline-none focus:border-[#FF6B35] transition-all"
+                className="w-full h-14 bg-gray-50 border border-[#1A1F36]/[0.07] rounded-2xl px-6 text-center text-2xl tracking-[1em] outline-none focus:border-[#FF6A00] transition-all"
               />
             </div>
             <button
@@ -229,7 +229,7 @@ const AdminDashboard = () => {
             </button>
             <span className="text-[14px] font-bold text-[#1A1F36]">Studio Admin</span>
           </div>
-          <div className="w-9 h-9 bg-[#FF6B35] rounded-xl flex items-center justify-center shadow-md shadow-[#FF6B35]/20">
+          <div className="w-9 h-9 bg-[#FF6A00] rounded-xl flex items-center justify-center shadow-md shadow-[#FF6A00]/20">
             <ShieldCheck size={18} className="text-white" />
           </div>
         </header>
@@ -248,7 +248,7 @@ const AdminDashboard = () => {
               {/* High-Impact Stat Dashboard */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 w-full">
                 {[
-                  { label: 'Pending Audit', count: shops.length, color: '#FF6B35', icon: AlertCircle },
+                  { label: 'Pending Audit', count: shops.length, color: '#FF6A00', icon: AlertCircle },
                   { label: 'Updates Pending', count: updatedShops.length, color: '#1A1F36', icon: RefreshCw },
                   { label: 'Live Shops', count: approvedShops.length, color: '#25D366', icon: ShieldCheck },
                   { label: 'Rejected', count: rejectedShops.length, color: '#ef4444', icon: History }
@@ -311,11 +311,11 @@ const AdminDashboard = () => {
                             <div key={city}>
                               <div className="flex items-center justify-between mb-1">
                                 <span className="text-[13px] font-bold text-[#1A1F36]">{city}</span>
-                                <span className="text-[11px] font-bold text-[#FF6B35]">{count}</span>
+                                <span className="text-[11px] font-bold text-[#FF6A00]">{count}</span>
                               </div>
                               <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
                                 <div
-                                  className="h-full bg-gradient-to-r from-[#FF6B35] to-[#FF6B35]/60 rounded-full transition-all duration-500"
+                                  className="h-full bg-gradient-to-r from-[#FF6A00] to-[#FF6A00]/60 rounded-full transition-all duration-500"
                                   style={{ width: `${(count / maxCity) * 100}%` }}
                                 />
                               </div>
@@ -357,8 +357,8 @@ const AdminDashboard = () => {
                                   <p className="text-[13px] font-bold text-[#1A1F36] truncate">{shop.name}</p>
                                   <p className="text-[10px] text-[#999] font-medium">{shop.views || 0} views · {shop.leads || 0} leads</p>
                                 </div>
-                                <div className="flex items-center gap-1 bg-[#FF6B35]/10 px-2 py-1 rounded-full">
-                                  <span className="text-[10px] font-black text-[#FF6B35]">{(shop.views || 0) + (shop.leads || 0) * 3}</span>
+                                <div className="flex items-center gap-1 bg-[#FF6A00]/10 px-2 py-1 rounded-full">
+                                  <span className="text-[10px] font-black text-[#FF6A00]">{(shop.views || 0) + (shop.leads || 0) * 3}</span>
                                 </div>
                               </div>
                             ))}
@@ -378,7 +378,7 @@ const AdminDashboard = () => {
                     <h2 className="text-[20px] font-bold text-[#1A1F36] tracking-tight">Recent Submissions</h2>
                     <button 
                       onClick={() => setActiveMainTab('shops')} 
-                      className="text-[11px] font-bold text-[#FF6B35] uppercase tracking-wider flex items-center gap-2 hover:gap-3 transition-all"
+                      className="text-[11px] font-bold text-[#FF6A00] uppercase tracking-wider flex items-center gap-2 hover:gap-3 transition-all"
                     >
                       Audit Queue <ArrowRight size={14} />
                     </button>
@@ -386,13 +386,13 @@ const AdminDashboard = () => {
                   {shops.length > 0 ? (
                     <div className="space-y-4">
                       {shops.slice(0, 4).map(shop => (
-                        <div key={shop.id} className="bg-white p-5 rounded-2xl border border-[#1A1F36]/[0.07] flex items-center justify-between hover:border-[#FF6B35]/30 transition-all group shadow-md">
+                        <div key={shop.id} className="bg-white p-5 rounded-2xl border border-[#1A1F36]/[0.07] flex items-center justify-between hover:border-[#FF6A00]/30 transition-all group shadow-md">
                           <div className="flex items-center gap-4">
-                            <div className="w-12 h-12 bg-gray-50 rounded-xl flex items-center justify-center border border-black/[0.04] text-[#FF6B35]">
+                            <div className="w-12 h-12 bg-gray-50 rounded-xl flex items-center justify-center border border-black/[0.04] text-[#FF6A00]">
                               <Store size={20} />
                             </div>
                             <div className="space-y-0.5">
-                              <h3 className="text-[15px] font-bold text-[#1A1F36] group-hover:text-[#FF6B35] transition-colors">{shop.name}</h3>
+                              <h3 className="text-[15px] font-bold text-[#1A1F36] group-hover:text-[#FF6A00] transition-colors">{shop.name}</h3>
                               <p className="text-[11px] font-medium text-[#999] uppercase tracking-wider">{shop.category} • {shop.city}</p>
                             </div>
                           </div>
@@ -438,7 +438,7 @@ const AdminDashboard = () => {
                         </div>
                         <div className="flex justify-between items-center">
                           <span className="text-white/40 text-[11px] font-bold uppercase tracking-widest">Database</span>
-                          <span className="text-[#FF6B35] font-bold text-[11px] uppercase tracking-wider">Optimal</span>
+                          <span className="text-[#FF6A00] font-bold text-[11px] uppercase tracking-wider">Optimal</span>
                         </div>
                         <div className="flex justify-between items-center">
                           <span className="text-white/40 text-[11px] font-bold uppercase tracking-widest">CDN Cache</span>
@@ -455,7 +455,7 @@ const AdminDashboard = () => {
               {/* Header */}
               <div className="flex items-center gap-5 w-full">
                 <div className={`w-1.5 h-12 rounded-full ${
-                  activeSubTab === 'pending' ? 'bg-[#FF6B35]' :
+                  activeSubTab === 'pending' ? 'bg-[#FF6A00]' :
                   activeSubTab === 'updates' ? 'bg-[#1A1F36]' :
                   activeSubTab === 'approved' ? 'bg-[#25D366]' : 'bg-[#ef4444]'
                 }`}></div>
@@ -504,21 +504,21 @@ const AdminDashboard = () => {
 
                 <div className="flex items-center gap-4">
                   <div className="relative group flex-1 md:w-80">
-                    <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-[#1A1F36]/30 group-focus-within:text-[#FF6B35] transition-colors" size={18} />
+                    <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-[#1A1F36]/30 group-focus-within:text-[#FF6A00] transition-colors" size={18} />
                     <input
                       type="text"
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
                       placeholder="Search..."
-                      className="w-full pl-14 pr-6 py-4 bg-white border border-[#1A1F36]/[0.07] rounded-xl shadow-md focus:border-[#FF6B35]/30 outline-none text-[14px] font-medium transition-all"
+                      className="w-full pl-14 pr-6 py-4 bg-white border border-[#1A1F36]/[0.07] rounded-xl shadow-md focus:border-[#FF6A00]/30 outline-none text-[14px] font-medium transition-all"
                     />
                   </div>
                   <button
                     onClick={fetchShops}
                     disabled={loading}
-                    className="w-14 h-14 bg-white border border-[#1A1F36]/[0.07] rounded-xl flex items-center justify-center hover:border-[#FF6B35]/30 transition-all text-[#1A1F36]/60 shadow-md"
+                    className="w-14 h-14 bg-white border border-[#1A1F36]/[0.07] rounded-xl flex items-center justify-center hover:border-[#FF6A00]/30 transition-all text-[#1A1F36]/60 shadow-md"
                   >
-                    <RefreshCw size={20} className={loading ? "animate-spin text-[#FF6B35]" : ""} />
+                    <RefreshCw size={20} className={loading ? "animate-spin text-[#FF6A00]" : ""} />
                   </button>
                 </div>
               </div>
@@ -565,7 +565,7 @@ const AdminDashboard = () => {
                           <div className="flex items-center gap-3 p-3 bg-white rounded-xl border border-[#1A1F36]/[0.07] shadow-md flex-wrap relative overflow-hidden">
                             {bulkLoading && (
                               <div className="absolute inset-0 bg-white/60 backdrop-blur-[1px] z-10 flex items-center justify-center">
-                                <Loader2 size={16} className="text-[#FF6B35] animate-spin" />
+                                <Loader2 size={16} className="text-[#FF6A00] animate-spin" />
                               </div>
                             )}
                             <button

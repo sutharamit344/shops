@@ -12,7 +12,7 @@ export const metadata = {
 const Section = ({ icon: Icon, title, children }) => (
   <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-700">
     <div className="flex items-center gap-3">
-      <div className="w-10 h-10 rounded-xl bg-[#FF6B35]/10 flex items-center justify-center text-[#FF6B35]">
+      <div className="w-10 h-10 rounded-xl bg-[#FF6A00]/10 flex items-center justify-center text-[#FF6A00]">
         <Icon size={20} />
       </div>
       <h2 className="text-xl font-bold text-[#1A1F36] tracking-tight">{title}</h2>
@@ -28,17 +28,17 @@ export default function TermsAndConditions() {
     <div className="bg-[#FAFAF8] min-h-screen">
       {/* Header */}
       <header className="bg-[#1A1F36] text-white py-24 px-6 relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-96 h-96 bg-[#FF6B35]/10 rounded-full -translate-y-1/2 translate-x-1/4 blur-3xl"></div>
+        <div className="absolute top-0 right-0 w-96 h-96 bg-[#FF6A00]/10 rounded-full -translate-y-1/2 translate-x-1/4 blur-3xl"></div>
         <div className="max-w-4xl mx-auto relative z-10 text-center md:text-left">
-          <Link href="/" className="inline-flex items-center gap-2 text-white/40 hover:text-[#FF6B35] transition-colors mb-8 text-[11px] font-bold uppercase tracking-[0.2em] group">
+          <Link href="/" className="inline-flex items-center gap-2 text-white/40 hover:text-[#FF6A00] transition-colors mb-8 text-[11px] font-bold uppercase tracking-[0.2em] group">
             <ChevronLeft size={16} className="group-hover:-translate-x-1 transition-transform" /> Back to Marketplace
           </Link>
           <h1 className="text-5xl md:text-6xl font-extrabold tracking-tighter mb-6 leading-tight">Terms & Conditions</h1>
           <p className="text-white/60 text-lg max-w-2xl font-medium leading-relaxed">
             Legal framework and operational guidelines for using the {BRAND} digital ecosystem.
           </p>
-          <div className="mt-10 flex flex-wrap items-center gap-4 text-[10px] font-bold uppercase tracking-widest text-[#FF6B35]">
-            <span className="px-4 py-2 bg-[#FF6B35]/15 rounded-full border border-[#FF6B35]/20 backdrop-blur-md">Effective: April 25, 2026</span>
+          <div className="mt-10 flex flex-wrap items-center gap-4 text-[10px] font-bold uppercase tracking-widest text-[#FF6A00]">
+            <span className="px-4 py-2 bg-[#FF6A00]/15 rounded-full border border-[#FF6A00]/20 backdrop-blur-md">Effective: April 25, 2026</span>
           </div>
         </div>
       </header>
@@ -123,8 +123,8 @@ export default function TermsAndConditions() {
           <div className="pt-16 border-t border-[#1A1F36]/[0.07]">
             <h2 className="text-2xl font-bold text-[#1A1F36] mb-8 tracking-tight">Contact Information</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              <a href="mailto:legal@shopbajar.com" className="flex items-center gap-5 p-6 bg-[#FAFAF8] rounded-3xl border border-[#1A1F36]/[0.05] hover:border-[#FF6B35]/30 transition-all group">
-                <div className="w-12 h-12 rounded-2xl bg-white shadow-sm flex items-center justify-center text-[#FF6B35] group-hover:scale-110 transition-transform">
+              <a href="mailto:legal@shopbajar.com" className="flex items-center gap-5 p-6 bg-[#FAFAF8] rounded-3xl border border-[#1A1F36]/[0.05] hover:border-[#FF6A00]/30 transition-all group">
+                <div className="w-12 h-12 rounded-2xl bg-white shadow-sm flex items-center justify-center text-[#FF6A00] group-hover:scale-110 transition-transform">
                   <Mail size={22} />
                 </div>
                 <div>

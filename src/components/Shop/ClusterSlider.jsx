@@ -162,7 +162,7 @@ const ClusterSlider = ({ clusters = [], shops = [], onClusterClick, parsed }) =>
       <div className="flex items-center justify-between mb-4 px-1">
         <div>
           <h2 className="text-[16px] md:text-lg font-bold text-[#1A1F36] flex items-center gap-2">
-            <Award size={18} className="text-[#FF6B35]" />
+            <Award size={18} className="text-[#FF6A00]" />
             {getTitle()}
           </h2>
           <p className="text-[11px] md:text-[12px] text-[#1A1F36]/40">Explore specialized markets and hubs</p>
@@ -176,14 +176,14 @@ const ClusterSlider = ({ clusters = [], shops = [], onClusterClick, parsed }) =>
             <button
               onClick={handlePrev}
               disabled={scrollPosition <= 5}
-              className="w-8 h-8 md:w-9 md:h-9 rounded-full bg-white border border-black/[0.06] flex items-center justify-center text-[#1A1F36]/40 hover:text-[#FF6B35] hover:border-[#FF6B35]/20 disabled:opacity-30 transition-all"
+              className="w-8 h-8 md:w-9 md:h-9 rounded-full bg-white border border-black/[0.06] flex items-center justify-center text-[#1A1F36]/40 hover:text-[#FF6A00] hover:border-[#FF6A00]/20 disabled:opacity-30 transition-all"
             >
               <ChevronLeft size={16} />
             </button>
             <button
               onClick={handleNext}
               disabled={scrollPosition >= maxScroll - 5 && visibleLimit >= clusterData.length}
-              className="w-8 h-8 md:w-9 md:h-9 rounded-full bg-white border border-black/[0.06] flex items-center justify-center text-[#1A1F36]/40 hover:text-[#FF6B35] hover:border-[#FF6B35]/20 disabled:opacity-30 transition-all"
+              className="w-8 h-8 md:w-9 md:h-9 rounded-full bg-white border border-black/[0.06] flex items-center justify-center text-[#1A1F36]/40 hover:text-[#FF6A00] hover:border-[#FF6A00]/20 disabled:opacity-30 transition-all"
             >
               <ChevronRight size={16} />
             </button>
@@ -220,11 +220,11 @@ const ClusterSlider = ({ clusters = [], shops = [], onClusterClick, parsed }) =>
             <div
               key={cluster.id || idx}
               onClick={() => onClusterClick && onClusterClick(cluster.name, cluster.area || cluster.city)}
-              className="flex-shrink-0 w-60 md:w-68 bg-white p-3.5 md:p-4 rounded-[20px] border border-black/[0.06] hover:border-[#FF6B35]/20 transition-all cursor-pointer group/card flex flex-col justify-between h-full"
+              className="flex-shrink-0 w-60 md:w-68 bg-white p-3.5 md:p-4 rounded-[20px] border border-black/[0.06] hover:border-[#FF6A00]/20 transition-all cursor-pointer group/card flex flex-col justify-between h-full"
             >
               <div>
                 <div className="flex items-start justify-between mb-2.5">
-                  <div className="w-8 h-8 md:w-9 md:h-9 rounded-xl bg-[#FF6B35]/10 flex items-center justify-center text-[#FF6B35]">
+                  <div className="w-8 h-8 md:w-9 md:h-9 rounded-xl bg-[#FF6A00]/10 flex items-center justify-center text-[#FF6A00]">
                     <Store className="w-4 h-4 md:w-4.5 md:h-4.5" />
                   </div>
                   <span className="text-[10px] font-bold bg-[#1A1F36] text-white px-2.5 py-1 rounded-full">
@@ -232,7 +232,7 @@ const ClusterSlider = ({ clusters = [], shops = [], onClusterClick, parsed }) =>
                   </span>
                 </div>
 
-                <h3 className="text-[13px] md:text-[14px] font-bold text-[#1A1F36] group-hover/card:text-[#FF6B35] transition-colors line-clamp-1 mb-0.5">
+                <h3 className="text-[13px] md:text-[14px] font-bold text-[#1A1F36] group-hover/card:text-[#FF6A00] transition-colors line-clamp-1 mb-0.5">
                   {cluster.name}
                 </h3>
                 <p className="text-[10px] font-semibold text-[#1A1F36]/40 uppercase tracking-wider">
@@ -241,10 +241,10 @@ const ClusterSlider = ({ clusters = [], shops = [], onClusterClick, parsed }) =>
 
                 {(cluster.area || cluster.city) && (
                   <div className="mt-2 flex items-center gap-1 text-[10px] text-[#1A1F36]/50">
-                    <MapPin size={9} className="text-[#FF6B35]" />
+                    <MapPin size={9} className="text-[#FF6A00]" />
                     <span className="truncate">{cluster.area || cluster.city}{cluster.area && cluster.city ? `, ${cluster.city}` : ""}</span>
                     {distanceText && (
-                      <span className="font-bold text-[#FF6B35] bg-[#FF6B35]/10 px-1.5 py-0.5 rounded ml-1 whitespace-nowrap">
+                      <span className="font-bold text-[#FF6A00] bg-[#FF6A00]/10 px-1.5 py-0.5 rounded ml-1 whitespace-nowrap">
                         {distanceText}
                       </span>
                     )}
@@ -252,7 +252,7 @@ const ClusterSlider = ({ clusters = [], shops = [], onClusterClick, parsed }) =>
                 )}
               </div>
 
-              <div className="mt-3 flex items-center text-[10px] font-bold text-[#FF6B35] opacity-0 group-hover/card:opacity-100 transition-all">
+              <div className="mt-3 flex items-center text-[10px] font-bold text-[#FF6A00] opacity-0 group-hover/card:opacity-100 transition-all">
                 <span>View Collection</span>
                 <ChevronRight size={12} className="ml-0.5" />
               </div>
@@ -263,9 +263,9 @@ const ClusterSlider = ({ clusters = [], shops = [], onClusterClick, parsed }) =>
         {visibleLimit < clusterData.length && (
           <div
             onClick={handleNext}
-            className="flex-shrink-0 w-36 flex flex-col items-center justify-center gap-2 text-[#FF6B35] font-bold cursor-pointer hover:bg-[#FF6B35]/5 rounded-[20px] border-2 border-dashed border-[#FF6B35]/20 transition-all"
+            className="flex-shrink-0 w-36 flex flex-col items-center justify-center gap-2 text-[#FF6A00] font-bold cursor-pointer hover:bg-[#FF6A00]/5 rounded-[20px] border-2 border-dashed border-[#FF6A00]/20 transition-all"
           >
-            <div className="w-9 h-9 rounded-full bg-[#FF6B35]/10 flex items-center justify-center">
+            <div className="w-9 h-9 rounded-full bg-[#FF6A00]/10 flex items-center justify-center">
               <ChevronRight size={20} />
             </div>
             <span className="text-[11px]">Load More</span>

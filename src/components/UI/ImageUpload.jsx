@@ -12,7 +12,8 @@ const ImageUpload = ({
   folder = "general",
   currentImage = null,
   compact = false,
-  multiple = false
+  multiple = false,
+  className = ""
 }) => {
   const { showAlert } = useModal();
   const [uploading, setUploading] = useState(false);
@@ -73,7 +74,7 @@ const ImageUpload = ({
     if (onUpload) onUpload("");
   };
 
-  const heightClass = compact ? "h-20 w-20" : "h-32 w-32";
+  const heightClass = className.includes('h-') || className.includes('w-') ? "" : (compact ? "h-20 w-20" : "h-32 w-32");
   const containerClass = compact ? "rounded-xl" : "rounded-2xl";
 
   return (
@@ -84,9 +85,9 @@ const ImageUpload = ({
         </label>
       )}
 
-      <div className="relative group">
+      <div className="relative group flex items-center justify-center text-center">
         {preview ? (
-          <div className={`relative ${heightClass} ${containerClass} overflow-hidden border border-black/[0.06] bg-white shadow-sm`}>
+          <div className={`relative ${heightClass} ${containerClass} ${className} overflow-hidden border border-black/[0.06] bg-white shadow-sm`}>
             <img
               src={preview}
               alt="Preview"
@@ -106,13 +107,13 @@ const ImageUpload = ({
             )}
           </div>
         ) : (
-          <label className={`flex flex-col items-center justify-center ${heightClass} ${containerClass} border-2 border-dashed border-black/[0.08] bg-gray-50/30 hover:bg-gray-50 hover:border-[#FF6B35]/30 transition-all cursor-pointer group`}>
+          <label className={`flex flex-col items-center justify-center ${heightClass} ${containerClass} ${className} border-2 border-dashed border-black/[0.08] bg-gray-50/30 hover:bg-gray-50 hover:border-[#FF6A00]/30 transition-all cursor-pointer group`}>
             <div className="flex flex-col items-center justify-center px-3 text-center">
               {uploading ? (
-                <Loader2 size={compact ? 16 : 20} className="text-[#FF6B35] animate-spin" />
+                <Loader2 size={compact ? 16 : 20} className="text-[#FF6A00] animate-spin" />
               ) : (
                 <>
-                  <Plus size={compact ? 16 : 20} className="text-[#999] group-hover:text-[#FF6B35] transition-colors mb-1" />
+                  <Plus size={compact ? 16 : 20} className="text-[#999] group-hover:text-[#FF6A00] transition-colors mb-1" />
                   {!compact && (
                     <p className="text-[9px] text-[#999] font-medium">Add</p>
                   )}

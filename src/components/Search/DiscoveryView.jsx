@@ -10,7 +10,8 @@ import { getCategories, getClusters } from "@/lib/db";
 import {
   ChevronDown, LayoutGrid, List, Search, RotateCcw, MapPin,
   SlidersHorizontal,
-  ArrowUpDown
+  ArrowUpDown,
+  Navigation
 } from "lucide-react";
 import Button from "@/components/UI/Button";
 import { generateDiscoveryUrl } from "@/lib/urlArchitect";
@@ -18,7 +19,7 @@ import { slugify } from "@/lib/slugify";
 
 import { ShopCardSkeleton } from "@/components/Shop/ShopCardSkeleton";
 
-const DiscoveryView = ({ title, subtitle, onSubtitleClick }) => {
+const DiscoveryView = ({ title, subtitle, onSubtitleClick, onRefresh, isDetecting }) => {
   const dispatch = useDispatch();
   const router = useRouter();
   const { results: filteredShops, loading: shopsLoading, parsed } = useSelector((state) => state.search);
@@ -90,54 +91,31 @@ const DiscoveryView = ({ title, subtitle, onSubtitleClick }) => {
               {title}
             </h1>
             {subtitle && (
-              <div 
-                onClick={onSubtitleClick}
-                className="flex items-center gap-1.5 text-[#FF6B35] font-bold text-[14px] hover:opacity-80 cursor-pointer group w-fit bg-[#FF6B35]/5 px-3 py-1 rounded-lg border border-[#FF6B35]/10"
-              >
-                <MapPin size={14} className="group-hover:animate-bounce" />
-                <span>{subtitle}</span>
-                <ChevronDown size={12} className="opacity-50" />
+              <div className="flex items-center gap-2">
+                <div 
+                  onClick={onSubtitleClick}
+                  className="flex items-center gap-1.5 text-[#FF6A00] font-bold text-[15px] hover:opacity-80 cursor-pointer group w-fit bg-[#FF6A00]/5 px-3 py-1 rounded-lg border border-[#FF6A00]/10"
+                >
+                  <MapPin size={14} className="group-hover:animate-bounce" />
+                  <span>{subtitle}</span>
+                  <ChevronDown size={12} className="opacity-50" />
+                </div>
+                
+                {onRefresh && (
+                  <button 
+                    onClick={onRefresh}
+                    disabled={isDetecting}
+                    className={`w-8 h-8 rounded-lg flex items-center justify-center bg-white border border-black/[0.06] text-[#FF6A00] hover:bg-[#FF6A00]/5 transition-all ${isDetecting ? "animate-spin opacity-50" : ""}`}
+                    title="Refresh Location"
+                  >
+                    <Navigation size={14} />
+                  </button>
+                )}
               </div>
             )}
           </div>
 
           <div className="flex items-center gap-3">
-            {/* Sort Dropdown */}
-            <div className="relative">
-              <button
-                onClick={() => setShowSort(!showSort)}
-                className={`h-11 px-4 rounded-xl border flex items-center gap-2 text-[13px] font-bold transition-all ${
-                  showSort ? "border-[#FF6B35] bg-white text-[#FF6B35] shadow-md" : "border-black/[0.06] bg-white text-[#1A1F36] hover:bg-gray-50"
-                }`}
-              >
-                <ArrowUpDown size={14} />
-                <span className="capitalize">{sortBy}</span>
-              </button>
-
-              {showSort && (
-                <>
-                  <div className="fixed inset-0 z-40" onClick={() => setShowSort(false)} />
-                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-2xl border border-black/[0.08] shadow-xl z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-                    {[
-                      { id: "relevance", label: "Smart Relevance" },
-                      { id: "distance", label: "Near Me First" },
-                      { id: "rating", label: "Top Rated" }
-                    ].map((opt) => (
-                      <button
-                        key={opt.id}
-                        onClick={() => handleSortChange(opt.id)}
-                        className={`w-full text-left px-5 py-3 text-[13px] font-bold transition-colors ${
-                          sortBy === opt.id ? "bg-[#FF6B35]/5 text-[#FF6B35]" : "text-[#1A1F36] hover:bg-gray-50"
-                        }`}
-                      >
-                        {opt.label}
-                      </button>
-                    ))}
-                  </div>
-                </>
-              )}
-            </div>
-
             {/* View Toggle */}
             <div className="flex items-center gap-1 p-1 bg-white border border-black/[0.06] rounded-xl shadow-sm">
               {[
@@ -173,7 +151,7 @@ const DiscoveryView = ({ title, subtitle, onSubtitleClick }) => {
                 key={cat.id}
                 onClick={() => handleCategoryChipClick(cat.name)}
                 className={`flex-shrink-0 px-5 py-2.5 rounded-xl text-[13px] font-bold transition-all border whitespace-nowrap ${
-                  activeCategory === cat.name ? "bg-[#FF6B35] text-white border-[#FF6B35] shadow-md" : "bg-white text-[#1A1F36]/60 border-black/[0.06] hover:border-black/[0.15]"
+                  activeCategory === cat.name ? "bg-[#FF6A00] text-white border-[#FF6A00] shadow-md" : "bg-white text-[#1A1F36]/60 border-black/[0.06] hover:border-black/[0.15]"
                 }`}
               >
                 {cat.name}
@@ -219,8 +197,8 @@ const DiscoveryView = ({ title, subtitle, onSubtitleClick }) => {
           {/* Infinite Scroll Trigger */}
           <div ref={observerRef} className="h-20 flex items-center justify-center">
             {visibleCount < filteredShops.length && (
-              <div className="flex items-center gap-2 text-[#FF6B35] font-bold text-[13px]">
-                <div className="w-4 h-4 border-2 border-[#FF6B35] border-t-transparent rounded-full animate-spin" />
+              <div className="flex items-center gap-2 text-[#FF6A00] font-bold text-[13px]">
+                <div className="w-4 h-4 border-2 border-[#FF6A00] border-t-transparent rounded-full animate-spin" />
                 <span>Discovering more...</span>
               </div>
             )}

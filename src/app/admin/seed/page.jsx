@@ -109,7 +109,7 @@ export default function SeederPage() {
           ownerId: "system_seeder",
           isCertified: true,
           businessHours: "9:00 AM - 9:00 PM",
-          primaryColor: "#FF6B35",
+          primaryColor: "#FF6A00",
           secondaryColor: "#1A1F36"
         };
 
@@ -128,7 +128,7 @@ export default function SeederPage() {
     <div className="min-h-screen bg-[#FAFAF8] flex items-center justify-center p-6">
       <div className="max-w-md w-full bg-white rounded-[40px] p-10 shadow-2xl shadow-[#1A1F36]/5 border border-[#1A1F36]/[0.02]">
         <div className="flex flex-col items-center text-center">
-          <div className="w-20 h-20 rounded-[28px] bg-[#FF6B35]/10 flex items-center justify-center text-[#FF6B35] mb-8">
+          <div className="w-20 h-20 rounded-[28px] bg-[#FF6A00]/10 flex items-center justify-center text-[#FF6A00] mb-8">
             {status === "clearing" ? <Trash2 className="animate-pulse" size={40} /> : <ShieldCheck size={40} />}
           </div>
           
@@ -140,7 +140,7 @@ export default function SeederPage() {
           </p>
 
           {status === "idle" && (
-            <Button size="lg" className="w-full shadow-lg shadow-[#FF6B35]/20" icon={Zap} onClick={generateShops}>
+            <Button size="lg" className="w-full shadow-lg shadow-[#FF6A00]/20" icon={Zap} onClick={generateShops}>
               Clear & Seed 500 Shops
             </Button>
           )}
@@ -148,12 +148,12 @@ export default function SeederPage() {
           {(status === "seeding" || status === "clearing") && (
             <div className="w-full space-y-6">
               <div className="flex items-center justify-between font-bold text-sm mb-1">
-                <span className="text-[#FF6B35]">{status === "clearing" ? "Clearing Database..." : "Pushing Records..."}</span>
+                <span className="text-[#FF6A00]">{status === "clearing" ? "Clearing Database..." : "Pushing Records..."}</span>
                 <span className="text-[#1A1F36]/40">{status === "clearing" ? "---" : `${progress} / 500`}</span>
               </div>
               <div className="h-4 w-full bg-[#FAFAF8] rounded-full overflow-hidden border border-[#1A1F36]/[0.04]">
                 <div 
-                  className="h-full bg-gradient-to-r from-[#FF6B35] to-[#FF8C61] transition-all duration-300"
+                  className="h-full bg-gradient-to-r from-[#FF6A00] to-[#FF8C61] transition-all duration-300"
                   style={{ width: status === "clearing" ? "100%" : `${(progress / 500) * 100}%` }}
                 />
               </div>

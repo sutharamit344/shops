@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { Phone, Share2, QrCode, ChevronLeft, MessageCircle, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useModal } from '@/hooks/useModal';
-import IconButton from '../UI/IconButton';
 
 const ShopHeader = ({ name, phone, shareUrl, logo, isSticky, onQRClick }) => {
   const router = useRouter();
@@ -48,10 +47,10 @@ const ShopHeader = ({ name, phone, shareUrl, logo, isSticky, onQRClick }) => {
       setTimeout(() => setShowCopiedFeedback(false), 2000);
     } catch (err) {
       console.error("Failed to copy:", err);
-      showAlert({ 
-        title: "Sharing Failed", 
-        message: "Unable to copy the link automatically. Please copy the URL from your browser address bar.", 
-        type: "error" 
+      showAlert({
+        title: "Sharing Failed",
+        message: "Unable to copy the link automatically. Please copy the URL from your browser address bar.",
+        type: "error"
       });
     }
   };

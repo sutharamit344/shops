@@ -73,17 +73,17 @@ const AdminShopCard = ({ shop, onRefresh, isSelected = false, onToggleSelect }) 
   return (
     <div className={`bg-white rounded-2xl border shadow-md hover:shadow-lg transition-all p-5 group relative overflow-hidden ${
       isSelected
-        ? "border-[#FF6B35]/60 shadow-[#FF6B35]/10"
-        : "border-[#1A1F36]/[0.07] hover:border-[#FF6B35]/30"
+        ? "border-[#FF6A00]/60 shadow-[#FF6A00]/10"
+        : "border-[#1A1F36]/[0.07] hover:border-[#FF6A00]/30"
     }`}>
-      <div className="absolute top-0 left-0 w-1.5 h-full bg-[#1A1F36]/5 group-hover:bg-[#FF6B35] transition-colors" />
+      <div className="absolute top-0 left-0 w-1.5 h-full bg-[#1A1F36]/5 group-hover:bg-[#FF6A00] transition-colors" />
 
       {/* Checkbox */}
       {onToggleSelect && (
         <button
           onClick={(e) => { e.stopPropagation(); onToggleSelect(shop.id); }}
           className={`absolute top-4 right-4 w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all z-10 ${
-            isSelected ? "bg-[#FF6B35] border-[#FF6B35]" : "bg-white border-gray-200 hover:border-[#FF6B35]/50"
+            isSelected ? "bg-[#FF6A00] border-[#FF6A00]" : "bg-white border-gray-200 hover:border-[#FF6A00]/50"
           }`}
         >
           {isSelected && <Check size={12} className="text-white" />}
@@ -96,7 +96,7 @@ const AdminShopCard = ({ shop, onRefresh, isSelected = false, onToggleSelect }) 
             {shop.logo ? (
               <img src={shop.logo} alt={shop.name} className="w-full h-full object-cover" />
             ) : (
-              <Store size={24} className="text-[#FF6B35]" />
+              <Store size={24} className="text-[#FF6A00]" />
             )}
           </div>
           <div className="space-y-1.5 min-w-0">
@@ -104,7 +104,7 @@ const AdminShopCard = ({ shop, onRefresh, isSelected = false, onToggleSelect }) 
               <h3 className="text-[17px] font-bold text-[#1A1F36] tracking-tight truncate max-w-[300px]">{shop.name}</h3>
 
               {isUpdate && (
-                <div className="bg-[#FF6B35]/10 text-[#FF6B35] px-2.5 py-1 rounded-full text-[9px] font-bold uppercase tracking-wider flex items-center gap-1.5 border border-[#FF6B35]/20 animate-pulse">
+                <div className="bg-[#FF6A00]/10 text-[#FF6A00] px-2.5 py-1 rounded-full text-[9px] font-bold uppercase tracking-wider flex items-center gap-1.5 border border-[#FF6A00]/20 animate-pulse">
                   <RefreshCw size={10} className="animate-spin" /> Audit Update
                 </div>
               )}
@@ -122,14 +122,14 @@ const AdminShopCard = ({ shop, onRefresh, isSelected = false, onToggleSelect }) 
               )}
 
               {isPending && !isUpdate && (
-                <div className="bg-[#FF6B35]/10 text-[#FF6B35] px-2.5 py-1 rounded-full text-[9px] font-bold uppercase tracking-wider flex items-center gap-1.5 border border-[#FF6B35]/20">
+                <div className="bg-[#FF6A00]/10 text-[#FF6A00] px-2.5 py-1 rounded-full text-[9px] font-bold uppercase tracking-wider flex items-center gap-1.5 border border-[#FF6A00]/20">
                   <Clock size={10} /> Pending
                 </div>
               )}
             </div>
 
             <div className="flex items-center gap-4 text-[11px] font-medium text-[#666] tracking-wide">
-              <span className="text-[#FF6B35] font-bold">{shop.category}</span>
+              <span className="text-[#FF6A00] font-bold">{shop.category}</span>
               <span className="flex items-center gap-1.5"><MapPin size={12} className="opacity-40" /> {shop.city}</span>
               <span className="flex items-center gap-1.5 hidden sm:flex"><Mail size={12} className="opacity-40" /> {shop.ownerEmail}</span>
             </div>

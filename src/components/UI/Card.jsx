@@ -10,7 +10,7 @@ const Card = ({ children, className = '', hover = true, variant = 'default', ...
     surface: 'bg-[#FAFAF8] border-[#1A1F36]/[0.07]',
   };
 
-  const hoverStyles = hover ? 'hover:border-[#FF6B35]/30 hover:-translate-y-0.5' : '';
+  const hoverStyles = hover ? 'hover:border-[#FF6A00]/30 hover:-translate-y-0.5' : '';
 
   return (
     <div 

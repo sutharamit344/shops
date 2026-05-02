@@ -34,6 +34,9 @@ const UserDashboard = () => {
   const [isAdmin, setIsAdmin] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  
+  const { favorites } = useSelector((state) => state.auth);
+  const { items: allShops } = useSelector((state) => state.shops);
 
   useEffect(() => {
     if (user) {
@@ -59,7 +62,7 @@ const UserDashboard = () => {
     return (
       <div className="min-h-screen bg-[#FAFAF8] flex items-center justify-center">
         <div className="text-center">
-          <div className="w-10 h-10 rounded-full border-[3px] border-[#FF6B35] border-t-transparent animate-spin mx-auto mb-6"></div>
+          <div className="w-10 h-10 rounded-full border-[3px] border-[#FF6A00] border-t-transparent animate-spin mx-auto mb-6"></div>
           <p className="text-[11px] font-bold text-[#1A1F36]/30 uppercase tracking-[0.2em]">Loading Console</p>
         </div>
       </div>
@@ -72,8 +75,8 @@ const UserDashboard = () => {
         <Navbar />
         <main className="max-w-4xl mx-auto px-4 py-32">
           <Card className="p-16 text-center shadow-md">
-            <div className="w-20 h-20 bg-[#FF6B35]/10 rounded-3xl flex items-center justify-center mx-auto mb-8 shadow-inner">
-              <Store size={40} className="text-[#FF6B35]" />
+            <div className="w-20 h-20 bg-[#FF6A00]/10 rounded-3xl flex items-center justify-center mx-auto mb-8 shadow-inner">
+              <Store size={40} className="text-[#FF6A00]" />
             </div>
             <h1 className="text-3xl md:text-4xl font-extrabold text-[#1A1F36] mb-4 tracking-tight">
               Sign in to manage
@@ -103,8 +106,7 @@ const UserDashboard = () => {
     shop.category?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const { favorites } = useSelector((state) => state.auth);
-  const { items: allShops } = useSelector((state) => state.shops);
+
 
   const sidebarItems = [
     { id: "businesses", label: "My Businesses", icon: Store, count: shops.length },
@@ -125,11 +127,11 @@ const UserDashboard = () => {
           <div className="p-8 h-full flex flex-col">
             <div className="flex items-center justify-between mb-12">
               <Link href="/" className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-xl bg-[#FF6B35] flex items-center justify-center shadow-sm">
+                <div className="w-8 h-8 rounded-xl bg-[#FF6A00] flex items-center justify-center shadow-sm">
                   <Store size={16} className="text-white" />
                 </div>
                 <span className="text-[18px] font-bold tracking-tight text-[#1A1F36]">
-                  Shop<span className="text-[#FF6B35]">Bajar</span>
+                  Shop<span className="text-[#FF6A00]">Bajar</span>
                 </span>
               </Link>
               <button onClick={() => setMobileMenuOpen(false)} className="w-9 h-9 rounded-xl bg-[#FAFAF8] flex items-center justify-center text-[#1A1F36]/40 hover:text-[#1A1F36]">
@@ -190,12 +192,12 @@ const UserDashboard = () => {
       <aside className={`hidden lg:flex bg-white border-r border-[#1A1F36]/[0.06] flex-col sticky top-0 h-screen transition-all duration-500 ease-in-out ${isSidebarCollapsed ? "w-24" : "w-80"}`}>
         <div className={`p-8 pb-4 flex flex-col h-full ${isSidebarCollapsed ? "items-center" : ""}`}>
           <Link href="/" className={`flex items-center gap-2.5 mb-12 ${isSidebarCollapsed ? "justify-center" : ""}`}>
-            <div className="w-8 h-8 rounded-xl bg-[#FF6B35] flex items-center justify-center shadow-sm shrink-0">
+            <div className="w-8 h-8 rounded-xl bg-[#FF6A00] flex items-center justify-center shadow-sm shrink-0">
               <Store size={16} className="text-white" />
             </div>
             {!isSidebarCollapsed && (
               <span className="text-[18px] font-bold tracking-tight text-[#1A1F36] animate-in fade-in duration-500">
-                Shop<span className="text-[#FF6B35]">Bajar</span>
+                Shop<span className="text-[#FF6A00]">Bajar</span>
               </span>
             )}
           </Link>
@@ -262,7 +264,7 @@ const UserDashboard = () => {
       <div className="flex-1 flex flex-col min-w-0">
         <header className="lg:hidden h-16 bg-white border-b border-[#1A1F36]/[0.06] px-6 flex items-center justify-between sticky top-0 z-30">
           <Link href="/" className="flex items-center gap-2.5">
-            <div className="w-7 h-7 rounded-lg bg-[#FF6B35] flex items-center justify-center"><Store size={14} className="text-white" /></div>
+            <div className="w-7 h-7 rounded-lg bg-[#FF6A00] flex items-center justify-center"><Store size={14} className="text-white" /></div>
             <span className="text-[15px] font-bold tracking-tight text-[#1A1F36]">ShopBajar</span>
           </Link>
           <button onClick={() => setMobileMenuOpen(true)} className="w-9 h-9 rounded-xl bg-[#FAFAF8] flex items-center justify-center text-[#1A1F36]/40"><User size={18} /></button>
@@ -272,9 +274,9 @@ const UserDashboard = () => {
           {activeTab === "businesses" && (
             <div className="animate-in fade-in duration-700 slide-in-from-bottom-4">
               <header className="mb-12">
-                <div className="inline-flex items-center gap-2.5 px-4 py-1.5 bg-[#FF6B35]/10 rounded-full mb-6 border border-[#FF6B35]/20">
-                  <LayoutDashboard size={14} className="text-[#FF6B35]" />
-                  <span className="text-[10px] font-bold text-[#FF6B35] uppercase tracking-widest">Merchant Console</span>
+                <div className="inline-flex items-center gap-2.5 px-4 py-1.5 bg-[#FF6A00]/10 rounded-full mb-6 border border-[#FF6A00]/20">
+                  <LayoutDashboard size={14} className="text-[#FF6A00]" />
+                  <span className="text-[10px] font-bold text-[#FF6A00] uppercase tracking-widest">Merchant Console</span>
                 </div>
                 <h1 className="text-3xl md:text-5xl font-extrabold text-[#1A1F36] tracking-tight mb-4">My Businesses</h1>
                 <p className="text-[17px] text-[#1A1F36]/40 font-medium max-w-xl">Manage your storefronts, update catalogs, and track real-time customer leads.</p>
@@ -290,7 +292,7 @@ const UserDashboard = () => {
                     { label: "Customer Leads", value: totalLeads.toLocaleString(), icon: MessageSquare },
                   ].map((stat, i) => (
                     <Card key={i} className="p-6 border-[#1A1F36]/[0.04]">
-                      <div className="text-[#FF6B35] mb-4"><stat.icon size={22} /></div>
+                      <div className="text-[#FF6A00] mb-4"><stat.icon size={22} /></div>
                       <div className="text-3xl font-extrabold text-[#1A1F36] mb-1">{stat.value}</div>
                       <div className="text-[11px] font-bold text-[#1A1F36]/30 uppercase tracking-widest">{stat.label}</div>
                     </Card>
@@ -301,13 +303,13 @@ const UserDashboard = () => {
               {/* Toolbar */}
               <div className="flex flex-col md:flex-row gap-4 mb-8">
                 <div className="relative flex-1 group">
-                  <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-[#1A1F36]/20 group-focus-within:text-[#FF6B35] transition-colors" size={18} />
+                  <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-[#1A1F36]/20 group-focus-within:text-[#FF6A00] transition-colors" size={18} />
                   <input
                     type="text"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     placeholder="Search by business name or location..."
-                    className="w-full pl-14 pr-6 py-4 bg-white border border-[#1A1F36]/[0.08] rounded-2xl focus:outline-none focus:border-[#FF6B35]/40 text-[15px] font-bold transition-all placeholder:text-[#1A1F36]/20"
+                    className="w-full pl-14 pr-6 py-4 bg-white border border-[#1A1F36]/[0.08] rounded-2xl focus:outline-none focus:border-[#FF6A00]/40 text-[15px] font-bold transition-all placeholder:text-[#1A1F36]/20"
                   />
                 </div>
                 <Link href="/create">
@@ -336,7 +338,7 @@ const UserDashboard = () => {
               ) : (
                 <div className="grid grid-cols-1 gap-4 md:gap-6">
                   {filteredShops.map(shop => (
-                    <Card key={shop.id} className="p-6 md:p-8 hover:border-[#FF6B35]/30 group transition-all duration-500">
+                    <Card key={shop.id} className="p-6 md:p-8 hover:border-[#FF6A00]/30 group transition-all duration-500">
                       <div className="flex flex-col md:flex-row gap-6 items-start md:items-center">
                         <div className="w-20 h-20 rounded-[24px] bg-[#FAFAF8] shrink-0 overflow-hidden border border-[#1A1F36]/[0.06] shadow-sm relative">
                           {shop.logo ? (
@@ -349,20 +351,20 @@ const UserDashboard = () => {
                               sizes="80px"
                             />
                           ) : (
-                            <div className="w-full h-full flex items-center justify-center text-[#FF6B35] text-2xl font-bold">{shop.name.charAt(0)}</div>
+                            <div className="w-full h-full flex items-center justify-center text-[#FF6A00] text-2xl font-bold">{shop.name.charAt(0)}</div>
                           )}
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex flex-wrap items-center gap-3 mb-2">
-                            <h3 className="text-xl font-extrabold text-[#1A1F36] group-hover:text-[#FF6B35] transition-colors">{shop.name}</h3>
-                            <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${shop.status === 'approved' ? 'bg-green-100 text-green-700' : shop.status === 'rejected' ? 'bg-red-100 text-red-600' : 'bg-[#FF6B35]/10 text-[#FF6B35]'}`}>
+                            <h3 className="text-xl font-extrabold text-[#1A1F36] group-hover:text-[#FF6A00] transition-colors">{shop.name}</h3>
+                            <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${shop.status === 'approved' ? 'bg-green-100 text-green-700' : shop.status === 'rejected' ? 'bg-red-100 text-red-600' : 'bg-[#FF6A00]/10 text-[#FF6A00]'}`}>
                               {shop.status === 'approved' ? <><CheckCircle2 size={12} /> Live Store</> : shop.status === 'rejected' ? <><AlertCircle size={12} /> Rejected</> : <><Clock size={12} /> Under Review</>}
                             </span>
                           </div>
                           <div className="flex flex-wrap gap-x-6 gap-y-2 text-[13px] font-bold text-[#1A1F36]/30 uppercase tracking-widest mb-4">
                             <span className="flex items-center gap-2"><Store size={14} /> {shop.category}</span>
                             <span className="flex items-center gap-2"><MapPin size={14} /> {shop.city}</span>
-                            {shop.status === 'approved' && <><span className="flex items-center gap-2 text-[#1A1F36]/60"><Eye size={14} /> {shop.views || 0} Views</span><span className="flex items-center gap-2 text-[#FF6B35]"><MessageSquare size={14} /> {shop.leads || 0} Leads</span></>}
+                            {shop.status === 'approved' && <><span className="flex items-center gap-2 text-[#1A1F36]/60"><Eye size={14} /> {shop.views || 0} Views</span><span className="flex items-center gap-2 text-[#FF6A00]"><MessageSquare size={14} /> {shop.leads || 0} Leads</span></>}
                           </div>
                           <p className="text-[14px] text-[#1A1F36]/40 line-clamp-1 font-medium">{shop.description || "Professional merchant storefront on ShopBajar."}</p>
                         </div>
@@ -426,7 +428,7 @@ const UserDashboard = () => {
 
               <Card className="p-10">
                 <div className="flex flex-col md:flex-row gap-10 items-start">
-                  <div className="w-32 h-32 rounded-[32px] bg-[#FAFAF8] flex items-center justify-center text-4xl font-bold text-[#FF6B35] border border-[#1A1F36]/[0.08] shadow-md overflow-hidden shrink-0 relative">
+                  <div className="w-32 h-32 rounded-[32px] bg-[#FAFAF8] flex items-center justify-center text-4xl font-bold text-[#FF6A00] border border-[#1A1F36]/[0.08] shadow-md overflow-hidden shrink-0 relative">
                     {user.photoURL ? (
                       <Image 
                         src={user.photoURL} 
@@ -482,7 +484,7 @@ const UserDashboard = () => {
               </header>
 
               <Card className="py-24 text-center">
-                <div className="w-24 h-24 bg-[#FF6B35]/10 rounded-[32px] flex items-center justify-center mx-auto mb-10 text-[#FF6B35] shadow-inner"><Shield size={48} /></div>
+                <div className="w-24 h-24 bg-[#FF6A00]/10 rounded-[32px] flex items-center justify-center mx-auto mb-10 text-[#FF6A00] shadow-inner"><Shield size={48} /></div>
                 <h2 className="text-3xl font-extrabold text-[#1A1F36] mb-4">Global Administration</h2>
                 <p className="text-[17px] text-[#1A1F36]/40 mb-10 max-w-sm mx-auto font-medium">Review pending shop applications, manage categories, and monitor platform activity.</p>
                 <Link href="/admin">

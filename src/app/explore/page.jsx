@@ -56,7 +56,7 @@ export default function ExplorePage() {
     <Suspense fallback={
       <div className="min-h-screen bg-[#FAFAF8] flex items-center justify-center">
         <div className="text-center">
-          <div className="w-10 h-10 rounded-full border-2 border-[#FF6B35] border-t-transparent animate-spin mx-auto mb-4"></div>
+          <div className="w-10 h-10 rounded-full border-2 border-[#FF6A00] border-t-transparent animate-spin mx-auto mb-4"></div>
           <p className="text-[13px] text-[#999] font-medium">Loading Marketplace...</p>
         </div>
       </div>

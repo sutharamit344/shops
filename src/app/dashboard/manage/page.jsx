@@ -390,7 +390,7 @@ function ShopDashboardContent() {
     return (
       <div className="min-h-screen bg-[#FAFAF8] flex items-center justify-center">
         <div className="text-center">
-          <div className="w-10 h-10 border-2 border-[#FF6B35] border-t-transparent animate-spin rounded-full mx-auto mb-4"></div>
+          <div className="w-10 h-10 border-2 border-[#FF6A00] border-t-transparent animate-spin rounded-full mx-auto mb-4"></div>
           <p className="text-[11px] font-semibold text-[#999]">Loading...</p>
         </div>
       </div>
@@ -435,7 +435,7 @@ function ShopDashboardContent() {
                 <h1 className="text-xl font-bold text-[#0F0F0F]">{shop.name}</h1>
                 <span className={`px-2 py-0.5 rounded-lg text-[8px] font-semibold ${shop.status === 'approved'
                   ? 'bg-green-50 text-green-600'
-                  : 'bg-[#FF6B35]/10 text-[#FF6B35]'
+                  : 'bg-[#FF6A00]/10 text-[#FF6A00]'
                   }`}>
                   {shop.status}
                 </span>
@@ -479,7 +479,7 @@ function ShopDashboardContent() {
             {/* Stats Grid */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {[
-                { label: "Total Views", value: shop.views || 0, icon: Eye, color: "#FF6B35" },
+                { label: "Total Views", value: shop.views || 0, icon: Eye, color: "#FF6A00" },
                 { label: "WhatsApp Leads", value: shop.leads || 0, icon: MessageSquare, color: "#25D366" },
                 { label: "Rating", value: shop.avgRating || "5.0", icon: Star, color: "#FFB800" },
                 { label: "Catalog Items", value: catalogCount, icon: ShoppingBag, color: "#888" },
@@ -517,7 +517,7 @@ function ShopDashboardContent() {
                       return (
                         <div key={i} className="flex-1 relative group">
                           <div
-                            className={`w-full transition-all rounded-lg ${isToday ? 'bg-[#FF6B35]' : 'bg-[#FF6B35]/20 hover:bg-[#FF6B35]/60'}`}
+                            className={`w-full transition-all rounded-lg ${isToday ? 'bg-[#FF6A00]' : 'bg-[#FF6A00]/20 hover:bg-[#FF6A00]/60'}`}
                             style={{ height: `${heightPct}%` }}
                           />
                           <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-[#0F0F0F] text-white text-[9px] px-2 py-1 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10">
@@ -530,7 +530,7 @@ function ShopDashboardContent() {
                 </div>
                 <div className="flex justify-between mt-3 text-[9px] font-medium text-[#999]">
                   {getWeeklyViewStats(shop).map((s, i) => (
-                    <span key={i} className={i === 6 ? 'text-[#FF6B35] font-bold' : ''}>{s.day}</span>
+                    <span key={i} className={i === 6 ? 'text-[#FF6A00] font-bold' : ''}>{s.day}</span>
                   ))}
                 </div>
               </div>
@@ -538,7 +538,7 @@ function ShopDashboardContent() {
               {/* QR & Share Card */}
               <div className="bg-white rounded-xl border border-black/[0.06] p-6 text-center">
                 <div className="w-12 h-12 bg-gray-50 rounded-xl flex items-center justify-center mx-auto mb-3">
-                  <QrCode size={20} className="text-[#FF6B35]" />
+                  <QrCode size={20} className="text-[#FF6A00]" />
                 </div>
                 <h3 className="text-[13px] font-semibold text-[#0F0F0F] mb-3">Store Discovery</h3>
                 <div className="bg-gray-50 p-4 rounded-xl mb-3 flex items-center justify-center">
@@ -583,28 +583,28 @@ function ShopDashboardContent() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <button
                 onClick={() => setActiveView("catalog")}
-                className="bg-white p-5 rounded-xl border border-black/[0.06] text-left hover:border-[#FF6B35]/30 transition-all group"
+                className="bg-white p-5 rounded-xl border border-black/[0.06] text-left hover:border-[#FF6A00]/30 transition-all group"
               >
-                <div className="w-10 h-10 bg-[#FF6B35]/10 rounded-lg flex items-center justify-center mb-3">
-                  <ListFilter size={18} className="text-[#FF6B35]" />
+                <div className="w-10 h-10 bg-[#FF6A00]/10 rounded-lg flex items-center justify-center mb-3">
+                  <ListFilter size={18} className="text-[#FF6A00]" />
                 </div>
                 <h3 className="text-[14px] font-semibold text-[#0F0F0F] mb-1">Catalog Manager</h3>
                 <p className="text-[11px] text-[#666]">Update your items, prices, and categories.</p>
-                <div className="mt-3 text-[#FF6B35] text-[11px] font-semibold opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className="mt-3 text-[#FF6A00] text-[11px] font-semibold opacity-0 group-hover:opacity-100 transition-opacity">
                   Manage Catalog →
                 </div>
               </button>
 
               <button
                 onClick={() => setActiveView("gallery")}
-                className="bg-white p-5 rounded-xl border border-black/[0.06] text-left hover:border-[#FF6B35]/30 transition-all group"
+                className="bg-white p-5 rounded-xl border border-black/[0.06] text-left hover:border-[#FF6A00]/30 transition-all group"
               >
                 <div className="w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center mb-3">
                   <ImageIcon size={18} className="text-blue-500" />
                 </div>
                 <h3 className="text-[14px] font-semibold text-[#0F0F0F] mb-1">Photo Gallery</h3>
                 <p className="text-[11px] text-[#666]">Showcase your shop with photos.</p>
-                <div className="mt-3 text-[#FF6B35] text-[11px] font-semibold opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className="mt-3 text-[#FF6A00] text-[11px] font-semibold opacity-0 group-hover:opacity-100 transition-opacity">
                   Upload Photos →
                 </div>
               </button>
@@ -622,12 +622,12 @@ function ShopDashboardContent() {
                         <h3 className="text-[13px] font-bold text-[#0F0F0F]">Complete Your Profile</h3>
                         <p className="text-[10px] text-[#999] mt-0.5">More complete = more customers</p>
                       </div>
-                      <span className="text-[24px] font-black text-[#FF6B35]">{score}%</span>
+                      <span className="text-[24px] font-black text-[#FF6A00]">{score}%</span>
                     </div>
                     {/* Progress bar */}
                     <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
                       <div
-                        className="h-full bg-gradient-to-r from-[#FF6B35] to-[#FF9A72] rounded-full transition-all duration-700"
+                        className="h-full bg-gradient-to-r from-[#FF6A00] to-[#FF9A72] rounded-full transition-all duration-700"
                         style={{ width: `${score}%` }}
                       />
                     </div>
@@ -640,7 +640,7 @@ function ShopDashboardContent() {
                         className={`w-full flex items-center gap-3 p-3 rounded-xl text-left transition-all ${item.done ? "opacity-60" : "hover:bg-gray-50 group cursor-pointer"
                           }`}
                       >
-                        <div className={`w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 border-2 transition-all ${item.done ? "bg-[#FF6B35] border-[#FF6B35]" : "border-gray-200 group-hover:border-[#FF6B35]/50"
+                        <div className={`w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 border-2 transition-all ${item.done ? "bg-[#FF6A00] border-[#FF6A00]" : "border-gray-200 group-hover:border-[#FF6A00]/50"
                           }`}>
                           {item.done && <CheckCircle2 size={12} className="text-white" />}
                         </div>
@@ -652,7 +652,7 @@ function ShopDashboardContent() {
                           )}
                         </div>
                         {!item.done && (
-                          <ChevronRight size={13} className="text-[#ccc] group-hover:text-[#FF6B35] transition-colors flex-shrink-0" />
+                          <ChevronRight size={13} className="text-[#ccc] group-hover:text-[#FF6A00] transition-colors flex-shrink-0" />
                         )}
                       </button>
                     ))}
@@ -662,15 +662,15 @@ function ShopDashboardContent() {
             })()}
 
             {/* Growth Tip */}
-            <div className="bg-gradient-to-r from-[#FF6B35]/5 to-transparent rounded-xl p-5 border border-[#FF6B35]/10">
+            <div className="bg-gradient-to-r from-[#FF6A00]/5 to-transparent rounded-xl p-5 border border-[#FF6A00]/10">
               <div className="flex items-start gap-3">
-                <div className="w-8 h-8 bg-[#FF6B35]/10 rounded-lg flex items-center justify-center">
-                  <Zap size={16} className="text-[#FF6B35]" />
+                <div className="w-8 h-8 bg-[#FF6A00]/10 rounded-lg flex items-center justify-center">
+                  <Zap size={16} className="text-[#FF6A00]" />
                 </div>
                 <div>
                   <h4 className="text-[12px] font-semibold text-[#0F0F0F] mb-1">Growth Insight</h4>
                   <p className="text-[11px] text-[#666]">
-                    Businesses with complete catalogs see <span className="font-semibold text-[#FF6B35]">2.4x higher</span> customer conversion.
+                    Businesses with complete catalogs see <span className="font-semibold text-[#FF6A00]">2.4x higher</span> customer conversion.
                   </p>
                 </div>
               </div>
@@ -719,7 +719,7 @@ function ShopDashboardContent() {
                     placeholder="Search items..."
                     defaultValue={searchQuery}
                     onChange={(e) => handleCatalogSearch(e.target.value)}
-                    className="pl-9 pr-4 py-2 bg-gray-50 border border-black/[0.06] rounded-lg text-[11px] focus:bg-white focus:border-[#FF6B35]/30 outline-none transition-all w-40 sm:w-60 font-medium"
+                    className="pl-9 pr-4 py-2 bg-gray-50 border border-black/[0.06] rounded-lg text-[11px] focus:bg-white focus:border-[#FF6A00]/30 outline-none transition-all w-40 sm:w-60 font-medium"
                   />
                 </div>
                 <button
@@ -756,7 +756,7 @@ function ShopDashboardContent() {
                                 <div className={`transition-transform duration-200 ${isCollapsed ? "-rotate-90" : ""}`}>
                                   <ChevronRight size={14} className="text-[#999]" />
                                 </div>
-                                <ShoppingBag size={14} className="text-[#FF6B35]" />
+                                <ShoppingBag size={14} className="text-[#FF6A00]" />
                                 <span className="font-semibold text-[13px] text-[#0F0F0F]">{category.name}</span>
                                 <span className="text-[9px] font-medium text-[#999] bg-white px-1.5 py-0.5 rounded-lg border border-black/[0.02]">
                                   {category.items?.length || 0} items
@@ -806,7 +806,7 @@ function ShopDashboardContent() {
                                     </div>
                                     <div className="flex-1">
                                       <p className="text-[12px] font-semibold text-[#0F0F0F]">{item.name}</p>
-                                      <p className="text-[11px] font-medium text-[#FF6B35]">₹{item.price}</p>
+                                      <p className="text-[11px] font-medium text-[#FF6A00]">₹{item.price}</p>
                                     </div>
                                     <div className="flex gap-1 opacity-0 group-hover/item:opacity-100 transition-opacity">
                                       <button
@@ -867,7 +867,7 @@ function ShopDashboardContent() {
                             resetItemForm();
                             setShowCategoryModal(true);
                           }}
-                          className="px-5 py-2.5 bg-[#FF6B35] text-white text-[12px] font-semibold rounded-lg shadow-lg shadow-[#FF6B35]/20 active:scale-95 transition-all"
+                          className="px-5 py-2.5 bg-[#FF6A00] text-white text-[12px] font-semibold rounded-lg shadow-lg shadow-[#FF6A00]/20 active:scale-95 transition-all"
                         >
                           Add First Category
                         </button>
@@ -932,7 +932,7 @@ function ShopDashboardContent() {
                             ...openingHours,
                             [day]: { ...openingHours[day], isClosed: e.target.checked }
                           })}
-                          className="w-4 h-4 rounded border-black/[0.06] text-[#FF6B35] focus:ring-[#FF6B35]"
+                          className="w-4 h-4 rounded border-black/[0.06] text-[#FF6A00] focus:ring-[#FF6A00]"
                         />
                         <span className="text-[11px] font-medium text-[#666]">Closed</span>
                       </label>
@@ -976,7 +976,7 @@ function ShopDashboardContent() {
                     holidays.map((holiday, idx) => (
                       <div key={idx} className="flex items-center justify-between p-4 bg-gray-50/50 rounded-xl border border-black/[0.02]">
                         <div className="flex items-center gap-4">
-                          <div className="px-3 py-1 bg-white border border-black/[0.06] rounded-lg text-[10px] font-bold text-[#FF6B35]">
+                          <div className="px-3 py-1 bg-white border border-black/[0.06] rounded-lg text-[10px] font-bold text-[#FF6A00]">
                             {new Date(holiday.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                           </div>
                           <span className="text-[12px] font-semibold text-[#0F0F0F]">{holiday.title}</span>
@@ -1076,20 +1076,20 @@ function ShopDashboardContent() {
                 <h3 className="text-lg font-bold text-[#0F0F0F]">Customer Reviews</h3>
                 <p className="text-[11px] text-[#999]">Manage what customers are saying about your shop</p>
               </div>
-              <div className="px-3 py-1 bg-gray-50 rounded-lg text-[11px] font-bold text-[#FF6B35]">
+              <div className="px-3 py-1 bg-gray-50 rounded-lg text-[11px] font-bold text-[#FF6A00]">
                 {shop.avgRating || "5.0"} Avg Rating
               </div>
             </div>
 
             {loadingReviews ? (
               <div className="py-20 flex flex-col items-center justify-center gap-4">
-                <div className="w-8 h-8 border-2 border-[#FF6B35]/20 border-t-[#FF6B35] rounded-full animate-spin" />
+                <div className="w-8 h-8 border-2 border-[#FF6A00]/20 border-t-[#FF6A00] rounded-full animate-spin" />
                 <p className="text-[12px] text-[#999] font-medium">Fetching feedback...</p>
               </div>
             ) : reviews.length > 0 ? (
               <div className="space-y-4">
                 {reviews.map((review) => (
-                  <div key={review.id} className="p-5 rounded-2xl bg-gray-50/50 border border-black/[0.03] group hover:border-[#FF6B35]/10 transition-all">
+                  <div key={review.id} className="p-5 rounded-2xl bg-gray-50/50 border border-black/[0.03] group hover:border-[#FF6A00]/10 transition-all">
                     <div className="flex items-start justify-between gap-4">
                       <div className="flex gap-4">
                         <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center border border-black/[0.06] shadow-sm">
@@ -1150,11 +1150,11 @@ function ShopDashboardContent() {
               key={tab.id}
               onClick={() => setActiveView(tab.id)}
               className={`flex-1 flex flex-col items-center justify-center py-3 gap-1 text-[9px] font-bold uppercase tracking-wider transition-all ${activeView === tab.id
-                ? "text-[#FF6B35]"
+                ? "text-[#FF6A00]"
                 : "text-[#999]"
                 }`}
             >
-              <tab.icon size={18} className={activeView === tab.id ? "text-[#FF6B35]" : "text-[#ccc]"} />
+              <tab.icon size={18} className={activeView === tab.id ? "text-[#FF6A00]" : "text-[#ccc]"} />
               {tab.label}
             </button>
           ))}
@@ -1334,7 +1334,7 @@ function ShopDashboardContent() {
             <p className="text-[13px] font-semibold text-[#0F0F0F]">
               {shop.menu?.[activeCategoryIdx]?.items?.[activeItemIdx]?.name}
             </p>
-            <p className="text-[11px] text-[#FF6B35]">₹{shop.menu?.[activeCategoryIdx]?.items?.[activeItemIdx]?.price}</p>
+            <p className="text-[11px] text-[#FF6A00]">₹{shop.menu?.[activeCategoryIdx]?.items?.[activeItemIdx]?.price}</p>
           </div>
           <div className="flex gap-3">
             <Button
@@ -1364,7 +1364,7 @@ function ShopDashboardContent() {
           ref={qrRef}
           className="w-[420px] bg-white rounded-[40px] p-10 flex flex-col items-center text-center border shadow-sm"
         >
-          <div className="w-24 h-24 bg-[#FF6B35]/10 rounded-3xl flex items-center justify-center mb-6 overflow-hidden">
+          <div className="w-24 h-24 bg-[#FF6A00]/10 rounded-3xl flex items-center justify-center mb-6 overflow-hidden">
             {shop?.logo ? (
               <img
                 src={`https://images.weserv.nl/?url=${encodeURIComponent(shop.logo)}&output=png&t=${Date.now()}`}
@@ -1373,13 +1373,13 @@ function ShopDashboardContent() {
                 crossOrigin="anonymous"
               />
             ) : (
-              <Store size={40} className="text-[#FF6B35]" />
+              <Store size={40} className="text-[#FF6A00]" />
             )}
           </div>
 
           <h2 className="text-3xl font-black text-[#0F0F0F] mb-1 tracking-tight">{shop?.name}</h2>
           <div className="flex items-center gap-2 text-[14px] text-[#666] tracking-widest mb-8">
-            <MapPin size={14} className="text-[#FF6B35]" />
+            <MapPin size={14} className="text-[#FF6A00]" />
             {[shop?.zone, shop?.area, shop?.city].filter(Boolean).join(", ")}
           </div>
 

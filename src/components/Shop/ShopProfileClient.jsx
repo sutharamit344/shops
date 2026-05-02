@@ -84,7 +84,7 @@ const ShopProfileClient = ({ shop }) => {
     setSubmittingReview(false);
   };
 
-  const brandColor = shop.primaryColor || "#FF6B35";
+  const brandColor = shop.primaryColor || "#FF6A00";
   const avgRating = shop.rating || "5.0";
   const totalReviews = shop.reviewCount || 0;
   const menuItems = shop.menu || [];
@@ -140,7 +140,7 @@ const ShopProfileClient = ({ shop }) => {
     <div className="min-h-screen bg-[#FAFAF8]">
 
       {/* Hero Banner */}
-      <div className="relative h-56 md:h-72 w-full overflow-hidden bg-gradient-to-r from-[#FF6B35]/20 to-[#FF9A72]/20">
+      <div className="relative h-56 md:h-72 w-full overflow-hidden bg-gradient-to-r from-[#FF6A00]/20 to-[#FF9A72]/20">
         {shop.coverImage ? (
           <Image 
             src={shop.coverImage} 
@@ -152,7 +152,7 @@ const ShopProfileClient = ({ shop }) => {
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center">
-            <Store size={80} className="text-[#FF6B35]/20" />
+            <Store size={80} className="text-[#FF6A00]/20" />
           </div>
         )}
 
@@ -200,7 +200,7 @@ const ShopProfileClient = ({ shop }) => {
                     sizes="80px"
                   />
                 ) : (
-                  <div className="w-full h-full bg-gradient-to-br from-[#FF6B35] to-[#FF9A72] flex items-center justify-center text-white text-2xl font-bold">
+                  <div className="w-full h-full bg-gradient-to-br from-[#FF6A00] to-[#FF9A72] flex items-center justify-center text-white text-2xl font-bold">
                     {shop.name?.charAt(0)}
                   </div>
                 )}
@@ -222,19 +222,19 @@ const ShopProfileClient = ({ shop }) => {
                 <div className="flex flex-wrap items-center gap-4 text-[12px] text-[#666] mb-3">
                   <Link
                     href={`/explore?category=${encodeURIComponent(slugify(shop.category))}`}
-                    className="flex items-center gap-1 hover:text-[#FF6B35] transition-colors"
+                    className="flex items-center gap-1 hover:text-[#FF6A00] transition-colors"
                   >
-                    <Store size={12} className="text-[#FF6B35]" />
+                    <Store size={12} className="text-[#FF6A00]" />
                     <span>{shop.category}</span>
                   </Link>
                   {shop.clusterType && (
                     <div className="flex items-center gap-1">
-                      <Award size={12} className="text-[#FF6B35]" />
+                      <Award size={12} className="text-[#FF6A00]" />
                       <span className="font-semibold">{shop.clusterType}</span>
                     </div>
                   )}
                   <div className="flex items-center gap-1">
-                    <MapPin size={12} className="text-[#FF6B35]" />
+                    <MapPin size={12} className="text-[#FF6A00]" />
                     <span className="capitalize">{shop.area}, {shop.city}</span>
                   </div>
                   <div className="flex items-center gap-1">
@@ -309,7 +309,7 @@ const ShopProfileClient = ({ shop }) => {
                 placeholder="Search items..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-white border border-black/[0.06] rounded-xl py-3 pl-11 pr-4 text-[13px] outline-none focus:border-[#FF6B35]/30 transition-all"
+                className="w-full bg-white border border-black/[0.06] rounded-xl py-3 pl-11 pr-4 text-[13px] outline-none focus:border-[#FF6A00]/30 transition-all"
               />
             </div>
 
@@ -320,7 +320,7 @@ const ShopProfileClient = ({ shop }) => {
                   <div
                     key={idx}
                     onClick={() => setSelectedItem(item)}
-                    className="bg-white rounded-xl border border-black/[0.06] p-4 flex items-center gap-4 cursor-pointer hover:border-[#FF6B35]/30 transition-all"
+                    className="bg-white rounded-xl border border-black/[0.06] p-4 flex items-center gap-4 cursor-pointer hover:border-[#FF6A00]/30 transition-all"
                   >
                     <div className="w-14 h-14 rounded-lg bg-gray-50 flex items-center justify-center overflow-hidden flex-shrink-0 relative">
                       {item.image ? (
@@ -339,7 +339,7 @@ const ShopProfileClient = ({ shop }) => {
                       <h3 className="text-[14px] font-semibold text-[#0F0F0F]">{item.name}</h3>
                       <p className="text-[10px] text-[#999] mt-0.5">{item.category}</p>
                       {item.price && (
-                        <span className="text-[13px] font-bold text-[#FF6B35] mt-1 block">₹{item.price}</span>
+                        <span className="text-[13px] font-bold text-[#FF6A00] mt-1 block">₹{item.price}</span>
                       )}
                     </div>
                     <Plus size={18} className="text-[#999]" />
@@ -367,7 +367,7 @@ const ShopProfileClient = ({ shop }) => {
                         <div
                           key={itemIdx}
                           onClick={() => setSelectedItem({ ...item, category: section.name || section.category })}
-                          className="bg-white rounded-xl border border-black/[0.06] p-4 flex items-center gap-4 cursor-pointer hover:border-[#FF6B35]/30 transition-all group"
+                          className="bg-white rounded-xl border border-black/[0.06] p-4 flex items-center gap-4 cursor-pointer hover:border-[#FF6A00]/30 transition-all group"
                         >
                           <div className="w-14 h-14 rounded-lg bg-gray-50 flex items-center justify-center overflow-hidden flex-shrink-0 relative">
                             {item.image ? (
@@ -386,16 +386,16 @@ const ShopProfileClient = ({ shop }) => {
                             <div className="flex items-center gap-2">
                               <h4 className="text-[14px] font-semibold text-[#0F0F0F]">{item.name}</h4>
                               {item.popular && (
-                                <span className="text-[8px] font-semibold bg-[#FF6B35]/10 text-[#FF6B35] px-1.5 py-0.5 rounded-full">Popular</span>
+                                <span className="text-[8px] font-semibold bg-[#FF6A00]/10 text-[#FF6A00] px-1.5 py-0.5 rounded-full">Popular</span>
                               )}
                             </div>
                             <p className="text-[11px] text-[#999] mt-0.5 line-clamp-1">{item.description}</p>
                           </div>
                           <div className="text-right">
                             {item.price && (
-                              <span className="text-[14px] font-bold text-[#FF6B35]">₹{item.price}</span>
+                              <span className="text-[14px] font-bold text-[#FF6A00]">₹{item.price}</span>
                             )}
-                            <Plus size={16} className="text-[#999] group-hover:text-[#FF6B35] mt-1 ml-auto" />
+                            <Plus size={16} className="text-[#999] group-hover:text-[#FF6A00] mt-1 ml-auto" />
                           </div>
                         </div>
                       ))}
@@ -449,19 +449,19 @@ const ShopProfileClient = ({ shop }) => {
                 {/* Contact Info */}
                 <div className="space-y-4">
                   <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 rounded-xl bg-[#FF6B35]/10 flex items-center justify-center">
-                      <Phone size={18} className="text-[#FF6B35]" />
+                    <div className="w-10 h-10 rounded-xl bg-[#FF6A00]/10 flex items-center justify-center">
+                      <Phone size={18} className="text-[#FF6A00]" />
                     </div>
                     <div>
                       <p className="text-[10px] font-semibold text-[#999] uppercase tracking-wider">Phone Number</p>
-                      <a href={`tel:${shop.phone}`} className="text-[14px] font-medium text-[#0F0F0F] hover:text-[#FF6B35] transition-colors">
+                      <a href={`tel:${shop.phone}`} className="text-[14px] font-medium text-[#0F0F0F] hover:text-[#FF6A00] transition-colors">
                         +91 {shop.phone}
                       </a>
                     </div>
                   </div>
                   <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 rounded-xl bg-[#FF6B35]/10 flex items-center justify-center">
-                      <MapPin size={18} className="text-[#FF6B35]" />
+                    <div className="w-10 h-10 rounded-xl bg-[#FF6A00]/10 flex items-center justify-center">
+                      <MapPin size={18} className="text-[#FF6A00]" />
                     </div>
                     <div>
                       <p className="text-[10px] font-semibold text-[#999] uppercase tracking-wider">Address</p>
@@ -484,8 +484,8 @@ const ShopProfileClient = ({ shop }) => {
             <div className="bg-white rounded-xl border border-black/[0.06] overflow-hidden">
               <div className="p-6">
                 <div className="flex items-center gap-3 mb-6">
-                  <div className="w-10 h-10 rounded-xl bg-[#FF6B35]/10 flex items-center justify-center">
-                    <ClockIcon size={18} className="text-[#FF6B35]" />
+                  <div className="w-10 h-10 rounded-xl bg-[#FF6A00]/10 flex items-center justify-center">
+                    <ClockIcon size={18} className="text-[#FF6A00]" />
                   </div>
                   <div>
                     <p className="text-[15px] font-semibold text-[#0F0F0F]">Business Hours</p>
@@ -510,12 +510,12 @@ const ShopProfileClient = ({ shop }) => {
                               {day}
                             </span>
                             {isToday && (
-                              <span className="text-[9px] font-bold bg-[#FF6B35] text-white px-1.5 py-0.5 rounded-full uppercase">Today</span>
+                              <span className="text-[9px] font-bold bg-[#FF6A00] text-white px-1.5 py-0.5 rounded-full uppercase">Today</span>
                             )}
                           </div>
                           <div className="text-right">
                             {hours && !hours.isClosed ? (
-                              <span className={`text-[13px] ${isToday ? 'font-bold text-[#FF6B35]' : 'font-medium text-[#0F0F0F]'}`}>
+                              <span className={`text-[13px] ${isToday ? 'font-bold text-[#FF6A00]' : 'font-medium text-[#0F0F0F]'}`}>
                                 {hours.open} - {hours.close}
                               </span>
                             ) : (
@@ -620,7 +620,7 @@ const ShopProfileClient = ({ shop }) => {
 
               {loadingReviews ? (
                 <div className="py-12 flex flex-col items-center justify-center gap-4">
-                  <div className="w-8 h-8 border-2 border-[#FF6B35]/20 border-t-[#FF6B35] rounded-full animate-spin" />
+                  <div className="w-8 h-8 border-2 border-[#FF6A00]/20 border-t-[#FF6A00] rounded-full animate-spin" />
                   <p className="text-[12px] text-[#999] font-medium">Loading verified reviews...</p>
                 </div>
               ) : reviews.length > 0 ? (
@@ -693,7 +693,7 @@ const ShopProfileClient = ({ shop }) => {
                   placeholder="e.g., Rajesh Kumar"
                   value={reviewForm.name}
                   onChange={(e) => setReviewForm({ ...reviewForm, name: e.target.value })}
-                  className="w-full bg-gray-50 border border-black/[0.06] rounded-xl py-3 px-4 text-[14px] outline-none focus:border-[#FF6B35]/30 transition-all"
+                  className="w-full bg-gray-50 border border-black/[0.06] rounded-xl py-3 px-4 text-[14px] outline-none focus:border-[#FF6A00]/30 transition-all"
                 />
               </div>
 
@@ -705,7 +705,7 @@ const ShopProfileClient = ({ shop }) => {
                   placeholder="Tell others what you liked about this shop..."
                   value={reviewForm.comment}
                   onChange={(e) => setReviewForm({ ...reviewForm, comment: e.target.value })}
-                  className="w-full bg-gray-50 border border-black/[0.06] rounded-xl py-3 px-4 text-[14px] outline-none focus:border-[#FF6B35]/30 transition-all resize-none"
+                  className="w-full bg-gray-50 border border-black/[0.06] rounded-xl py-3 px-4 text-[14px] outline-none focus:border-[#FF6A00]/30 transition-all resize-none"
                 />
               </div>
             </div>
@@ -713,7 +713,7 @@ const ShopProfileClient = ({ shop }) => {
             <button
               type="submit"
               disabled={submittingReview}
-              className="w-full py-4 bg-[#FF6B35] text-white rounded-xl font-bold text-[14px] flex items-center justify-center gap-2 hover:bg-[#FF8457] transition-all disabled:opacity-50"
+              className="w-full py-4 bg-[#FF6A00] text-white rounded-xl font-bold text-[14px] flex items-center justify-center gap-2 hover:bg-[#FF8457] transition-all disabled:opacity-50"
             >
               {submittingReview ? (
                 <>
@@ -763,7 +763,7 @@ const ShopProfileClient = ({ shop }) => {
             <div className="p-6">
               <div className="mb-4">
                 <div className="flex items-center gap-2 mb-2">
-                  <span className="px-2 py-0.5 rounded-full bg-[#FF6B35]/10 text-[#FF6B35] text-[9px] font-semibold">
+                  <span className="px-2 py-0.5 rounded-full bg-[#FF6A00]/10 text-[#FF6A00] text-[9px] font-semibold">
                     {selectedItem.category}
                   </span>
                   {selectedItem.popular && (
@@ -775,7 +775,7 @@ const ShopProfileClient = ({ shop }) => {
                 <div className="flex justify-between items-start mb-3">
                   <h2 className="text-xl font-bold text-[#0F0F0F]">{selectedItem.name}</h2>
                   {selectedItem.price && (
-                    <span className="text-lg font-bold text-[#FF6B35]">₹{selectedItem.price}</span>
+                    <span className="text-lg font-bold text-[#FF6A00]">₹{selectedItem.price}</span>
                   )}
                 </div>
                 <p className="text-[13px] text-[#666] leading-relaxed">

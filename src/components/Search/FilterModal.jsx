@@ -43,7 +43,7 @@ const FilterModal = ({ isOpen, onClose }) => {
                 onClick={() => dispatch(setSortBy(option.id))}
                 className={`flex items-center justify-between p-4 rounded-xl border-2 transition-all ${
                   sortBy === option.id
-                    ? "border-[#FF6B35] bg-[#FF6B35]/5 text-[#FF6B35]"
+                    ? "border-[#FF6A00] bg-[#FF6A00]/5 text-[#FF6A00]"
                     : "border-black/[0.04] bg-white text-[#1A1F36]/60 hover:border-black/[0.1]"
                 }`}
               >
@@ -52,7 +52,7 @@ const FilterModal = ({ isOpen, onClose }) => {
                   <span className="text-[14px] font-bold">{option.label}</span>
                 </div>
                 {sortBy === option.id && (
-                  <div className="w-2 h-2 rounded-full bg-[#FF6B35]" />
+                  <div className="w-2 h-2 rounded-full bg-[#FF6A00]" />
                 )}
               </button>
             ))}
@@ -71,7 +71,7 @@ const FilterModal = ({ isOpen, onClose }) => {
                 onClick={() => dispatch(toggleTag(tag.id))}
                 className={`flex items-center justify-between p-4 rounded-xl border-2 transition-all ${
                   tags[tag.id]
-                    ? "border-[#FF6B35] bg-[#FF6B35]/5 text-[#FF6B35]"
+                    ? "border-[#FF6A00] bg-[#FF6A00]/5 text-[#FF6A00]"
                     : "border-black/[0.04] bg-white text-[#1A1F36]/60 hover:border-black/[0.1]"
                 }`}
               >
@@ -80,7 +80,7 @@ const FilterModal = ({ isOpen, onClose }) => {
                   <span className="text-[14px] font-bold">{tag.label}</span>
                 </div>
                 <div className={`w-10 h-6 rounded-full transition-all relative ${
-                  tags[tag.id] ? "bg-[#FF6B35]" : "bg-gray-200"
+                  tags[tag.id] ? "bg-[#FF6A00]" : "bg-gray-200"
                 }`}>
                   <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all ${
                     tags[tag.id] ? "left-5" : "left-1"

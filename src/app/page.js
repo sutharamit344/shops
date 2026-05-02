@@ -58,19 +58,18 @@ export default function Home() {
   return (
     <div className="flex flex-col min-h-screen bg-[#FAFAF8] overflow-x-hidden">
       <Navbar />
-
       {/* ── HERO SECTION ───────────────────────────────────────── */}
       <section className="pt-32 pb-20 px-6 md:px-12 max-w-7xl mx-auto w-full">
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_420px] gap-16 items-center">
           <div className="space-y-10 max-w-2xl">
             <div className="space-y-4">
-              <p className="text-[11px] font-bold text-[#FF6B35] uppercase tracking-[0.15em] animate-in fade-in slide-in-from-bottom-2 duration-500">
+              <p className="text-[11px] font-bold text-[#FF6A00] uppercase tracking-[0.15em] animate-in fade-in slide-in-from-bottom-2 duration-500">
                 1000+ Shops Already Joined!
               </p>
               <h1 className="text-[56px] md:text-[72px] font-extrabold text-[#1A1F36] leading-[0.95] tracking-[-0.03em] animate-in fade-in slide-in-from-bottom-4 duration-700">
                 Your shop,
                 <br />
-                <span className="text-[#FF6B35]">found online.</span>
+                <span className="text-[#FF6A00]">found online.</span>
               </h1>
             </div>
 
@@ -98,7 +97,7 @@ export default function Home() {
               </Link>
               <Link
                 href="/explore"
-                className="text-[13px] font-bold text-[#1A1F36]/40 hover:text-[#FF6B35] transition-colors"
+                className="text-[13px] font-bold text-[#1A1F36]/40 hover:text-[#FF6A00] transition-colors"
               >
                 Explore Local Shops
               </Link>
@@ -125,10 +124,10 @@ export default function Home() {
 
           {/* Right — Shop Mockup */}
           <div className="relative hidden lg:block animate-in zoom-in-95 duration-1000">
-            <div className="absolute inset-0 bg-[#FF6B35]/5 rounded-3xl blur-3xl scale-110" />
+            <div className="absolute inset-0 bg-[#FF6A00]/5 rounded-3xl blur-3xl scale-110" />
 
             <Card className="relative overflow-hidden border-[#1A1F36]/[0.08] shadow-md scale-105 group/mock">
-              <div className="h-1 bg-[#FF6B35]" />
+              <div className="h-1 bg-[#FF6A00]" />
               <div className="p-6">
                 <div className="flex items-start justify-between mb-6">
                   <div className="flex items-center gap-3">
@@ -140,7 +139,7 @@ export default function Home() {
                         <span className="text-[15px] font-bold text-[#1A1F36]">
                           Sharma Kirana Store
                         </span>
-                        <ShieldCheck size={14} className="text-[#FF6B35]" />
+                        <ShieldCheck size={14} className="text-[#FF6A00]" />
                       </div>
                       <div className="flex items-center gap-1 mt-0.5">
                         <MapPin size={11} className="text-[#1A1F36]/30" />
@@ -150,8 +149,8 @@ export default function Home() {
                       </div>
                     </div>
                   </div>
-                  <div className="flex items-center gap-1 text-[#FF6B35]">
-                    <Star size={12} className="fill-[#FF6B35]" />
+                  <div className="flex items-center gap-1 text-[#FF6A00]">
+                    <Star size={12} className="fill-[#FF6A00]" />
                     <span className="text-[12px] font-bold">4.9</span>
                   </div>
                 </div>
@@ -168,7 +167,7 @@ export default function Home() {
                       <span className="text-[13px] font-medium text-[#1A1F36]/70">
                         {item.name}
                       </span>
-                      <span className="text-[14px] font-bold text-[#FF6B35] font-mono">
+                      <span className="text-[14px] font-bold text-[#FF6A00] font-mono">
                         {item.price}
                       </span>
                     </div>
@@ -198,7 +197,6 @@ export default function Home() {
           </div>
         </div>
       </section>
-
       {/* ── SOCIAL PROOF ──────────────────────────────────────── */}
       <section className="py-12 border-y border-[#1A1F36]/[0.06] bg-white">
         <div className="max-w-7xl mx-auto px-6 md:px-12 text-center">
@@ -223,7 +221,7 @@ export default function Home() {
               <Link
                 key={cat.id || cat.name}
                 href={`/explore?category=${encodeURIComponent(slugify(cat.name))}`}
-                className="px-5 py-2.5 bg-[#FAFAF8] hover:bg-white rounded-full text-[13px] font-bold text-[#1A1F36]/60 hover:text-[#FF6B35] border border-[#1A1F36]/[0.06] hover:border-[#FF6B35]/30 transition-all shadow-md"
+                className="px-5 py-2.5 bg-[#FAFAF8] hover:bg-white rounded-full text-[13px] font-bold text-[#1A1F36]/60 hover:text-[#FF6A00] border border-[#1A1F36]/[0.06] hover:border-[#FF6A00]/30 transition-all shadow-md"
               >
                 {cat.name}
               </Link>
@@ -231,11 +229,10 @@ export default function Home() {
           </div>
         </div>
       </section>
-
       {/* ── SEARCH GUIDE ───────────────────────────────────────── */}
       <section className="py-24 px-6 md:px-12 max-w-7xl mx-auto w-full">
         <div className="text-center mb-16">
-          <p className="text-[11px] font-bold text-[#FF6B35] uppercase tracking-[0.15em] mb-4">
+          <p className="text-[11px] font-bold text-[#FF6A00] uppercase tracking-[0.15em] mb-4">
             Search Like a Pro
           </p>
           <h2 className="text-[32px] md:text-[48px] font-bold text-[#1A1F36] leading-tight tracking-tight">
@@ -280,7 +277,7 @@ export default function Home() {
           ].map((item, i) => (
             <Card
               key={i}
-              className="p-8 border-[#1A1F36]/[0.04] hover:border-[#FF6B35]/20 transition-all group"
+              className="p-8 border-[#1A1F36]/[0.04] hover:border-[#FF6A00]/20 transition-all group"
             >
               <div
                 className={`w-12 h-12 rounded-2xl flex items-center justify-center mb-6 ${item.color}`}
@@ -291,7 +288,7 @@ export default function Home() {
                 {item.title}
               </h3>
               <div className="bg-[#FAFAF8] rounded-xl px-4 py-3 mb-4 border border-black/[0.03]">
-                <code className="text-[13px] font-bold text-[#FF6B35]">
+                <code className="text-[13px] font-bold text-[#FF6A00]">
                   {item.example}
                 </code>
               </div>
@@ -302,12 +299,11 @@ export default function Home() {
           ))}
         </div>
       </section>
-
       {/* ── FEATURES ───────────────────────────────────────────── */}
       <section className="py-24 px-6 md:px-12 max-w-7xl mx-auto w-full">
         <div className="mb-20 flex flex-col md:flex-row md:items-end justify-between gap-8">
           <div className="max-w-2xl">
-            <p className="text-[11px] font-bold text-[#FF6B35] uppercase tracking-[0.15em] mb-4">
+            <p className="text-[11px] font-bold text-[#FF6A00] uppercase tracking-[0.15em] mb-4">
               The {BRAND} Advantage
             </p>
             <h2 className="text-[40px] md:text-[52px] font-bold text-[#1A1F36] leading-[1] tracking-tight">
@@ -332,7 +328,7 @@ export default function Home() {
               icon: Globe,
               title: "Unique Shop URL",
               desc: "A dedicated, shareable link optimized for Google and perfect for your Instagram bio.",
-              accent: "#FF6B35",
+              accent: "#FF6A00",
             },
             {
               icon: Store,
@@ -350,7 +346,7 @@ export default function Home() {
               icon: Search,
               title: "Local SEO Built-in",
               desc: "Each page is server-rendered with structured data and category keywords baked in.",
-              accent: "#FF6B35",
+              accent: "#FF6A00",
             },
             {
               icon: ShieldCheck,
@@ -362,14 +358,14 @@ export default function Home() {
               icon: TrendingUp,
               title: "Live Insights",
               desc: "Track page views, WhatsApp clicks, and calls to know exactly how your shop is performing.",
-              accent: "#FF6B35",
+              accent: "#FF6A00",
             },
           ].map((f, i) => (
             <Card
               key={i}
               className="p-8 group hover:-translate-y-1 transition-all"
             >
-              <div className="w-12 h-12 rounded-2xl flex items-center justify-center mb-6 transition-colors duration-300 bg-[#FAFAF8] text-[#1A1F36]/20 group-hover:bg-[#FF6B35]/10 group-hover:text-[#FF6B35]">
+              <div className="w-12 h-12 rounded-2xl flex items-center justify-center mb-6 transition-colors duration-300 bg-[#FAFAF8] text-[#1A1F36]/20 group-hover:bg-[#FF6A00]/10 group-hover:text-[#FF6A00]">
                 <f.icon size={22} />
               </div>
               <h3 className="text-[17px] font-bold text-[#1A1F36] mb-3">
@@ -382,14 +378,13 @@ export default function Home() {
           ))}
         </div>
       </section>
-
       {/* ── PROCESS SECTION ───────────────────────────────────── */}
       <section className="py-24 bg-[#1A1F36] text-white overflow-hidden relative">
-        <div className="absolute top-0 right-0 w-64 h-64 bg-[#FF6B35]/10 rounded-full -translate-y-1/2 translate-x-1/4 blur-[100px]" />
+        <div className="absolute top-0 right-0 w-64 h-64 bg-[#FF6A00]/10 rounded-full -translate-y-1/2 translate-x-1/4 blur-[100px]" />
 
         <div className="max-w-7xl mx-auto px-6 md:px-12">
           <div className="mb-20 text-center">
-            <p className="text-[11px] font-bold text-[#FF6B35] uppercase tracking-[0.15em] mb-4">
+            <p className="text-[11px] font-bold text-[#FF6A00] uppercase tracking-[0.15em] mb-4">
               Simple 3-Step Process
             </p>
             <h2 className="text-[40px] md:text-[52px] font-bold tracking-tight">
@@ -419,7 +414,7 @@ export default function Home() {
                 key={i}
                 className="relative bg-white/[0.03] border border-white/10 rounded-2xl p-8 hover:bg-white/[0.05] transition-all"
               >
-                <div className="w-10 h-10 rounded-full bg-[#FF6B35]/20 border border-[#FF6B35]/40 flex items-center justify-center text-[#FF6B35] text-[13px] font-bold mb-6">
+                <div className="w-10 h-10 rounded-full bg-[#FF6A00]/20 border border-[#FF6A00]/40 flex items-center justify-center text-[#FF6A00] text-[13px] font-bold mb-6">
                   {step.n}
                 </div>
                 <h3 className="text-[19px] font-bold mb-3">{step.title}</h3>
@@ -442,9 +437,8 @@ export default function Home() {
           </div>
         </div>
       </section>
-
       {/* ── FINAL CTA ─────────────────────────────────────────── */}
-      <section className="mx-6 md:mx-12 my-24 rounded-[32px] bg-[#FF6B35] p-12 md:p-24 text-white text-center relative overflow-hidden">
+      <section className="mx-6 md:mx-12 my-24 rounded-[32px] bg-[#FF6A00] p-12 md:p-24 text-white text-center relative overflow-hidden">
         <div className="absolute top-0 right-0 w-96 h-96 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/3 blur-3xl" />
         <div className="relative z-10 max-w-2xl mx-auto">
           <h2 className="text-[40px] md:text-[56px] font-bold leading-tight tracking-tight mb-6">
@@ -464,19 +458,25 @@ export default function Home() {
           </Button>
         </div>
       </section>
-
       {/* ── FOOTER ────────────────────────────────────────────── */}
       <footer className="border-t border-[#1A1F36]/[0.06] bg-white">
         <div className="max-w-7xl mx-auto px-6 md:px-12 py-20 grid grid-cols-1 md:grid-cols-5 gap-12">
           <div className="md:col-span-2">
             <Link href="/" className="flex items-center gap-2.5 mb-6 group">
-              <div className="w-8 h-8 rounded-lg bg-[#FF6B35] flex items-center justify-center">
-                <Store size={16} className="text-white" />
+              <div className="w-8 h-8 rounded-lg overflow-hidden flex items-center justify-center border border-black/5">
+                <img
+                  src="/sb-logo.png"
+                  alt={BRAND}
+                  className="w-full h-full object-cover"
+                />
               </div>
               <span className="text-[18px] font-bold tracking-tight text-[#1A1F36]">
                 {BRAND.startsWith("Shop") ? (
                   <>
-                    Shop<span className="text-[#FF6B35]">{BRAND.replace("Shop", "")}</span>
+                    Shop
+                    <span className="text-[#FF6A00]">
+                      {BRAND.replace("Shop", "")}
+                    </span>
                   </>
                 ) : (
                   BRAND
@@ -518,7 +518,7 @@ export default function Home() {
                             ? "/terms"
                             : "#"
                       }
-                      className="text-[14px] font-bold text-[#1A1F36]/40 hover:text-[#FF6B35] transition-colors"
+                      className="text-[14px] font-bold text-[#1A1F36]/40 hover:text-[#FF6A00] transition-colors"
                     >
                       {link}
                     </Link>

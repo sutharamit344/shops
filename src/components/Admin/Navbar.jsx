@@ -46,11 +46,11 @@ const AdminNavbar = ({ activeTab, onTabChange }) => {
           {/* Admin Identity */}
           <div className="flex items-center gap-10">
             <Link href="/" className="flex items-center gap-2.5 group">
-              <div className="w-9 h-9 bg-[#FF6B35] rounded-xl flex items-center justify-center shadow-lg shadow-[#FF6B35]/20 group-hover:scale-105 transition-transform">
+              <div className="w-9 h-9 bg-[#FF6A00] rounded-xl flex items-center justify-center shadow-lg shadow-[#FF6A00]/20 group-hover:scale-105 transition-transform">
                 <ShieldCheck size={18} className="text-white" />
               </div>
               <div className="flex flex-col">
-                <span className="text-[15px] font-bold text-[#0F0F0F] tracking-tight">ShopBajar <span className="text-[#FF6B35]">Admin</span></span>
+                <span className="text-[15px] font-bold text-[#0F0F0F] tracking-tight">ShopBajar <span className="text-[#FF6A00]">Admin</span></span>
                 <span className="text-[9px] font-bold text-[#999] uppercase tracking-widest leading-none">Authority Control</span>
               </div>
             </Link>

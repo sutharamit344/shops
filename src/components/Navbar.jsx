@@ -8,26 +8,33 @@ import { useSelector, useDispatch } from "react-redux";
 import { loginWithGoogle, logout } from "@/redux/thunks/authThunks";
 import {
   Store, Menu as MenuIcon, X,
-  LogOut, Navigation, RotateCcw
+  LogOut, Navigation, SlidersHorizontal
 } from "lucide-react";
 import { isUserAdmin } from "@/lib/db";
 import Button from "@/components/UI/Button";
 import SmartSearch from "@/components/Search/SmartSearch";
 import { setCity, setArea, setAllFilters, resetFilters } from "@/redux/slices/filterSlice";
 import { slugify } from "@/lib/slugify";
+import FilterModal from "@/components/Search/FilterModal";
 
 import { BRAND } from "@/lib/config";
 
 const Navbar = () => {
   const dispatch = useDispatch();
-  const pathname = usePathname();
   const router = useRouter();
+  const pathname = usePathname();
   const searchParams = useSearchParams();
   const { user } = useSelector((state) => state.auth);
   const { nearby: isNearbyActive } = useSelector((state) => state.filters);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [isDetecting, setIsDetecting] = useState(false);
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     const checkAdmin = async () => {
@@ -54,8 +61,17 @@ const Navbar = () => {
           );
           const data = await res.json();
           const address = data.address || {};
-          const city = address.city || address.town || address.village || address.state_district;
-          const area = address.suburb || address.neighbourhood || address.residential || address.industrial;
+          const city = address.city || address.city_district || address.state_district || address.town || "";
+          let area = address.suburb ||
+            address.neighbourhood ||
+            address.residential ||
+            address.quarter ||
+            address.industrial ||
+            address.village ||
+            address.hamlet || "";
+
+          // CLEANUP: Remove redundant or overly generic names
+          if (area.toLowerCase() === city.toLowerCase()) area = "";
 
           if (city) {
             const cleanCity = city.replace(/ District| Division/g, "");
@@ -70,7 +86,7 @@ const Navbar = () => {
             params.set("nearby", "true");
 
             router.push(`/explore?${params.toString()}`);
-            
+
             // CACHE LOCATION
             localStorage.setItem('last_city', cleanCity);
             if (cleanArea) localStorage.setItem('last_area', cleanArea);
@@ -113,125 +129,134 @@ const Navbar = () => {
   };
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-[100] h-16 flex items-center px-6 md:px-12 bg-white/95 backdrop-blur-md border-b border-[#1A1F36]/[0.06]">
-      {/* Logo */}
-      <Link href="/" className="flex items-center gap-2.5 flex-shrink-0 group">
-        <div className="w-9 h-9 rounded-xl bg-[#FF6B35] flex items-center justify-center transition-transform group-hover:scale-105">
-          <Store size={18} className="text-white" />
-        </div>
-        <span className="text-[16px] font-black tracking-tighter text-[#1A1F36]">
-          {BRAND.startsWith("Shop") ? (
-            <>
-              Shop<span className="text-[#FF6B35]">{BRAND.replace("Shop", "")}</span>
-            </>
-          ) : (
-            BRAND
-          )}
-        </span>
-      </Link>
-
-      {/* Desktop Search Section */}
-      <div className="hidden lg:flex flex-1 items-center justify-center max-w-3xl mx-12 gap-3 group">
-        <div className="flex-1 min-w-[320px]">
-          <SmartSearch />
-        </div>
-        <div className="flex items-center gap-2 group-focus-within:hidden">
-          <Button
-            variant={isNearbyActive ? "primary" : "ghost"}
-            onClick={handleNearbyToggle}
-            loading={isDetecting}
-            icon={Navigation}
-            className="h-10 px-4 text-[12px] font-bold"
-          />
-          <Button
-            variant="ghost"
-            onClick={handleReset}
-            icon={RotateCcw}
-            className="h-10 px-4 text-[12px] font-bold"
-          />
-        </div>
-      </div>
-
-      {/* Navigation & Auth */}
-      <div className="ml-auto flex items-center gap-5 flex-shrink-0">
-        <div className="hidden md:flex items-center gap-8 mr-4">
-          <Link href="/explore" className="text-[14px] font-bold text-[#1A1F36]/40 hover:text-[#FF6B35] transition-colors">Marketplace</Link>
-          {isAdmin && <Link href="/admin" className="text-[14px] font-bold text-[#1A1F36]/40 hover:text-[#FF6B35] transition-colors">Admin</Link>}
-        </div>
-
-        {user ? (
-          <Link href="/dashboard" className="flex items-center gap-3 hover:opacity-80 transition-all p-1.5 pr-5 bg-[#1A1F36]/[0.03] border border-[#1A1F36]/[0.06] rounded-full relative">
-            {user.photoURL ? (
-              <div className="w-7 h-7 rounded-full overflow-hidden border border-[#1A1F36]/10 relative">
-                <Image 
-                  src={user.photoURL} 
-                  alt="Profile" 
-                  fill 
-                  className="object-cover" 
-                  sizes="28px"
-                />
-              </div>
-            ) : (
-              <div className="w-7 h-7 rounded-full bg-[#1A1F36] text-white flex items-center justify-center text-[11px] font-bold">
-                {user.email?.charAt(0).toUpperCase()}
-              </div>
-            )}
-            <span className="hidden md:block text-[12px] font-bold text-[#1A1F36]">
-              {user.displayName?.split(' ')[0] || "Account"}
+    <>
+      <nav className="fixed top-0 left-0 right-0 z-[100] h-16 flex items-center px-6 md:px-12 bg-white/95 backdrop-blur-md border-b border-[#1A1F36]/[0.06]">
+        {/* Logo */}
+        {mounted && (
+          <Link href="/" prefetch={false} className="flex items-center gap-2.5 flex-shrink-0 group">
+            <div className="w-9 h-9 rounded-xl overflow-hidden flex items-center justify-center transition-transform group-hover:scale-105 border border-black/5 shadow-sm">
+              <Image
+                src="/sb-logo.png"
+                alt={BRAND}
+                width={36}
+                height={36}
+                className="object-cover"
+              />
+            </div>
+            <span className="text-[18px] font-black tracking-tighter text-[#020617]">
+              {BRAND.startsWith("Shop") ? (
+                <>
+                  Shop<span className="text-[#FF6A00]">{BRAND.replace("Shop", "")}</span>
+                </>
+              ) : (
+                BRAND
+              )}
             </span>
           </Link>
-        ) : (
-          <div className="hidden sm:flex items-center gap-8">
-            <button
-              onClick={() => dispatch(loginWithGoogle())}
-              className="text-[14px] font-bold text-[#1A1F36]/40 hover:text-[#1A1F36] transition-colors"
-            >
-              Sign in
-            </button>
-            <Button
-              variant="dark"
-              size="sm"
-              className="h-10 px-6 text-[12px] font-bold"
-              onClick={() => window.location.href = '/create'}
-            >
-              List shop
-            </Button>
+        )}
+
+        {/* Desktop Search Section */}
+        {pathname !== "/" && (
+          <div className="hidden lg:flex flex-1 items-center justify-center max-w-3xl mx-12 gap-3 group">
+            <div className="flex-1 min-w-[320px]">
+              <SmartSearch />
+            </div>
+            <div className="flex items-center gap-2 group-focus-within:hidden">
+              <button
+                onClick={() => setIsFilterOpen(true)}
+                className="h-10 px-4 rounded-xl border border-black/[0.06] bg-white text-[#1A1F36] hover:bg-gray-50 flex items-center gap-2 text-[13px] font-bold transition-all"
+                title="Sort & Filter"
+              >
+                <SlidersHorizontal size={16} className="text-[#FF6A00]" />
+                <span>Filter</span>
+              </button>
+            </div>
           </div>
         )}
 
-        {/* Mobile Menu Toggle */}
-        <button
-          className="lg:hidden text-[#1A1F36] p-2 hover:bg-[#1A1F36]/5 rounded-xl transition-colors"
-          onClick={() => setIsMenuOpen(!isMenuOpen)}
-        >
-          {isMenuOpen ? <X size={22} /> : <MenuIcon size={22} />}
-        </button>
-      </div>
-
-      {/* Mobile Menu Overlay */}
-      {isMenuOpen && (
-        <div className="absolute top-16 left-0 right-0 bg-white border-b border-[#1A1F36]/[0.06] p-8 flex flex-col gap-8 lg:hidden animate-in slide-in-from-top-4 duration-300 shadow-2xl z-50">
-          <div className="flex flex-col gap-6">
-            <Link href="/explore" onClick={() => setIsMenuOpen(false)} className="text-xl font-bold text-[#1A1F36] tracking-tight">Marketplace</Link>
-            <Link href="/create" onClick={() => setIsMenuOpen(false)} className="text-xl font-bold text-[#1A1F36] tracking-tight">List Your Business</Link>
+        {/* Navigation & Auth */}
+        <div className="ml-auto flex items-center gap-5 flex-shrink-0">
+          <div className="hidden md:flex items-center gap-8 mr-4">
+            <Link href="/explore" className="text-[15px] font-bold text-[#1A1F36]/40 hover:text-[#FF6A00] transition-colors">Marketplace</Link>
+            {isAdmin && <Link href="/admin" className="text-[15px] font-bold text-[#1A1F36]/40 hover:text-[#FF6A00] transition-colors">Admin</Link>}
           </div>
 
-          <div className="pt-8 border-t border-[#1A1F36]/[0.06] flex flex-col gap-4">
-            {!user ? (
-              <Button onClick={() => { dispatch(loginWithGoogle()); setIsMenuOpen(false); }} variant="dark" className="w-full h-14 text-base">Sign In with Google</Button>
-            ) : (
-              <>
-                <Link href="/dashboard" onClick={() => setIsMenuOpen(false)} className="w-full h-14 flex items-center justify-center bg-[#1A1F36] rounded-xl text-[15px] font-bold text-white shadow-lg">Go to Dashboard</Link>
-                <button onClick={() => { dispatch(logout()); setIsMenuOpen(false); }} className="w-full h-14 text-red-500 text-[15px] font-bold flex items-center justify-center gap-2">
-                  <LogOut size={18} />
-                  Logout Account
-                </button>
-              </>
-            )}
-          </div>
+          {user ? (
+            <Link href="/dashboard" className="flex items-center gap-3 hover:opacity-80 transition-all md:p-1.5 md:pr-5 bg-[#1A1F36]/[0.03] border border-[#1A1F36]/[0.06] rounded-full relative">
+              {user.photoURL ? (
+                <div className="w-7 h-7 rounded-full overflow-hidden border border-[#1A1F36]/10 relative">
+                  <Image
+                    src={user.photoURL}
+                    alt="Profile"
+                    fill
+                    className="object-cover"
+                    sizes="28px"
+                  />
+                </div>
+              ) : (
+                <div className="w-7 h-7 rounded-full bg-[#1A1F36] text-white flex items-center justify-center text-[11px] font-bold">
+                  {user.email?.charAt(0).toUpperCase()}
+                </div>
+              )}
+              <span className="hidden md:block text-[14px] font-bold text-[#1A1F36]">
+                {user.displayName?.split(' ')[0] || "Account"}
+              </span>
+            </Link>
+          ) : (
+            <div className="hidden sm:flex items-center gap-8">
+              <button
+                onClick={() => dispatch(loginWithGoogle())}
+                className="text-[14px] font-bold text-[#1A1F36]/40 hover:text-[#1A1F36] transition-colors"
+              >
+                Sign in
+              </button>
+              <Button
+                variant="dark"
+                size="sm"
+                className="h-10 px-6 text-[13px] font-bold"
+                onClick={() => window.location.href = '/create'}
+              >
+                List shop
+              </Button>
+            </div>
+          )}
+
+          {/* Mobile Menu Toggle */}
+          <button
+            className="lg:hidden text-[#1A1F36] p-2 hover:bg-[#1A1F36]/5 rounded-xl transition-colors"
+            onClick={() => setIsMenuOpen(!isMenuOpen)}
+          >
+            {isMenuOpen ? <X size={22} /> : <MenuIcon size={22} />}
+          </button>
         </div>
-      )}
-    </nav>
+
+        {/* Mobile Menu Overlay */}
+        {isMenuOpen && (
+          <div className="absolute top-16 left-0 right-0 bg-white border-b border-[#1A1F36]/[0.06] p-8 flex flex-col gap-8 lg:hidden animate-in slide-in-from-top-4 duration-300 shadow-2xl z-50">
+            <div className="flex flex-col gap-6">
+              <Link href="/explore" onClick={() => setIsMenuOpen(false)} className="text-xl font-bold text-[#1A1F36] tracking-tight">Marketplace</Link>
+              <Link href="/create" onClick={() => setIsMenuOpen(false)} className="text-xl font-bold text-[#1A1F36] tracking-tight">List Your Business</Link>
+            </div>
+
+            <div className="pt-8 border-t border-[#1A1F36]/[0.06] flex flex-col gap-4">
+              {!user ? (
+                <Button onClick={() => { dispatch(loginWithGoogle()); setIsMenuOpen(false); }} variant="dark" className="w-full h-14 text-base">Sign In with Google</Button>
+              ) : (
+                <>
+                  <Link href="/dashboard" onClick={() => setIsMenuOpen(false)} className="w-full h-14 flex items-center justify-center bg-[#1A1F36] rounded-xl text-[15px] font-bold text-white shadow-lg">Go to Dashboard</Link>
+                  <button onClick={() => { dispatch(logout()); setIsMenuOpen(false); }} className="w-full h-14 text-red-500 text-[15px] font-bold flex items-center justify-center gap-2">
+                    <LogOut size={18} />
+                    Logout Account
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
+        )}
+      </nav>
+
+      <FilterModal isOpen={isFilterOpen} onClose={() => setIsFilterOpen(false)} />
+    </>
   );
 };
 

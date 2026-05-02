@@ -27,7 +27,7 @@ const ModalContainer = () => {
     switch (modal.type) {
       case "success": return "text-green-500 bg-green-50";
       case "error": return "text-red-500 bg-red-50";
-      case "confirm": return "text-[#FF6B35] bg-[#FF6B35]/10";
+      case "confirm": return "text-[#FF6A00] bg-[#FF6A00]/10";
       default: return "text-blue-500 bg-blue-50";
     }
   };
@@ -59,7 +59,7 @@ const ModalContainer = () => {
               type="text"
               value={modal.inputValue}
               onChange={(e) => dispatch(setInputValue(e.target.value))}
-              className="w-full h-12 bg-gray-50 border border-black/[0.06] rounded-xl px-4 text-[14px] outline-none focus:border-[#FF6B35] transition-all"
+              className="w-full h-12 bg-gray-50 border border-black/[0.06] rounded-xl px-4 text-[14px] outline-none focus:border-[#FF6A00] transition-all"
               autoFocus
               onKeyDown={(e) => {
                 if (e.key === "Enter") {

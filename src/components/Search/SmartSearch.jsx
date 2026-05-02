@@ -30,6 +30,11 @@ const SmartSearch = () => {
 
   const [isOpen, setIsOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(-1);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
   const containerRef = useRef(null);
 
   // Close suggestions on click outside
@@ -100,7 +105,7 @@ const SmartSearch = () => {
       <span>
         {parts.map((part, i) =>
           part.toLowerCase() === query.toLowerCase()
-            ? <b key={i} className="text-[#FF6B35]">{part}</b>
+            ? <b key={i} className="text-[#FF6A00]">{part}</b>
             : <span key={i}>{part}</span>
         )}
       </span>
@@ -354,9 +359,11 @@ const SmartSearch = () => {
     }
   };
 
+  if (!mounted) return null;
+
   return (
     <div ref={containerRef} className="relative w-full transition-all duration-300 z-50 md:max-w-2xl mx-auto focus-within:max-w-none">
-      <div className={`relative flex items-center bg-white rounded-2xl border-2 transition-all ${isOpen ? "border-[#FF6B35] ring-4 ring-[#FF6B35]/10" : "border-black/[0.06] hover:border-black/[0.15]"}`}>
+      <div className={`relative flex items-center bg-white rounded-2xl border-2 transition-all ${isOpen ? "border-[#FF6A00] ring-4 ring-[#FF6A00]/10" : "border-black/[0.06] hover:border-black/[0.15]"}`}>
         <Search className="ml-3 md:ml-5 text-gray-400 flex-shrink-0 w-4 h-4 md:w-[18px] md:h-[18px]" />
         <input
           type="text"
@@ -419,7 +426,7 @@ const SmartSearch = () => {
                       aria-selected={activeIndex === index}
                     >
                       <div className={`w-8 h-8 md:w-9 md:h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${item.type === 'history' ? 'bg-gray-50 text-gray-400' :
-                        item.type === 'category' ? 'bg-[#FF6B35]/10 text-[#FF6B35]' :
+                        item.type === 'category' ? 'bg-[#FF6A00]/10 text-[#FF6A00]' :
                           item.type === 'shop' ? 'bg-emerald-50 text-emerald-500' :
                             item.type === 'cluster' ? 'bg-amber-50 text-amber-500' :
                               item.type === 'location' ? 'bg-blue-50 text-blue-500' :
@@ -433,7 +440,7 @@ const SmartSearch = () => {
                                   <Search className="w-3.5 h-3.5 md:w-4 md:h-4" />}
                       </div>
                       <div className="flex-1">
-                        <p className={`text-[13px] md:text-[14px] font-bold whitespace-nowrap ${activeIndex === index ? "text-[#FF6B35]" : "text-[#1A1F36]"}`}>
+                        <p className={`text-[13px] md:text-[14px] font-bold whitespace-nowrap ${activeIndex === index ? "text-[#FF6A00]" : "text-[#1A1F36]"}`}>
                           {highlightMatch(item.text, query)}
                         </p>
                         <p className="text-[10px] md:text-[11px] text-gray-400 font-bold whitespace-nowrap">

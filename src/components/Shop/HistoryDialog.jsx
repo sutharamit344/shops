@@ -48,14 +48,14 @@ const ShopHistoryDialog = ({ shop, isOpen, onClose }) => {
       <div className="relative">
         {loading ? (
           <div className="py-20 flex flex-col items-center gap-4">
-            <div className="w-12 h-12 rounded-full border-2 border-[#FF6B35] border-t-transparent animate-spin"></div>
+            <div className="w-12 h-12 rounded-full border-2 border-[#FF6A00] border-t-transparent animate-spin"></div>
             <p className="text-[11px] font-semibold text-[#999] uppercase tracking-wider">
               Loading history...
             </p>
           </div>
         ) : logs.length === 0 ? (
           <div className="py-20 text-center space-y-4">
-            <div className="w-16 h-16 bg-[#FF6B35]/5 rounded-2xl flex items-center justify-center mx-auto">
+            <div className="w-16 h-16 bg-[#FF6A00]/5 rounded-2xl flex items-center justify-center mx-auto">
               <Clock size={32} className="text-[#999]" />
             </div>
             <div>
@@ -71,7 +71,7 @@ const ShopHistoryDialog = ({ shop, isOpen, onClose }) => {
             {logs.map((log, idx) => (
               <div key={log.id || idx} className="relative flex gap-4 group">
                 {/* Timeline Dot */}
-                <div className="relative z-10 w-8 h-8 bg-white rounded-xl border border-black/[0.06] flex items-center justify-center text-[#FF6B35] group-hover:border-[#FF6B35]/30 group-hover:bg-[#FF6B35]/5 transition-all shrink-0">
+                <div className="relative z-10 w-8 h-8 bg-white rounded-xl border border-black/[0.06] flex items-center justify-center text-[#FF6A00] group-hover:border-[#FF6A00]/30 group-hover:bg-[#FF6A00]/5 transition-all shrink-0">
                   {getActionIcon(log.action || log.details)}
                 </div>
 
@@ -108,7 +108,7 @@ const ShopHistoryDialog = ({ shop, isOpen, onClose }) => {
         <div className="mt-8 pt-6 border-t border-black/[0.06] flex justify-end">
           <button
             onClick={onClose}
-            className="px-6 py-2.5 bg-white border border-black/[0.06] text-[#0F0F0F] text-[11px] font-semibold rounded-xl hover:bg-gray-50 hover:border-[#FF6B35]/30 transition-all"
+            className="px-6 py-2.5 bg-white border border-black/[0.06] text-[#0F0F0F] text-[11px] font-semibold rounded-xl hover:bg-gray-50 hover:border-[#FF6A00]/30 transition-all"
           >
             Close
           </button>

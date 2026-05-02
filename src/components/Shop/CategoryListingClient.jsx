@@ -25,7 +25,7 @@ export default function CategoryListingClient({ shops, title, subtitle, view }) 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {shops.map((s) => (
               <Link key={s.id} href={`/${slugify(s.city)}/${slugify(s.category)}/${slugify(s.slug)}`}>
-                <Card className="h-full flex flex-col justify-between group border-2 hover:border-[#FF6B35] transition-all duration-500 rounded-[32px] overflow-hidden p-0">
+                <Card className="h-full flex flex-col justify-between group border-2 hover:border-[#FF6A00] transition-all duration-500 rounded-[32px] overflow-hidden p-0">
                   <div className="p-6">
                     <div className="flex items-center gap-4 mb-4">
                       {s.logo ? (
@@ -37,21 +37,21 @@ export default function CategoryListingClient({ shops, title, subtitle, view }) 
                           />
                         </div>
                       ) : (
-                        <div className="w-14 h-14 rounded-2xl bg-[#FF6B35]/5 flex items-center justify-center text-[#FF6B35] font-black text-2xl flex-shrink-0">
+                        <div className="w-14 h-14 rounded-2xl bg-[#FF6A00]/5 flex items-center justify-center text-[#FF6A00] font-black text-2xl flex-shrink-0">
                           {s.name.charAt(0)}
                         </div>
                       )}
                       <div className="min-w-0">
                         <div className="flex items-center gap-2 mb-1">
-                          <span className="text-[9px] font-bold uppercase tracking-wider text-[#FF6B35] bg-[#FF6B35]/10 px-2 py-0.5 rounded-md">
+                          <span className="text-[9px] font-bold uppercase tracking-wider text-[#FF6A00] bg-[#FF6A00]/10 px-2 py-0.5 rounded-md">
                             {s.category}
                           </span>
                         </div>
-                        <h3 className="text-xl font-black text-navy truncate group-hover:text-[#FF6B35] transition-colors uppercase tracking-tight">
+                        <h3 className="text-xl font-black text-navy truncate group-hover:text-[#FF6A00] transition-colors uppercase tracking-tight">
                           {s.name}
                         </h3>
                         <div className="flex items-center gap-2">
-                          <div className="flex items-center gap-1 text-[#FF6B35] px-2 py-0.5 rounded-lg text-[10px] font-black tracking-tighter bg-primary/5 border border-primary/10">
+                          <div className="flex items-center gap-1 text-[#FF6A00] px-2 py-0.5 rounded-lg text-[10px] font-black tracking-tighter bg-primary/5 border border-primary/10">
                             <Star size={12} fill="currentColor" />{" "}
                             {s.avgRating || s.rating || "5.0"}
                           </div>
@@ -71,7 +71,7 @@ export default function CategoryListingClient({ shops, title, subtitle, view }) 
                         <MapPin size={14} /> {s.area}, {s.city}
                       </div>
                       {s.zone && (
-                        <div className="bg-blue-50 text-[#FF6B35] px-2 py-0.5 rounded-md text-[9px] font-black uppercase">
+                        <div className="bg-blue-50 text-[#FF6A00] px-2 py-0.5 rounded-md text-[9px] font-black uppercase">
                           {s.zone}
                         </div>
                       )}
@@ -79,12 +79,12 @@ export default function CategoryListingClient({ shops, title, subtitle, view }) 
                   </div>
 
                   <div className="px-6 py-4 bg-gray-50/50 border-t border-cream flex items-center justify-between">
-                    <span className="text-[#FF6B35] font-black text-xs uppercase tracking-widest">
+                    <span className="text-[#FF6A00] font-black text-xs uppercase tracking-widest">
                       Visit Shop
                     </span>
                     <ArrowRight
                       size={18}
-                      className="text-[#FF6B35] transform group-hover:translate-x-1 transition-transform"
+                      className="text-[#FF6A00] transform group-hover:translate-x-1 transition-transform"
                     />
                   </div>
                 </Card>

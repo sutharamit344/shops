@@ -225,8 +225,8 @@ export default function NotFound() {
       <Navbar />
       <main className="flex-1 flex flex-col items-center justify-center px-4 pt-24 pb-16">
         {/* Error Icon */}
-        <div className="w-24 h-24 bg-[#FF6B35]/10 rounded-3xl flex items-center justify-center mb-6">
-          <Store size={44} className="text-[#FF6B35]" />
+        <div className="w-24 h-24 bg-[#FF6A00]/10 rounded-3xl flex items-center justify-center mb-6">
+          <Store size={44} className="text-[#FF6A00]" />
         </div>
         <h1 className="text-4xl font-black text-[#1A1F36] mb-3 tracking-tight">Page Not Found</h1>
         <p className="text-[15px] text-[#666] mb-8 max-w-md text-center">
@@ -245,7 +245,7 @@ export default function NotFound() {
         {suggestedShops.length > 0 && (
           <div className="w-full max-w-3xl">
             <div className="flex items-center gap-2 mb-5">
-              <MapPin size={16} className="text-[#FF6B35]" />
+              <MapPin size={16} className="text-[#FF6A00]" />
               <h2 className="text-[14px] font-bold text-[#1A1F36]">You might like these nearby</h2>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -253,9 +253,9 @@ export default function NotFound() {
                 <Link
                   key={shop.id}
                   href={`/shop/${slugify(shop.slug)}`}
-                  className="bg-white rounded-2xl border border-[#1A1F36]/[0.06] p-4 flex items-center gap-4 hover:border-[#FF6B35]/30 hover:shadow-md transition-all group"
+                  className="bg-white rounded-2xl border border-[#1A1F36]/[0.06] p-4 flex items-center gap-4 hover:border-[#FF6A00]/30 hover:shadow-md transition-all group"
                 >
-                  <div className="w-12 h-12 rounded-xl bg-[#FF6B35]/10 flex items-center justify-center flex-shrink-0 text-[#FF6B35] font-bold text-lg overflow-hidden">
+                  <div className="w-12 h-12 rounded-xl bg-[#FF6A00]/10 flex items-center justify-center flex-shrink-0 text-[#FF6A00] font-bold text-lg overflow-hidden">
                     {shop.logo
                       ? <img src={shop.logo.includes(" ") ? shop.logo.replace(/\s/g, "%20") : shop.logo} alt={shop.name} className="w-full h-full object-cover" />
                       : shop.name?.charAt(0)}
@@ -264,7 +264,7 @@ export default function NotFound() {
                     <p className="text-[13px] font-bold text-[#1A1F36] truncate">{shop.name}</p>
                     <p className="text-[11px] text-[#999] truncate">{shop.category}</p>
                   </div>
-                  <ArrowRight size={14} className="text-[#ccc] group-hover:text-[#FF6B35] flex-shrink-0 transition-colors" />
+                  <ArrowRight size={14} className="text-[#ccc] group-hover:text-[#FF6A00] flex-shrink-0 transition-colors" />
                 </Link>
               ))}
             </div>

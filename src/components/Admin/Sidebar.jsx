@@ -38,13 +38,13 @@ const Sidebar = ({ activeTab, onTabChange, isOpen, onClose, isCollapsed, onToggl
       }`}>
       <div className={`p-6 border-b border-[#1A1F36]/[0.03] flex items-center ${isCollapsed ? "justify-center" : "justify-between"}`}>
         <Link href="/" className="flex items-center gap-3">
-          <div className="w-9 h-9 bg-[#FF6B35] rounded-xl flex items-center justify-center shadow-md shadow-[#FF6B35]/20 shrink-0">
+          <div className="w-9 h-9 bg-[#FF6A00] rounded-xl flex items-center justify-center shadow-md shadow-[#FF6A00]/20 shrink-0">
             <ShieldCheck size={20} className="text-white" />
           </div>
           {!isCollapsed && (
             <div className="flex flex-col animate-in fade-in duration-300">
               <span className="text-[14px] font-bold text-[#1A1F36] tracking-tight leading-none">
-                Studio<span className="text-[#FF6B35]">Admin</span>
+                Studio<span className="text-[#FF6A00]">Admin</span>
               </span>
               <span className="text-[9px] font-bold text-[#1A1F36]/30 uppercase tracking-widest mt-1">
                 Authority Suite
@@ -95,7 +95,7 @@ const Sidebar = ({ activeTab, onTabChange, isOpen, onClose, isCollapsed, onToggl
               </span>
             )}
             {activeTab === item.id && !isCollapsed && (
-              <div className="ml-auto w-1.5 h-1.5 rounded-full bg-[#FF6B35]" />
+              <div className="ml-auto w-1.5 h-1.5 rounded-full bg-[#FF6A00]" />
             )}
           </button>
         ))}

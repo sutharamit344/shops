@@ -78,8 +78,8 @@ const EditShopPage = () => {
         <Navbar />
         <main className="max-w-2xl mx-auto px-4 py-32 text-center">
           <div className="bg-white rounded-2xl p-12 shadow-sm border border-black/[0.06] flex flex-col items-center">
-            <div className="w-16 h-16 bg-[#FF6B35]/10 rounded-2xl flex items-center justify-center mb-6 animate-pulse">
-              <Loader2 size={32} className="text-[#FF6B35] animate-spin" />
+            <div className="w-16 h-16 bg-[#FF6A00]/10 rounded-2xl flex items-center justify-center mb-6 animate-pulse">
+              <Loader2 size={32} className="text-[#FF6A00] animate-spin" />
             </div>
             <h1 className="text-xl font-bold text-[#0F0F0F] mb-1">Loading Editor</h1>
             <p className="text-[13px] text-[#666]">Fetching your shop details...</p>
@@ -129,7 +129,7 @@ const EditShopPage = () => {
               Your shop information has been updated successfully.
             </p>
             <div className="flex items-center justify-center gap-2 text-[11px] text-[#999]">
-              <div className="w-5 h-5 rounded-full border-2 border-[#FF6B35] border-t-transparent animate-spin"></div>
+              <div className="w-5 h-5 rounded-full border-2 border-[#FF6A00] border-t-transparent animate-spin"></div>
               <span>Redirecting to dashboard...</span>
             </div>
           </div>
@@ -143,9 +143,9 @@ const EditShopPage = () => {
       <Navbar />
       <main className="max-w-4xl mx-auto px-4 pt-24 md:pt-32 pb-20">
         <div className="text-center mb-10">
-          <div className="inline-flex items-center gap-2 px-3 py-1 bg-[#FF6B35]/10 rounded-full mb-4">
-            <Store size={14} className="text-[#FF6B35]" />
-            <span className="text-[10px] font-semibold text-[#FF6B35] uppercase tracking-wider">Management Mode</span>
+          <div className="inline-flex items-center gap-2 px-3 py-1 bg-[#FF6A00]/10 rounded-full mb-4">
+            <Store size={14} className="text-[#FF6A00]" />
+            <span className="text-[10px] font-semibold text-[#FF6A00] uppercase tracking-wider">Management Mode</span>
           </div>
           <h1 className="text-3xl md:text-4xl font-bold text-[#0F0F0F] mb-2 tracking-tight">
             Edit {initialData?.name}
@@ -169,11 +169,11 @@ const EditShopPage = () => {
         <div className="mt-8 text-center">
           <p className="text-[11px] text-[#999]">
             Need help? Check out our{' '}
-            <a href="/guide" className="text-[#FF6B35] hover:underline font-semibold">
+            <a href="/guide" className="text-[#FF6A00] hover:underline font-semibold">
               management guide
             </a>{' '}
             or{' '}
-            <a href="/contact" className="text-[#FF6B35] hover:underline font-semibold">
+            <a href="/contact" className="text-[#FF6A00] hover:underline font-semibold">
               contact support
             </a>
           </p>

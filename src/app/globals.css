@@ -1,8 +1,8 @@
 @import "tailwindcss";
 
 @theme {
-  --color-primary: #FF6B35;
-  --color-navy: #1A1F36;
+  --color-primary: #FF6A00;
+  --color-navy: #020617;
   --color-whatsapp: #25D366;
   --color-cream: #FAFAF8;
   --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
@@ -60,9 +60,9 @@
 
 :root {
   --background: #FAFAF8;
-  --foreground: #1A1F36;
-  --primary: #FF6B35;
-  --navy: #1A1F36;
+  --foreground: #020617;
+  --primary: #FF6A00;
+  --navy: #020617;
   --whatsapp: #25D366;
 }
 
@@ -70,7 +70,7 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans);
-  @apply antialiased selection:bg-[#FF6B35]/10 selection:text-[#FF6B35];
+  @apply antialiased selection:bg-[#FF6A00]/10 selection:text-[#FF6A00];
 }
 
 /* Custom Scrollbar */

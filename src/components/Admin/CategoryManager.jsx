@@ -120,7 +120,7 @@ const CategoryManager = () => {
 
   if (loading) return (
     <div className="flex flex-col items-center py-24 gap-4 text-center">
-      <Loader2 className="animate-spin text-[#FF6B35] w-10 h-10 mb-2" />
+      <Loader2 className="animate-spin text-[#FF6A00] w-10 h-10 mb-2" />
       <p className="text-[11px] font-bold text-[#999] uppercase tracking-[0.2em]">Retrieving Taxonomy...</p>
     </div>
   );
@@ -182,7 +182,7 @@ const CategoryManager = () => {
                     <div className="flex items-center gap-2">
                       <span className="text-[10px] text-[#999] font-bold uppercase tracking-widest">{cluster.category}</span>
                       {(cluster.area || cluster.city) && (
-                        <span className="text-[10px] text-[#FF6B35] font-bold uppercase tracking-widest">• {cluster.area}{cluster.area && cluster.city ? ', ' : ''}{cluster.city}</span>
+                        <span className="text-[10px] text-[#FF6A00] font-bold uppercase tracking-widest">• {cluster.area}{cluster.area && cluster.city ? ', ' : ''}{cluster.city}</span>
                       )}
                     </div>
                   </div>
@@ -213,7 +213,7 @@ const CategoryManager = () => {
       <section className="space-y-6">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 px-2">
           <div className="flex items-center gap-4">
-            <div className="w-1.5 h-10 bg-[#FF6B35] rounded-full shadow-lg shadow-[#FF6B35]/20"></div>
+            <div className="w-1.5 h-10 bg-[#FF6A00] rounded-full shadow-lg shadow-[#FF6A00]/20"></div>
             <div>
               <h2 className="text-2xl font-bold text-[#1A1F36] tracking-tight italic">Active Taxonomy</h2>
               <p className="text-[#999] font-medium text-[12px] tracking-wide uppercase">Verified industry groupings</p>
@@ -242,7 +242,7 @@ const CategoryManager = () => {
           maxWidth="max-w-md"
         >
           <div className="p-8">
-            <div className="w-14 h-14 bg-[#FF6B35] rounded-2xl flex items-center justify-center mb-6 shadow-lg shadow-[#FF6B35]/20">
+            <div className="w-14 h-14 bg-[#FF6A00] rounded-2xl flex items-center justify-center mb-6 shadow-lg shadow-[#FF6A00]/20">
               <Plus size={28} className="text-white" />
             </div>
             <h3 className="text-xl font-bold text-[#1A1F36] mb-1">New Classification</h3>
@@ -256,7 +256,7 @@ const CategoryManager = () => {
                   value={newCat}
                   onChange={(e) => setNewCat(e.target.value)}
                   placeholder="e.g. Luxury Watches"
-                  className="w-full h-14 rounded-xl bg-gray-50 border border-[#1A1F36]/[0.07] px-6 font-bold text-[#1A1F36] outline-none focus:border-[#FF6B35] transition-all"
+                  className="w-full h-14 rounded-xl bg-gray-50 border border-[#1A1F36]/[0.07] px-6 font-bold text-[#1A1F36] outline-none focus:border-[#FF6A00] transition-all"
                 />
               </div>
 
@@ -271,7 +271,7 @@ const CategoryManager = () => {
                 <button
                   type="submit"
                   disabled={adding || !newCat.trim()}
-                  className="flex-1 h-12 bg-[#FF6B35] text-white rounded-xl font-bold text-[13px] shadow-md shadow-[#FF6B35]/20 hover:bg-[#E85C25] transition-all disabled:opacity-50"
+                  className="flex-1 h-12 bg-[#FF6A00] text-white rounded-xl font-bold text-[13px] shadow-md shadow-[#FF6A00]/20 hover:bg-[#E85C25] transition-all disabled:opacity-50"
                 >
                   {adding ? <Loader2 className="animate-spin mx-auto" size={20} /> : "Initialize"}
                 </button>
@@ -282,13 +282,13 @@ const CategoryManager = () => {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
           {categories.map((cat) => (
-            <div key={cat.id} className={`group relative flex flex-col p-5 bg-white border rounded-2xl shadow-md transition-all hover:shadow-lg ${selectedCatForClusters?.id === cat.id ? 'border-[#FF6B35] ring-2 ring-[#FF6B35]/10' : 'border-[#1A1F36]/[0.07] hover:border-[#FF6B35]/30'}`}>
+            <div key={cat.id} className={`group relative flex flex-col p-5 bg-white border rounded-2xl shadow-md transition-all hover:shadow-lg ${selectedCatForClusters?.id === cat.id ? 'border-[#FF6A00] ring-2 ring-[#FF6A00]/10' : 'border-[#1A1F36]/[0.07] hover:border-[#FF6A00]/30'}`}>
               <div className="flex items-center justify-between gap-3 mb-4">
                 <div
                   className="flex items-center gap-3 cursor-pointer flex-1"
                   onClick={() => setSelectedCatForClusters(selectedCatForClusters?.id === cat.id ? null : cat)}
                 >
-                  <div className="w-8 h-8 bg-gray-50 rounded-lg flex items-center justify-center text-[#FF6B35] group-hover:rotate-12 transition-transform">
+                  <div className="w-8 h-8 bg-gray-50 rounded-lg flex items-center justify-center text-[#FF6A00] group-hover:rotate-12 transition-transform">
                     <Tag size={14} />
                   </div>
                   <span className="text-[14px] font-bold text-[#1A1F36] tracking-tight">{cat.name}</span>

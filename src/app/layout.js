@@ -30,6 +30,15 @@ export const metadata = {
     type: "website",
   },
   manifest: "/manifest.json",
+  icons: {
+    icon: [
+      { url: "/sb-logo.png", sizes: "192x192", type: "image/png" },
+      { url: "/sb-logo.png", sizes: "512x512", type: "image/png" },
+    ],
+    apple: [
+      { url: "/sb-logo.png", sizes: "180x180", type: "image/png" },
+    ],
+  },
 };
 
 export const viewport = {
@@ -38,6 +47,8 @@ export const viewport = {
   initialScale: 1,
   maximumScale: 1,
 };
+
+import AppWrapper from "@/components/AppWrapper";
 
 export default function RootLayout({ children }) {
   return (
@@ -48,7 +59,9 @@ export default function RootLayout({ children }) {
           <LocationInit />
           <ModalContainer />
           <PWARegistration />
-          {children}
+          <AppWrapper>
+            {children}
+          </AppWrapper>
         </ReduxProvider>
       </body>
     </html>

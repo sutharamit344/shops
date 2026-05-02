@@ -22,10 +22,18 @@ const LocationModal = ({ isOpen, onClose, detectedLocation, onConfirm }) => {
     pincode: detectedLocation?.pincode || ""
   });
 
-  // Update map coords if detected location comes in initially with coordinates
+  // Sync edited data when detected location changes
   useEffect(() => {
-    if (detectedLocation?.lat && detectedLocation?.lng) {
-      setMapCoords({ lat: detectedLocation.lat, lng: detectedLocation.lng });
+    if (detectedLocation) {
+      setEditedData({
+        area: detectedLocation.area || "",
+        city: detectedLocation.city || "",
+        village: detectedLocation.village || "",
+        pincode: detectedLocation.pincode || ""
+      });
+      if (detectedLocation.lat && detectedLocation.lng) {
+        setMapCoords({ lat: detectedLocation.lat, lng: detectedLocation.lng });
+      }
     }
   }, [detectedLocation]);
 
@@ -101,7 +109,7 @@ const LocationModal = ({ isOpen, onClose, detectedLocation, onConfirm }) => {
       <div className="bg-white w-full max-w-md rounded-[32px] overflow-hidden shadow-2xl animate-in zoom-in-95 duration-300">
         <div className="p-8">
           <div className="flex items-center gap-4 mb-6">
-            <div className="w-12 h-12 rounded-2xl bg-[#FF6B35]/10 flex items-center justify-center text-[#FF6B35]">
+            <div className="w-12 h-12 rounded-2xl bg-[#FF6A00]/10 flex items-center justify-center text-[#FF6A00]">
               <MapPin size={24} />
             </div>
             <div>
@@ -113,23 +121,23 @@ const LocationModal = ({ isOpen, onClose, detectedLocation, onConfirm }) => {
           {!isEditing ? (
             <div className="bg-[#FAFAF8] rounded-2xl p-6 border border-[#1A1F36]/[0.04] mb-8">
               <div className="space-y-4">
-                {detectedLocation?.village && (
+                {detectedLocation?.village && detectedLocation.village !== detectedLocation.area && (
                   <div className="flex items-center gap-3">
-                    <div className="w-2 h-2 rounded-full bg-blue-400" />
-                    <span className="text-[15px] font-medium text-[#1A1F36]/70">Village: {detectedLocation.village}</span>
+                    <div className="w-2 h-2 rounded-full bg-blue-400/40" />
+                    <span className="text-[14px] font-medium text-[#1A1F36]/50">{detectedLocation.village}</span>
                   </div>
                 )}
                 {detectedLocation?.area && (
                   <div className="flex items-center gap-3">
-                    <div className="w-2 h-2 rounded-full bg-[#FF6B35]" />
+                    <div className="w-2 h-2 rounded-full bg-[#FF6A00]" />
                     <span className="text-[17px] font-extrabold text-[#1A1F36]">{detectedLocation.area}</span>
                   </div>
                 )}
                 <div className="flex items-center gap-3">
-                  <div className="w-2 h-2 rounded-full bg-[#1A1F36]/20" />
-                  <span className="text-[15px] font-medium text-[#1A1F36]/70">
+                  <div className="w-2 h-2 rounded-full bg-[#1A1F36]/10" />
+                  <span className="text-[14px] font-bold text-[#1A1F36]/40">
                     {detectedLocation?.city}
-                    {detectedLocation?.pincode && ` - ${detectedLocation.pincode}`}
+                    {detectedLocation?.pincode && ` • ${detectedLocation.pincode}`}
                   </span>
                 </div>
               </div>
@@ -149,7 +157,7 @@ const LocationModal = ({ isOpen, onClose, detectedLocation, onConfirm }) => {
                   <MapComponent center={mapCoords} onLocationSelect={handleMapClick} />
                   {isGeocoding && (
                     <div className="absolute inset-0 bg-white/60 backdrop-blur-[2px] z-10 flex items-center justify-center rounded-2xl">
-                      <Loader2 size={24} className="text-[#FF6B35] animate-spin" />
+                      <Loader2 size={24} className="text-[#FF6A00] animate-spin" />
                     </div>
                   )}
                 </div>
@@ -202,7 +210,7 @@ const LocationModal = ({ isOpen, onClose, detectedLocation, onConfirm }) => {
                 <Button 
                   variant="primary" 
                   size="lg" 
-                  className="w-full shadow-lg shadow-[#FF6B35]/20"
+                  className="w-full shadow-lg shadow-[#FF6A00]/20"
                   icon={Check}
                   onClick={handleConfirm}
                 >

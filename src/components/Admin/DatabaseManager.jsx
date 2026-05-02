@@ -175,7 +175,7 @@ const DatabaseManager = () => {
           ownerId: "pro_seeder",
           isCertified: Math.random() > 0.3,
           businessHours: "10:00 AM - 8:00 PM",
-          primaryColor: "#FF6B35",
+          primaryColor: "#FF6A00",
           secondaryColor: "#1A1F36"
         };
 
@@ -264,16 +264,16 @@ const DatabaseManager = () => {
         </div>
         <button 
           onClick={fetchStats}
-          className="w-12 h-12 bg-white border border-[#1A1F36]/[0.07] rounded-xl flex items-center justify-center hover:border-[#FF6B35]/30 transition-all text-[#1A1F36]/60 shadow-sm"
+          className="w-12 h-12 bg-white border border-[#1A1F36]/[0.07] rounded-xl flex items-center justify-center hover:border-[#FF6A00]/30 transition-all text-[#1A1F36]/60 shadow-sm"
         >
-          <RefreshCw size={20} className={loading ? "animate-spin text-[#FF6B35]" : ""} />
+          <RefreshCw size={20} className={loading ? "animate-spin text-[#FF6A00]" : ""} />
         </button>
       </div>
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {[
-          { id: "shops", label: "Total Shops", count: stats.shops, icon: Package, color: "#FF6B35" },
+          { id: "shops", label: "Total Shops", count: stats.shops, icon: Package, color: "#FF6A00" },
           { id: "locations", label: "Cached Locations", count: stats.locations, icon: MapPin, color: "#1A1F36" },
           { id: "categories", label: "Categories", count: stats.categories, icon: Tag, color: "#25D366" },
           { id: "clusters", label: "Clusters", count: stats.clusters, icon: ShieldCheck, color: "#6366f1" }
@@ -377,9 +377,9 @@ const DatabaseManager = () => {
                 key={amount}
                 disabled={status !== "idle" && status !== "finished"}
                 onClick={() => seedData(amount)}
-                className="h-24 rounded-2xl border-2 border-dashed border-[#1A1F36]/[0.1] hover:border-[#FF6B35] hover:bg-[#FF6B35]/5 transition-all flex flex-col items-center justify-center gap-2 group disabled:opacity-50"
+                className="h-24 rounded-2xl border-2 border-dashed border-[#1A1F36]/[0.1] hover:border-[#FF6A00] hover:bg-[#FF6A00]/5 transition-all flex flex-col items-center justify-center gap-2 group disabled:opacity-50"
               >
-                <span className="text-2xl font-black text-[#1A1F36] group-hover:text-[#FF6B35]">{amount}</span>
+                <span className="text-2xl font-black text-[#1A1F36] group-hover:text-[#FF6A00]">{amount}</span>
                 <span className="text-[10px] font-bold text-[#999] uppercase tracking-widest">Shops</span>
               </button>
             ))}
@@ -413,7 +413,7 @@ const DatabaseManager = () => {
           {(status === "idle" || status === "finished") ? (
             <div className="space-y-6 relative z-10">
               <div className="w-20 h-20 bg-white/10 rounded-3xl flex items-center justify-center mx-auto mb-4">
-                <BarChart3 size={40} className="text-[#FF6B35]" />
+                <BarChart3 size={40} className="text-[#FF6A00]" />
               </div>
               <h3 className="text-2xl font-bold tracking-tight">System Ready</h3>
               <p className="text-white/40 text-[14px] max-w-xs mx-auto">Select a seeding option to begin populating your marketplace with proper data.</p>
@@ -427,7 +427,7 @@ const DatabaseManager = () => {
           ) : (
             <div className="w-full space-y-8 relative z-10">
               <div className="w-20 h-20 bg-white/10 rounded-3xl flex items-center justify-center mx-auto mb-4 animate-pulse">
-                {status === "clearing" ? <Trash2 size={40} className="text-red-400" /> : <Loader2 size={40} className="text-[#FF6B35] animate-spin" />}
+                {status === "clearing" ? <Trash2 size={40} className="text-red-400" /> : <Loader2 size={40} className="text-[#FF6A00] animate-spin" />}
               </div>
               <div className="space-y-2">
                 <h3 className="text-2xl font-bold tracking-tight">
@@ -440,7 +440,7 @@ const DatabaseManager = () => {
               
               <div className="w-full h-3 bg-white/5 rounded-full overflow-hidden border border-white/10">
                 <div 
-                  className="h-full bg-[#FF6B35] transition-all duration-300"
+                  className="h-full bg-[#FF6A00] transition-all duration-300"
                   style={{ width: status === "clearing" ? "100%" : `${(progress.current / progress.total) * 100}%` }}
                 />
               </div>

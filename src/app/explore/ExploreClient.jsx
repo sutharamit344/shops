@@ -94,30 +94,25 @@ export default function ExploreClient() {
     const lastPin = localStorage.getItem('last_pincode');
     const lastLat = localStorage.getItem('last_lat');
     const lastLng = localStorage.getItem('last_lng');
-    
+
     // PERSISTENT LOCATION: Load cached coords even if live GPS is off
     if (lastLat && lastLng && !userCoords) {
-      dispatch(setUserCoords({ 
-        coords: { lat: parseFloat(lastLat), lng: parseFloat(lastLng) }, 
-        name: lastArea || lastCity 
+      dispatch(setUserCoords({
+        coords: { lat: parseFloat(lastLat), lng: parseFloat(lastLng) },
+        name: lastArea || lastCity
       }));
     }
 
     if (!localCity && !isNearbyActive) {
-      setLocalSubtitle("");
+      // Auto-trigger detection if no city is set
+      detectLocation();
       return;
     }
 
-    if (localCity && lastCity && localCity.toLowerCase() === lastCity.toLowerCase()) {
-      let sub = lastArea && lastArea !== "current" ? lastArea : "";
-      if (sub && lastCity) sub += `, ${lastCity}`;
-      else if (lastCity) sub = lastCity;
-      if (sub && lastPin) sub += ` ${lastPin}`;
-      setLocalSubtitle(sub);
-    } else if (localCity) {
+    if (localCity) {
       setLocalSubtitle(`${localArea ? localArea + ', ' : ''}${localCity}`);
-    } else if (isNearbyActive && lastCity) {
-       setLocalSubtitle(`${lastArea ? lastArea + ', ' : ''}${lastCity}`);
+    } else if (lastCity) {
+      setLocalSubtitle(`${lastArea ? lastArea + ', ' : ''}${lastCity}`);
     }
   }, [localCity, localArea, isNearbyActive]);
 
@@ -131,13 +126,7 @@ export default function ExploreClient() {
 
     localStorage.setItem('last_city', cleanCity);
     if (cleanArea) localStorage.setItem('last_area', cleanArea);
-
     if (pincode) localStorage.setItem('last_pincode', pincode);
-    else localStorage.removeItem('last_pincode');
-
-    if (village) localStorage.setItem('last_village', village);
-    else localStorage.removeItem('last_village');
-
     localStorage.setItem('last_lat', lat);
     localStorage.setItem('last_lng', lng);
 
@@ -146,9 +135,9 @@ export default function ExploreClient() {
       : `${cleanCity}${pincode ? ' ' + pincode : ''}`;
 
     setLocalSubtitle(displayLocation);
-    dispatch(setUserCoords({ 
-      coords: { lat, lng }, 
-      name: cleanArea || cleanCity 
+    dispatch(setUserCoords({
+      coords: { lat, lng },
+      name: cleanArea || cleanCity
     }));
 
     // Auto-update Redux filters to match
@@ -199,12 +188,26 @@ export default function ExploreClient() {
           const data = await res.json();
           const address = data.address || {};
 
-          const city = address.city || address.city_district || address.state_district || address.town || address.village || "";
-          const area = address.suburb || address.neighbourhood || address.residential || "";
-          const village = address.village || address.hamlet || "";
+          const city = address.city || address.city_district || address.state_district || address.town || "";
+
+          // AREA INTELLIGENCE: Prioritize suburb/neighbourhood but check everything
+          let area = address.suburb ||
+            address.neighbourhood ||
+            address.residential ||
+            address.quarter ||
+            address.industrial ||
+            address.village ||
+            address.hamlet || "";
+
+          let village = address.village || address.hamlet || "";
+
+          // CLEANUP: Remove redundant or overly generic names
+          if (village.toLowerCase().includes("city") || village.toLowerCase() === city.toLowerCase()) village = "";
+          if (area.toLowerCase() === city.toLowerCase()) area = "";
+
           const pincode = address.postcode || "";
 
-          setDetectedData({ city, area, village, pincode });
+          setDetectedData({ city, area, village, pincode, lat: latitude, lng: longitude });
           setPendingCoords({ lat: latitude, lng: longitude });
           setIsModalOpen(true);
         } catch (error) {
@@ -239,9 +242,8 @@ export default function ExploreClient() {
   };
 
   useEffect(() => {
-    if (searchParams.get("nearby") === "true" && !searchParams.get("city") && !isDetecting) {
-      detectLocation();
-    }
+    // Auto-detect location on every mount/reload
+    detectLocation();
   }, []);
 
   useEffect(() => {
@@ -328,15 +330,7 @@ export default function ExploreClient() {
             <SmartSearch />
           </div>
           <div className="flex items-center gap-2 transition-all duration-300">
-            <Button
-              variant={isNearbyActive ? "primary" : "ghost"}
-              onClick={handleNearbyToggle}
-              loading={isDetecting}
-              icon={Navigation}
-              className="px-3 md:px-5"
-            >
-              <span className="hidden md:inline">{isNearbyActive ? "Near Me Active" : "Near Me"}</span>
-            </Button>
+
             <Button
               variant={activeFilterCount > 0 ? "primary" : "ghost"}
               onClick={() => setIsFilterOpen(true)}
@@ -350,16 +344,13 @@ export default function ExploreClient() {
                 </span>
               )}
             </Button>
-            <Button variant="ghost" onClick={handleReset} icon={RotateCcw} className="px-3 md:px-5">
-              <span className="hidden md:inline">Reset</span>
-            </Button>
           </div>
         </div>
       </div>
 
-      <DiscoveryView 
-        title={titleText} 
-        subtitle={isNearbyActive ? localSubtitle : ""} 
+      <DiscoveryView
+        title={titleText}
+        subtitle={localSubtitle || "Select Location"}
         onSubtitleClick={() => {
           setDetectedData({
             city: localCity || localStorage.getItem('last_city') || "",
@@ -371,11 +362,13 @@ export default function ExploreClient() {
           });
           setIsModalOpen(true);
         }}
+        onRefresh={detectLocation}
+        isDetecting={isDetecting}
       />
 
-      <FilterModal 
-        isOpen={isFilterOpen} 
-        onClose={() => setIsFilterOpen(false)} 
+      <FilterModal
+        isOpen={isFilterOpen}
+        onClose={() => setIsFilterOpen(false)}
       />
 
       <LocationModal
@@ -385,7 +378,7 @@ export default function ExploreClient() {
         onConfirm={(confirmed, isManual, mapCoords) => {
           const finalLat = mapCoords ? mapCoords.lat : (pendingCoords ? pendingCoords.lat : null);
           const finalLng = mapCoords ? mapCoords.lng : (pendingCoords ? pendingCoords.lng : null);
-          
+
           applyLocation(
             confirmed.city,
             confirmed.area,

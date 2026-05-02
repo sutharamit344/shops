@@ -57,7 +57,7 @@ export default function Dialog({
           <div className="flex items-center justify-between p-5 border-b border-black/[0.06]">
             <div className="flex items-center gap-3">
               {Icon && (
-                <div className="w-9 h-9 rounded-xl bg-[#FF6B35]/10 flex items-center justify-center text-[#FF6B35]">
+                <div className="w-9 h-9 rounded-xl bg-[#FF6A00]/10 flex items-center justify-center text-[#FF6A00]">
                   <Icon size={18} />
                 </div>
               )}

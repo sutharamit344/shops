@@ -72,8 +72,8 @@ const GlobalActivity = () => {
 
       <div className="space-y-4">
         {paginatedLogs.map((log) => (
-          <div key={log.id} className="p-6 bg-white border border-[#1A1F36]/[0.07] hover:border-[#FF6B35]/30 hover:shadow-lg transition-all rounded-2xl relative overflow-hidden group shadow-md">
-            <div className="absolute top-0 left-0 w-1.5 h-full bg-[#1A1F36]/5 group-hover:bg-[#FF6B35] transition-colors"></div>
+          <div key={log.id} className="p-6 bg-white border border-[#1A1F36]/[0.07] hover:border-[#FF6A00]/30 hover:shadow-lg transition-all rounded-2xl relative overflow-hidden group shadow-md">
+            <div className="absolute top-0 left-0 w-1.5 h-full bg-[#1A1F36]/5 group-hover:bg-[#FF6A00] transition-colors"></div>
             <div className="flex items-start gap-6">
               <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 border transition-all ${
                 log.action.includes('APPROVE') ? 'bg-green-50 text-green-600 border-green-100' : 
@@ -94,7 +94,7 @@ const GlobalActivity = () => {
                     </span>
                   </div>
                   <div className="text-[12px] font-bold text-[#1A1F36] flex items-center gap-2">
-                     <User size={12} className="text-[#FF6B35]" /> {log.performedBy}
+                     <User size={12} className="text-[#FF6A00]" /> {log.performedBy}
                   </div>
                 </div>
                 
@@ -102,7 +102,7 @@ const GlobalActivity = () => {
                 
                 {log.entityId && (
                   <div className="text-[11px] font-bold text-[#999] uppercase tracking-widest flex items-center gap-2">
-                    <span className="opacity-40">Ref:</span> <span className="text-[#FF6B35]">{log.entityId.slice(0, 8)}...</span> <ArrowRight size={12} className="opacity-40" /> <span className="text-[#1A1F36]">{log.entityType}</span>
+                    <span className="opacity-40">Ref:</span> <span className="text-[#FF6A00]">{log.entityId.slice(0, 8)}...</span> <ArrowRight size={12} className="opacity-40" /> <span className="text-[#1A1F36]">{log.entityType}</span>
                   </div>
                 )}
               </div>

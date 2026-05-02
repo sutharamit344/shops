@@ -10,6 +10,12 @@ import Select from "@/components/UI/Select";
 import Textarea from "@/components/UI/Textarea";
 import Button from "@/components/UI/Button";
 import Card from "@/components/UI/Card";
+import dynamic from 'next/dynamic';
+
+const MapComponent = dynamic(() => import("@/components/UI/MapComponent"), { 
+  ssr: false,
+  loading: () => <div className="w-full h-[250px] bg-gray-100 animate-pulse rounded-2xl flex items-center justify-center text-gray-400 font-medium">Loading Map...</div>
+});
 
 // Icons
 import { Save, CheckCircle2, AlertCircle, Plus, Loader2, Zap, MapPin, Phone, Info, X, ChevronRight, ChevronLeft, ImageIcon, Star, Palette, ShieldCheck, Clock, Navigation } from "lucide-react";
@@ -30,7 +36,7 @@ const ShopForm = ({ initialData, onSubmit, isEdit = false, isLoading = false, er
     phone: "",
     description: "",
     mapEmbed: "",
-    primaryColor: "#FF6B35",
+    primaryColor: "#FF6A00",
     secondaryColor: "#1A1F36",
     rating: "5.0",
     logo: "",
@@ -93,40 +99,7 @@ const ShopForm = ({ initialData, onSubmit, isEdit = false, isLoading = false, er
     }
   }, [formData, isEdit]);
 
-  useEffect(() => {
-    const fetchPincodeDetails = async () => {
-      const pin = formData.pincode;
-      if (pin && pin.length === 6) {
-        try {
-          setUploadStatus("Searching location for PIN Code...");
-          const res = await fetch(`https://api.postalpincode.in/pincode/${pin}`);
-          const data = await res.json();
 
-          if (data && data[0] && data[0].Status === "Success") {
-            const offices = data[0].PostOffice;
-            setPincodeAreas(offices.map(o => o.Name));
-
-            const first = offices[0];
-            setFormData(prev => ({
-              ...prev,
-              city: first.District || first.Division || "",
-              state: first.State,
-              area: first.Name,
-              village: first.Block || "" // In India, Block often represents the village cluster
-            }));
-            setUploadStatus("");
-          } else {
-            setPincodeAreas([]);
-            setUploadStatus("");
-          }
-        } catch (error) {
-          console.error("PIN Code API failed:", error);
-          setUploadStatus("");
-        }
-      }
-    };
-    fetchPincodeDetails();
-  }, [formData.pincode]);
 
   useEffect(() => {
     const init = async () => {
@@ -165,20 +138,6 @@ const ShopForm = ({ initialData, onSubmit, isEdit = false, isLoading = false, er
     let { name, value } = e.target;
     if (name === "category") {
       setShowNewCategoryInput(value === "OTHER_PROPOSE");
-
-      // Auto-assign clusterType based on category
-      const lowVal = value.toLowerCase();
-      let cluster = "";
-      if (lowVal.includes("food") || lowVal.includes("restaurant") || lowVal.includes("cafe")) cluster = "Food & Dining";
-      else if (lowVal.includes("salon") || lowVal.includes("spa") || lowVal.includes("beauty")) cluster = "Beauty & Wellness";
-      else if (lowVal.includes("electronic") || lowVal.includes("mobile") || lowVal.includes("computer")) cluster = "Electronics Market";
-      else if (lowVal.includes("cloth") || lowVal.includes("fashion") || lowVal.includes("boutique")) cluster = "Fashion Hub";
-      else if (lowVal.includes("grocery") || lowVal.includes("kirana") || lowVal.includes("supermarket")) cluster = "Daily Essentials";
-
-      if (cluster) {
-        setFormData(prev => ({ ...prev, [name]: value, clusterType: cluster }));
-        return;
-      }
     }
     if (name === "clusterType") {
       setShowCustomCluster(value === "CUSTOM");
@@ -213,7 +172,7 @@ const ShopForm = ({ initialData, onSubmit, isEdit = false, isLoading = false, er
 
   const internalSubmit = async (e) => {
     if (e) e.preventDefault();
-    
+
     // If user hits 'Enter' on Step 1, move to Step 2 instead of submitting
     if (currentStep < totalSteps) {
       nextStep();
@@ -324,7 +283,7 @@ const ShopForm = ({ initialData, onSubmit, isEdit = false, isLoading = false, er
             </div>
             <p className="text-[13px] font-medium text-amber-900">We found a saved draft. You can continue or start over.</p>
           </div>
-          <button 
+          <button
             type="button"
             onClick={clearDraft}
             className="text-[11px] font-bold text-amber-700 uppercase tracking-wider hover:text-amber-900 transition-colors"
@@ -336,14 +295,14 @@ const ShopForm = ({ initialData, onSubmit, isEdit = false, isLoading = false, er
       {/* ── PROGRESS STEPS ─────────────────────────────────────── */}
       <div className="max-w-xl mx-auto mb-16 relative">
         <div className="absolute top-5 left-0 w-full h-[2px] bg-[#1A1F36]/[0.06] -z-0">
-          <div className="h-full bg-[#FF6B35] transition-all duration-700 ease-in-out" style={{ width: `${((currentStep - 1) / (totalSteps - 1)) * 100}%` }} />
+          <div className="h-full bg-[#FF6A00] transition-all duration-700 ease-in-out" style={{ width: `${((currentStep - 1) / (totalSteps - 1)) * 100}%` }} />
         </div>
         <div className="relative flex justify-between z-10">
           {steps.map((step, i) => (
             <div key={i} className="flex flex-col items-center">
               <div className={`w-10 h-10 rounded-2xl flex items-center justify-center font-bold text-[13px] transition-all duration-500 shadow-md
                 ${currentStep > i + 1
-                  ? "bg-[#FF6B35] text-white"
+                  ? "bg-[#FF6A00] text-white"
                   : currentStep === i + 1
                     ? "bg-[#1A1F36] text-white scale-110 shadow-md"
                     : "bg-white text-[#1A1F36]/20 border border-[#1A1F36]/[0.06]"
@@ -384,30 +343,32 @@ const ShopForm = ({ initialData, onSubmit, isEdit = false, isLoading = false, er
             </div>
 
             <div className="space-y-8">
-              <div className="w-full">
+              <div className="w-full flex flex-col md:flex-row gap-6">
                 <ImageUpload
-                  label="Background Cover Image"
                   onSelect={(file) => {
-                    setCoverFile(file);
-                    setCoverPreview(file ? URL.createObjectURL(file) : "");
+                    setLogoFile(file);
+                    setLogoPreview(file ? URL.createObjectURL(file) : "");
                   }}
-                  currentImage={coverPreview}
-                  helpText="Recommended size: 1200x400. This will appear as the banner on your shop profile."
+                  currentImage={logoPreview}
+
+                  className="aspect-[4/3]"
+                  label="Store Logo"
                 />
+                <div className="flex-1">
+                  <ImageUpload
+                    label="Background Cover Image"
+                    onSelect={(file) => {
+                      setCoverFile(file);
+                      setCoverPreview(file ? URL.createObjectURL(file) : "");
+                    }}
+                    className="w-full h-36"
+                    currentImage={coverPreview}
+                    helpText="Recommended size: 1200x400. This will appear as the banner on your shop profile."
+                  /></div>
               </div>
 
               <div className="flex flex-col md:flex-row gap-8 items-start">
-                <div className="shrink-0">
-                  <ImageUpload
-                    onSelect={(file) => {
-                      setLogoFile(file);
-                      setLogoPreview(file ? URL.createObjectURL(file) : "");
-                    }}
-                    currentImage={logoPreview}
-                    compact
-                    label="Store Logo"
-                  />
-                </div>
+
                 <div className="flex-1 w-full">
                   <Input
                     label="Business Name"
@@ -420,6 +381,16 @@ const ShopForm = ({ initialData, onSubmit, isEdit = false, isLoading = false, er
                   />
                 </div>
               </div>
+              <Textarea
+                label="Store Description"
+                name="description"
+                value={formData.description}
+                onChange={handleChange}
+                placeholder="What makes your store unique? Mention your best-sellers or specialties..."
+                required
+                rows={3}
+                helpText="A brief overview of your business for search results."
+              />
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-4">
@@ -463,49 +434,8 @@ const ShopForm = ({ initialData, onSubmit, isEdit = false, isLoading = false, er
                 />
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-4">
-                  <Select
-                    label="Cluster / Group Name"
-                    name="clusterType"
-                    value={showCustomCluster ? "CUSTOM" : formData.clusterType}
-                    onChange={handleChange}
-                    options={[
-                      { value: "", label: "Select a cluster", disabled: true },
-                      ...dbClusters
-                        .filter(c => !formData.category || c.category === formData.category)
-                        .map(c => ({ value: c.name, label: c.name })),
-                      { value: "CUSTOM", label: "➕ Custom Cluster..." }
-                    ]}
-                    helpText="Groups your business with similar local hubs"
-                  />
-                  {showCustomCluster && (
-                    <div className="animate-in slide-in-from-top-2 duration-300">
-                      <Input
-                        label="Custom Cluster Name"
-                        value={proposedCluster}
-                        onChange={(e) => setProposedCluster(e.target.value)}
-                        placeholder="e.g., Organic Food Park"
-                        required
-                      />
-                    </div>
-                  )}
-                </div>
-                <div className="flex items-end">
-                  <p className="text-[11px] text-[#1A1F36]/40 font-medium mb-3">Helping users find you in "hub" searches like 'Electronics Market'.</p>
-                </div>
-              </div>
 
-              <Textarea
-                label="Store Description"
-                name="description"
-                value={formData.description}
-                onChange={handleChange}
-                placeholder="What makes your store unique? Mention your best-sellers or specialties..."
-                required
-                rows={3}
-                helpText="A brief overview of your business for search results."
-              />
+
             </div>
           </div>
         )}
@@ -513,50 +443,60 @@ const ShopForm = ({ initialData, onSubmit, isEdit = false, isLoading = false, er
         {/* ── STEP 2: LOCATION ───────────────────────────────────── */}
         {currentStep === 2 && (
           <div className="space-y-8 animate-in fade-in duration-500 slide-in-from-bottom-2">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="flex flex-col  gap-4">
               <div>
                 <h2 className="text-2xl font-extrabold text-[#1A1F36] tracking-tight mb-2">Reach & Location</h2>
                 <p className="text-[15px] text-[#1A1F36]/50 font-medium">Connect your business with local customers in your area.</p>
               </div>
-              <button
-                type="button"
-                onClick={async () => {
-                  if (!navigator.geolocation) return alert("Geolocation not supported");
-                  setUploadStatus("Detecting your location...");
-                  navigator.geolocation.getCurrentPosition(async (pos) => {
-                    try {
-                      const { latitude, longitude } = pos.coords;
-                      const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`);
-                      const data = await res.json();
-                      const addr = data.address || {};
+              <div className="bg-[#FAFAF8] rounded-3xl p-6 border border-[#1A1F36]/[0.06] mb-8">
+                <p className="text-[14px] text-[#1A1F36]/60 font-bold mb-4 flex items-center gap-2">
+                  <MapPin size={16} className="text-[#FF6A00]" />
+                  Pin your shop location on the map
+                </p>
+                <MapComponent
+                  center={{
+                    lat: formData.lat || 23.0225,
+                    lng: formData.lng || 72.5714
+                  }}
+                  onLocationSelect={(coords) => {
+                    setFormData(prev => ({
+                      ...prev,
+                      lat: coords.lat,
+                      lng: coords.lng
+                    }));
+                  }}
+                />
 
-                      // Priority for City: Major City > District > State District > Town/Village
-                      const city = addr.city || addr.city_district || addr.state_district || addr.town || addr.village || "";
-                      const area = addr.suburb || addr.neighbourhood || addr.residential || "";
-                      const village = addr.village || addr.hamlet || addr.isolated_dwelling || "";
+                <div className="flex flex-wrap items-center gap-4 mt-4">
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      if (!navigator.geolocation) return alert("Geolocation not supported");
+                      setUploadStatus("Fetching current GPS...");
+                      navigator.geolocation.getCurrentPosition((pos) => {
+                        const { latitude, longitude } = pos.coords;
+                        setFormData(prev => ({
+                          ...prev,
+                          lat: latitude,
+                          lng: longitude
+                        }));
+                        setUploadStatus("");
+                      }, () => setUploadStatus(""));
+                    }}
+                    className="flex items-center gap-2 px-4 py-2 bg-[#FF6A00]/10 text-[#FF6A00] rounded-xl text-[13px] font-bold hover:bg-[#FF6A00]/20 transition-all active:scale-95 border border-[#FF6A00]/10"
+                  >
+                    <Navigation size={14} />
+                    Auto-detect My Location
+                  </button>
 
-                      setFormData(prev => ({
-                        ...prev,
-                        city: city.replace(/ District| Division/g, ""),
-                        state: addr.state || "",
-                        area: area || "",
-                        village: village || "",
-                        pincode: addr.postcode || "",
-                        lat: latitude,
-                        lng: longitude
-                      }));
-                      setUploadStatus("");
-                    } catch (err) {
-                      console.error(err);
-                      setUploadStatus("");
-                    }
-                  }, () => setUploadStatus(""));
-                }}
-                className="flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-600 rounded-xl text-[13px] font-bold hover:bg-blue-100 transition-all active:scale-95 self-start"
-              >
-                <Navigation size={14} />
-                Use My Location
-              </button>
+                  {formData.lat && (
+                    <div className="flex items-center gap-2 px-4 py-2 bg-[#25D366]/10 text-[#25D366] rounded-xl border border-[#25D366]/20">
+                      <div className="w-2 h-2 rounded-full bg-[#25D366] animate-pulse" />
+                      <span className="text-[13px] font-bold tracking-tight">Location Captured</span>
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
 
             <div className="space-y-6">
@@ -632,6 +572,37 @@ const ShopForm = ({ initialData, onSubmit, isEdit = false, isLoading = false, er
                 />
               </div>
 
+              <div className="relative">
+                <Input
+                  label="Cluster / Group Name (Optional)"
+                  name="clusterType"
+                  value={formData.clusterType}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setFormData(prev => ({ ...prev, clusterType: val }));
+                  }}
+                  placeholder="e.g., Gota Shopping Hub"
+                  helpText="Type to see suggestions. Groups your business with similar local hubs."
+                  autoComplete="off"
+                />
+                {formData.clusterType && dbClusters.filter(c => c.name.toLowerCase().includes(formData.clusterType.toLowerCase()) && c.name !== formData.clusterType).length > 0 && (
+                  <div className="absolute z-50 left-0 right-0 top-[calc(100%-8px)] bg-white border border-[#1A1F36]/[0.08] rounded-xl shadow-xl max-h-48 overflow-y-auto animate-in fade-in slide-in-from-top-1 duration-200">
+                    {dbClusters
+                      .filter(c => c.name.toLowerCase().includes(formData.clusterType.toLowerCase()))
+                      .map((c, i) => (
+                        <button
+                          key={i}
+                          type="button"
+                          className="w-full text-left px-4 py-2.5 text-[13px] font-medium text-[#1A1F36] hover:bg-[#FF6A00]/5 hover:text-[#FF6A00] transition-colors border-b border-[#1A1F36]/[0.04] last:border-0"
+                          onClick={() => setFormData(prev => ({ ...prev, clusterType: c.name }))}
+                        >
+                          {c.name}
+                        </button>
+                      ))}
+                  </div>
+                )}
+              </div>
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pb-6 border-b border-black/[0.04]">
                 <div className="grid grid-cols-2 gap-4">
                   <Input
@@ -656,7 +627,7 @@ const ShopForm = ({ initialData, onSubmit, isEdit = false, isLoading = false, er
               <div className="p-8 bg-[#1A1F36] rounded-3xl text-white relative overflow-hidden shadow-2xl">
                 <div className="absolute top-0 right-0 p-8 opacity-10"><ShieldCheck size={120} /></div>
                 <div className="relative z-10 max-w-lg">
-                  <h3 className="text-[11px] font-bold text-[#FF6B35] uppercase tracking-[0.2em] mb-4">Final Review</h3>
+                  <h3 className="text-[11px] font-bold text-[#FF6A00] uppercase tracking-[0.2em] mb-4">Final Review</h3>
                   <p className="text-[16px] font-bold mb-6">By submitting, you agree that your business follows our local marketplace guidelines.</p>
                   <div className="flex items-center gap-4 text-[13px] font-bold opacity-60">
                     <div className="flex items-center gap-2"><CheckCircle2 size={16} className="text-[#25D366]" /> <span>Free Forever</span></div>
@@ -702,7 +673,7 @@ const ShopForm = ({ initialData, onSubmit, isEdit = false, isLoading = false, er
                 size="xl"
                 disabled={isLoading || uploadStatus}
                 loading={isLoading || !!uploadStatus}
-                className="w-full sm:w-auto px-12 shadow-md shadow-[#FF6B35]/20"
+                className="w-full sm:w-auto px-12 shadow-md shadow-[#FF6A00]/20"
                 icon={Save}
               >
                 {uploadStatus || (isEdit ? "Update Business" : "Launch Storefront")}

@@ -5,7 +5,7 @@ const Textarea = ({ label, name, placeholder, value, onChange, rows = 3, require
     <div className={`flex flex-col gap-1.5 w-full ${className}`}>
       {label && (
         <label className="text-[11px] font-semibold text-[#1A1F36]/40 uppercase tracking-[0.08em] pl-1">
-          {label} {required && <span className="text-[#FF6B35]">*</span>}
+          {label} {required && <span className="text-[#FF6A00]">*</span>}
         </label>
       )}
       <textarea
@@ -18,7 +18,7 @@ const Textarea = ({ label, name, placeholder, value, onChange, rows = 3, require
         className={`w-full px-4 py-3 rounded-xl border bg-white text-[14px] font-medium text-[#1A1F36] placeholder:text-[#bbb] transition-all outline-none resize-none
           ${error 
             ? "border-red-400 focus:ring-2 focus:ring-red-100" 
-            : "border-black/10 focus:border-[#FF6B35]/60 focus:ring-2 focus:ring-[#FF6B35]/15"
+            : "border-black/10 focus:border-[#FF6A00]/60 focus:ring-2 focus:ring-[#FF6A00]/15"
           }`}
         {...props}
       />

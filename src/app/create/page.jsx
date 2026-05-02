@@ -58,7 +58,7 @@ const CreateShopPage = () => {
               Your business page is now under review. Our team verifies every listing to maintain quality. You'll be notified via email once approved.
             </p>
             <div className="flex items-center justify-center gap-3 py-3 px-6 bg-[#FAFAF8] rounded-xl border border-[#1A1F36]/[0.04] inline-flex mx-auto">
-              <div className="w-4 h-4 rounded-full border-2 border-[#FF6B35] border-t-transparent animate-spin"></div>
+              <div className="w-4 h-4 rounded-full border-2 border-[#FF6A00] border-t-transparent animate-spin"></div>
               <span className="text-[12px] font-bold text-[#1A1F36]/40 uppercase tracking-widest">Redirecting to Dashboard</span>
             </div>
           </Card>
@@ -73,8 +73,8 @@ const CreateShopPage = () => {
         <Navbar />
         <main className="max-w-2xl mx-auto px-4 py-32">
           <Card className="p-12 text-center shadow-2xl">
-            <div className="w-20 h-20 bg-[#FF6B35]/10 rounded-2xl flex items-center justify-center mx-auto mb-8 shadow-inner">
-              <Store size={40} className="text-[#FF6B35]" />
+            <div className="w-20 h-20 bg-[#FF6A00]/10 rounded-2xl flex items-center justify-center mx-auto mb-8 shadow-inner">
+              <Store size={40} className="text-[#FF6A00]" />
             </div>
             <h1 className="text-3xl md:text-4xl font-extrabold text-[#1A1F36] mb-4 tracking-tight">
               Sign in to list your shop
@@ -103,9 +103,9 @@ const CreateShopPage = () => {
       <Navbar />
       <main className="max-w-4xl mx-auto px-4 pt-24 md:pt-36 pb-32">
         <div className="text-center mb-16">
-          <div className="inline-flex items-center gap-2.5 px-4 py-1.5 bg-[#FF6B35]/10 rounded-full mb-6 border border-[#FF6B35]/20">
-            <ShieldCheck size={14} className="text-[#FF6B35]" />
-            <span className="text-[11px] font-bold text-[#FF6B35] uppercase tracking-[0.15em]">Official Merchant Onboarding</span>
+          <div className="inline-flex items-center gap-2.5 px-4 py-1.5 bg-[#FF6A00]/10 rounded-full mb-6 border border-[#FF6A00]/20">
+            <ShieldCheck size={14} className="text-[#FF6A00]" />
+            <span className="text-[11px] font-bold text-[#FF6A00] uppercase tracking-[0.15em]">Official Merchant Onboarding</span>
           </div>
           <h1 className="text-4xl md:text-5xl font-extrabold text-[#1A1F36] mb-4 tracking-tight leading-none">
             Create your shop page
@@ -127,9 +127,9 @@ const CreateShopPage = () => {
         <div className="mt-12 text-center">
           <p className="text-[13px] font-bold text-[#1A1F36]/30 uppercase tracking-widest">
             Need help? Check out our{' '}
-            <a href="#" className="text-[#FF6B35] hover:underline">Setup Guide</a>{' '}
+            <a href="#" className="text-[#FF6A00] hover:underline">Setup Guide</a>{' '}
             or{' '}
-            <a href="#" className="text-[#FF6B35] hover:underline">Support</a>
+            <a href="#" className="text-[#FF6A00] hover:underline">Support</a>
           </p>
         </div>
       </main>
