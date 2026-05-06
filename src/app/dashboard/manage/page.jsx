@@ -281,11 +281,11 @@ function ShopDashboardContent() {
   };
 
   const handleAddItem = () => {
-    if (!itemName.trim() || !itemPrice) return;
+    if (!itemName.trim()) return;
     const newMenu = [...(shop.menu || [])];
     newMenu[activeCategoryIdx].items.push({
       name: itemName.trim(),
-      price: parseFloat(itemPrice) || 0,
+      price: itemPrice ? parseFloat(itemPrice) : "",
       description: itemDescription.trim(),
       image: itemImage
     });
@@ -295,12 +295,12 @@ function ShopDashboardContent() {
   };
 
   const handleEditItem = () => {
-    if (!itemName.trim() || !itemPrice) return;
+    if (!itemName.trim()) return;
     const newMenu = [...(shop.menu || [])];
     newMenu[activeCategoryIdx].items[activeItemIdx] = {
       ...newMenu[activeCategoryIdx].items[activeItemIdx],
       name: itemName.trim(),
-      price: parseFloat(itemPrice) || 0,
+      price: itemPrice ? parseFloat(itemPrice) : "",
       description: itemDescription.trim(),
       image: itemImage
     };
@@ -806,9 +806,12 @@ function ShopDashboardContent() {
                                     </div>
                                     <div className="flex-1">
                                       <p className="text-[12px] font-semibold text-[#0F0F0F]">{item.name}</p>
-                                      <p className="text-[11px] font-medium text-[#FF6A00]">₹{item.price}</p>
+                                      {item.price !== "" && item.price != null
+                                        ? <p className="text-[11px] font-medium text-[#FF6A00]">₹{item.price}</p>
+                                        : <p className="text-[11px] font-medium text-[#999]">On Request</p>
+                                      }
                                     </div>
-                                    <div className="flex gap-1 opacity-0 group-hover/item:opacity-100 transition-opacity">
+                                    <div className="flex gap-1">
                                       <button
                                         onClick={() => {
                                           // Find the REAL index in the original shop.menu
@@ -823,9 +826,9 @@ function ShopDashboardContent() {
                                           setItemImage(item.image || "");
                                           setShowEditItemModal(true);
                                         }}
-                                        className="p-1.5 hover:bg-gray-100 rounded-lg text-[#666]"
+                                        className="p-2 hover:bg-gray-100 active:bg-gray-200 rounded-lg text-[#666] transition-all"
                                       >
-                                        <Settings2 size={12} />
+                                        <Settings2 size={13} />
                                       </button>
                                       <button
                                         onClick={() => {
@@ -835,9 +838,9 @@ function ShopDashboardContent() {
                                           setActiveItemIdx(originalItemIdx);
                                           setShowDeleteModal(true);
                                         }}
-                                        className="p-1.5 hover:bg-red-50 rounded-lg"
+                                        className="p-2 hover:bg-red-50 active:bg-red-100 rounded-lg transition-all"
                                       >
-                                        <X size={12} className="text-red-500" />
+                                        <X size={13} className="text-red-400" />
                                       </button>
                                     </div>
                                   </div>
@@ -1218,9 +1221,9 @@ function ShopDashboardContent() {
                 onChange={(e) => setItemName(e.target.value)}
               />
               <Input
-                label="Price (₹)"
+                label="Price ₹ (Optional)"
                 type="number"
-                placeholder="0.00"
+                placeholder="Leave blank if not applicable"
                 value={itemPrice}
                 onChange={(e) => setItemPrice(e.target.value)}
               />
@@ -1234,7 +1237,7 @@ function ShopDashboardContent() {
             rows={2}
           />
           <div className="flex justify-end pt-2">
-            <Button onClick={handleAddItem} disabled={!itemName.trim() || !itemPrice}>
+            <Button onClick={handleAddItem} disabled={!itemName.trim()}>
               Add to Catalog
             </Button>
           </div>
@@ -1284,7 +1287,7 @@ function ShopDashboardContent() {
             rows={2}
           />
           <div className="flex justify-end pt-2">
-            <Button onClick={handleEditItem} disabled={!itemName.trim() || !itemPrice}>
+            <Button onClick={handleEditItem} disabled={!itemName.trim()}>
               Update Item
             </Button>
           </div>

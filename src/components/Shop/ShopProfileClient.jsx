@@ -338,9 +338,10 @@ const ShopProfileClient = ({ shop }) => {
                     <div className="flex-1">
                       <h3 className="text-[14px] font-semibold text-[#0F0F0F]">{item.name}</h3>
                       <p className="text-[10px] text-[#999] mt-0.5">{item.category}</p>
-                      {item.price && (
-                        <span className="text-[13px] font-bold text-[#FF6A00] mt-1 block">₹{item.price}</span>
-                      )}
+                      {item.price
+                        ? <span className="text-[13px] font-bold text-[#FF6A00] mt-1 block">₹{item.price}</span>
+                        : <span className="text-[11px] font-medium text-[#999] mt-1 block">Contact for Price</span>
+                      }
                     </div>
                     <Plus size={18} className="text-[#999]" />
                   </div>
@@ -392,9 +393,10 @@ const ShopProfileClient = ({ shop }) => {
                             <p className="text-[11px] text-[#999] mt-0.5 line-clamp-1">{item.description}</p>
                           </div>
                           <div className="text-right">
-                            {item.price && (
-                              <span className="text-[14px] font-bold text-[#FF6A00]">₹{item.price}</span>
-                            )}
+                            {item.price
+                              ? <span className="text-[14px] font-bold text-[#FF6A00]">₹{item.price}</span>
+                              : <span className="text-[11px] font-medium text-[#999]">Contact for Price</span>
+                            }
                             <Plus size={16} className="text-[#999] group-hover:text-[#FF6A00] mt-1 ml-auto" />
                           </div>
                         </div>
@@ -774,9 +776,10 @@ const ShopProfileClient = ({ shop }) => {
                 </div>
                 <div className="flex justify-between items-start mb-3">
                   <h2 className="text-xl font-bold text-[#0F0F0F]">{selectedItem.name}</h2>
-                  {selectedItem.price && (
-                    <span className="text-lg font-bold text-[#FF6A00]">₹{selectedItem.price}</span>
-                  )}
+                  {selectedItem.price
+                    ? <span className="text-lg font-bold text-[#FF6A00]">₹{selectedItem.price}</span>
+                    : <span className="text-sm font-semibold text-[#999]">Contact for Price</span>
+                  }
                 </div>
                 <p className="text-[13px] text-[#666] leading-relaxed">
                   {selectedItem.description || "Premium quality item. Contact us for more details."}

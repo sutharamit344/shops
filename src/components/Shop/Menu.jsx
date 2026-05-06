@@ -106,11 +106,10 @@ const ShopMenu = ({ menu, businessType = "mixed", onItemClick }) => {
                         <h4 className="font-bold text-navy text-[12px] truncate uppercase tracking-tight italic">
                           {item.name}
                         </h4>
-                        {item.price && (
-                          <span className="text-primary font-black text-[11px]">
-                            ₹{Number(item.price)}
-                          </span>
-                        )}
+                        {item.price
+                          ? <span className="text-primary font-black text-[11px]">₹{Number(item.price)}</span>
+                          : <span className="text-navy/30 font-semibold text-[9px] uppercase tracking-widest">On Request</span>
+                        }
                       </div>
                       <p className="text-navy/30 text-[9px] font-medium line-clamp-1 italic">
                         {item.description || "Premium selection"}
