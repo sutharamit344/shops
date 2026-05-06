@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Gavel, Scale, AlertTriangle, UserCheck, ChevronLeft, HelpCircle, Mail, MessageSquare, Shield, Globe } from "lucide-react";
 
 import { BRAND } from "@/lib/config";
+import Footer from "@/components/Footer";
 
 export const metadata = {
   title: `Terms & Conditions | ${BRAND}`,
@@ -139,9 +140,7 @@ export default function TermsAndConditions() {
       </main>
 
       {/* Footer */}
-      <footer className="py-24 text-center border-t border-[#1A1F36]/[0.06] bg-white">
-        <p className="text-[#1A1F36]/20 text-[10px] font-bold uppercase tracking-[0.3em]">{BRAND} Marketplace Authority • 2026</p>
-      </footer>
+      <Footer />
     </div>
   );
 }

@@ -1,10 +1,10 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
-import { getApprovedShops } from "@/lib/db";
 
 export const fetchApprovedShops = createAsyncThunk(
   "shops/fetchApproved",
   async () => {
-    const shops = await getApprovedShops();
-    return shops;
+    const res = await fetch("/api/shops");
+    if (!res.ok) throw new Error("Failed to fetch shops");
+    return res.json();
   }
 );

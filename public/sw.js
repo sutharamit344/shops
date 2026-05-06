@@ -1,4 +1,4 @@
-const CACHE_NAME = "shopsetu-v1";
+const CACHE_NAME = "shopbajar-v1";
 const ASSETS_TO_CACHE = [
   "/",
   "/manifest.json",
@@ -29,9 +29,24 @@ self.addEventListener("activate", (event) => {
 });
 
 self.addEventListener("fetch", (event) => {
+  // Skip non-GET requests and non-http(s)
+  if (event.request.method !== "GET" || !event.request.url.startsWith("http")) {
+    return;
+  }
+
+  // Skip Next.js internal assets in development to avoid HMR and chunk issues
+  if (event.request.url.includes("/_next/")) {
+    return;
+  }
+
   event.respondWith(
     caches.match(event.request).then((response) => {
-      return response || fetch(event.request);
+      return response || fetch(event.request).catch(() => {
+        if (event.request.mode === "navigate") {
+          return caches.match("/");
+        }
+        return null;
+      });
     })
   );
 });

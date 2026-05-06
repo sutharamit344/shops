@@ -24,7 +24,14 @@ const ShopCard = ({ shop, variant = "grid", showActions = false }) => {
   const [copied, setCopied] = useState(false);
   const userCoords = useSelector((state) => state.search.userCoords);
   const { favorites, user } = useSelector((state) => state.auth);
+  const { parsed } = useSelector((state) => state.search);
   const isFavorited = favorites.includes(shop.id);
+
+  const targetCity = (parsed?.city || "").toLowerCase().trim();
+  const targetArea = (parsed?.area || "").toLowerCase().trim();
+
+  const areaMatch = shop.isLocationMatch || (targetArea && (shop.area || "").toLowerCase().includes(targetArea));
+  const cityMatch = shop.isCityMatch || (targetCity && (shop.city || "").toLowerCase().includes(targetCity));
 
   if (!shop) return null;
 
@@ -40,8 +47,8 @@ const ShopCard = ({ shop, variant = "grid", showActions = false }) => {
       Math.sin(dLat / 2) * Math.sin(dLat / 2) +
       Math.cos(userCoords.lat * (Math.PI / 180)) * Math.cos(shop.lat * (Math.PI / 180)) *
       Math.sin(dLon / 2) * Math.sin(dLon / 2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    const distanceKm = R * c;
+    const dC = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    const distanceKm = R * dC;
 
     if (distanceKm < 1) {
       return `${Math.round(distanceKm * 1000)}m`;
@@ -108,11 +115,13 @@ const ShopCard = ({ shop, variant = "grid", showActions = false }) => {
     <Card
       hover
       className={`h-full flex relative overflow-hidden transition-all duration-300 group/card ${variant === "grid" ? "flex-col p-0" : "flex-row items-center p-4"
-        }`}
+        } ${areaMatch || shop.isClusterMatch ? "border-[#FF6A00]/30 shadow-lg shadow-[#FF6A00]/5 bg-[#FF6A00]/[0.01]" : ""}`}
     >
+      {/* Location Match Badge */}
+
       {/* Branding Stripe */}
       {variant === "grid" && (
-        <div className="h-[2px] w-full bg-gradient-to-r from-[#FF6A00] to-transparent opacity-60 group-hover/card:opacity-100 transition-opacity duration-300" />
+        <div className={`h-[2px] w-full bg-gradient-to-r from-[#FF6A00] to-transparent transition-opacity duration-300 ${areaMatch ? "opacity-100" : "opacity-60 group-hover/card:opacity-100"}`} />
       )}
 
       {variant === "list" ? (
@@ -120,7 +129,7 @@ const ShopCard = ({ shop, variant = "grid", showActions = false }) => {
           {/* Logo */}
           <div className="relative flex-shrink-0">
             {shop.logo ? (
-              <div className="w-16 h-16 md:w-24 md:h-24 rounded-2xl overflow-hidden border border-[#1A1F36]/[0.08] group-hover/card:scale-105 transition-transform duration-500 relative shadow-sm">
+              <div className={`w-16 h-16 md:w-24 md:h-24 rounded-2xl overflow-hidden border group-hover/card:scale-105 transition-transform duration-500 relative shadow-sm ${areaMatch ? "border-[#FF6A00]/40" : "border-[#1A1F36]/[0.08]"}`}>
                 <Image
                   src={shop.logo.includes(" ") ? shop.logo.replace(/\s/g, "%20") : shop.logo}
                   alt={shop.name}
@@ -131,12 +140,12 @@ const ShopCard = ({ shop, variant = "grid", showActions = false }) => {
                 />
               </div>
             ) : (
-              <div className="w-16 h-16 md:w-24 md:h-24 rounded-2xl bg-[#1A1F36] text-white flex items-center justify-center font-black text-2xl md:text-3xl shadow-inner">
+              <div className={`w-16 h-16 md:w-24 md:h-24 rounded-2xl text-white flex items-center justify-center font-black text-2xl md:text-3xl shadow-inner ${areaMatch ? "bg-[#FF6A00]" : "bg-[#1A1F36]"}`}>
                 {shop.name.charAt(0)}
               </div>
             )}
             {isApproved && (
-              <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-[#FF6A00] rounded-full flex items-center justify-center border-2 border-white shadow-lg">
+              <div className={`absolute -bottom-1 -right-1 w-6 h-6 rounded-full flex items-center justify-center border-2 border-white shadow-lg ${areaMatch ? "bg-blue-500" : "bg-[#FF6A00]"}`}>
                 <ShieldCheck size={11} className="text-white" />
               </div>
             )}
@@ -147,7 +156,7 @@ const ShopCard = ({ shop, variant = "grid", showActions = false }) => {
             <div className="flex items-center gap-2 mb-2 flex-wrap">
               <span
                 onClick={(e) => handleCategoryClick(e, shop.category)}
-                className="text-[12px] font-black uppercase tracking-[0.05em] text-[#FF6A00] bg-[#FF6A00]/5 px-3 py-1 rounded-lg border border-[#FF6A00]/10 hover:bg-[#FF6A00] hover:text-white transition-all cursor-pointer"
+                className={`text-[12px] font-black uppercase tracking-[0.05em] px-3 py-1 rounded-lg border transition-all cursor-pointer ${areaMatch ? "bg-[#FF6A00] text-white border-[#FF6A00]" : "text-[#FF6A00] bg-[#FF6A00]/5 border-[#FF6A00]/10 hover:bg-[#FF6A00] hover:text-white"}`}
               >
                 {shop.category}
               </span>
@@ -157,28 +166,30 @@ const ShopCard = ({ shop, variant = "grid", showActions = false }) => {
               </div>
               <OpenNowBadge shop={shop} size="md" />
             </div>
-            <h3 className="text-[19px] md:text-[22px] font-black text-[#1A1F36] tracking-tight truncate group-hover/card:text-[#FF6A00] transition-colors flex items-center gap-2 mb-1.5">
+            <h3 className={`text-[19px] md:text-[22px] font-black tracking-tight truncate transition-colors flex items-center gap-2 mb-1.5 ${areaMatch ? "text-[#FF6A00]" : "text-[#1A1F36] group-hover/card:text-[#FF6A00]"}`}>
               {shop.name}
               {shop.isVerified && <ShieldCheck size={20} className="text-blue-500 fill-blue-50" />}
             </h3>
-            
+
             {shop.clusterType && (
               <div className="flex items-center gap-2 mb-2 opacity-80">
                 <Award size={13} className="text-[#FF6A00]" />
-                <span className="text-[12px] font-bold text-[#1A1F36]/60 uppercase tracking-wide">{shop.clusterType}</span>
+                <span className={`text-[12px] font-bold uppercase tracking-wide ${shop.isClusterMatch ? "text-[#FF6A00] font-black" : "text-[#1A1F36]/75"}`}>{shop.clusterType}</span>
               </div>
             )}
-            
+
             <div
               onClick={(e) => handleCityClick(e, shop.city)}
-              className="flex items-center gap-2 hover:text-[#FF6A00] transition-colors cursor-pointer group/loc"
+              className="flex items-center gap-2 hover:text-[#FF6A00] transition-colors cursor-pointer group/loc flex-1 min-w-0"
             >
-              <div className="w-7 h-7 rounded-lg bg-gray-50 flex items-center justify-center text-gray-400 group-hover/loc:bg-[#FF6A00]/10 group-hover/loc:text-[#FF6A00] transition-colors border border-black/[0.03]">
+              <div className={`w-7 h-7 rounded-lg flex items-center justify-center transition-colors border border-black/[0.03] flex-shrink-0 ${areaMatch ? "bg-[#FF6A00] text-white" : "bg-gray-50 text-gray-400 group-hover/loc:bg-[#FF6A00]/10 group-hover/loc:text-[#FF6A00]"}`}>
                 <MapPin size={14} />
               </div>
-              <span className="text-[15px] text-[#1A1F36]/60 font-bold">{shop.area}, {shop.city}</span>
+              <span className="text-[15px] text-[#1A1F36]/75 font-bold truncate">
+                <span className={areaMatch ? "text-[#FF6A00] font-black" : ""}>{shop.area}</span>, <span className={cityMatch ? "text-[#FF6A00] font-black" : ""}>{shop.city}</span>
+              </span>
               {distanceText && (
-                <span className="text-[12px] font-black text-[#FF6A00] bg-[#FF6A00]/10 px-2 py-0.5 rounded-md ml-1 border border-[#FF6A00]/10">
+                <span className={`text-[12px] font-black px-2 py-0.5 rounded-md ml-1 border ${areaMatch ? "bg-[#FF6A00] text-white border-[#FF6A00]" : "text-[#FF6A00] bg-[#FF6A00]/10 border-[#FF6A00]/10"}`}>
                   {distanceText}
                 </span>
               )}
@@ -191,8 +202,8 @@ const ShopCard = ({ shop, variant = "grid", showActions = false }) => {
               <button
                 onClick={handleFavorite}
                 className={`w-11 h-11 rounded-2xl flex items-center justify-center transition-all ${isFavorited
-                    ? "bg-red-50 text-red-500 border border-red-100 shadow-sm"
-                    : "bg-[#1A1F36]/[0.03] text-[#1A1F36]/30 hover:text-red-500 hover:bg-red-50"
+                  ? "bg-red-50 text-red-500 border border-red-100 shadow-sm"
+                  : "bg-[#1A1F36]/[0.03] text-[#1A1F36]/30 hover:text-red-500 hover:bg-red-50"
                   }`}
               >
                 <Heart size={18} className={isFavorited ? "fill-current" : ""} />
@@ -255,7 +266,7 @@ const ShopCard = ({ shop, variant = "grid", showActions = false }) => {
               <Star size={12} className="text-[#FF6A00] fill-[#FF6A00]" />
               <span className="text-[14px] font-bold text-[#1A1F36]">{shop.avgRating || shop.rating || "5.0"}</span>
             </div>
-            <p className="text-[14px] text-[#1A1F36]/50 line-clamp-2 leading-relaxed">
+            <p className="text-[14px] text-[#1A1F36]/70 line-clamp-2 leading-relaxed">
               {shop.description || "Verified local business offering quality products and trusted services."}
             </p>
           </div>
@@ -264,17 +275,17 @@ const ShopCard = ({ shop, variant = "grid", showActions = false }) => {
             {shop.clusterType && (
               <div className="flex items-center gap-1.5 mb-2 opacity-80">
                 <Award size={10} className="text-[#FF6A00]" />
-                <span className="text-[11px] font-bold text-[#1A1F36]/60 uppercase tracking-wide">{shop.clusterType}</span>
+                <span className={`text-[11px] font-bold uppercase tracking-wide ${shop.isClusterMatch ? "text-[#FF6A00] font-black" : "text-[#1A1F36]/75"}`}>{shop.clusterType}</span>
               </div>
             )}
             <div className="flex items-center justify-between">
               <div
                 onClick={(e) => handleCityClick(e, shop.city)}
-                className="flex items-center gap-1.5 text-[#1A1F36]/40 hover:text-[#FF6A00] transition-colors cursor-pointer group/loc"
+                className="flex items-center gap-1.5 text-[#1A1F36]/40 hover:text-[#FF6A00] transition-colors cursor-pointer group/loc flex-1 min-w-0"
               >
-                <MapPin size={12} className="group-hover/loc:text-[#FF6A00] transition-colors" />
-                <span className="text-[13px] font-semibold group-hover/loc:text-[#FF6A00] transition-colors truncate max-w-[120px]">
-                  {shop.area}, {shop.city}
+                <MapPin size={12} className="group-hover/loc:text-[#FF6A00] transition-colors flex-shrink-0" />
+                <span className="text-[13px] font-semibold group-hover/loc:text-[#FF6A00] transition-colors truncate">
+                  <span className={areaMatch ? "text-[#FF6A00] font-black" : ""}>{shop.area}</span>, <span className={cityMatch ? "text-[#FF6A00] font-black" : ""}>{shop.city}</span>
                 </span>
                 {distanceText && (
                   <span className="text-[10px] font-bold text-[#FF6A00] bg-[#FF6A00]/10 px-1.5 py-0.5 rounded ml-1 whitespace-nowrap">
@@ -286,8 +297,8 @@ const ShopCard = ({ shop, variant = "grid", showActions = false }) => {
                 <button
                   onClick={handleFavorite}
                   className={`w-8 h-8 rounded-xl flex items-center justify-center transition-all ${isFavorited
-                      ? "bg-red-50 text-red-500 border border-red-100"
-                      : "bg-[#1A1F36]/[0.03] text-[#1A1F36]/30 hover:text-red-500 hover:bg-red-50"
+                    ? "bg-red-50 text-red-500 border border-red-100"
+                    : "bg-[#1A1F36]/[0.03] text-[#1A1F36]/30 hover:text-red-500 hover:bg-red-50"
                     }`}
                 >
                   <Heart size={12} className={isFavorited ? "fill-current" : ""} />
@@ -298,9 +309,6 @@ const ShopCard = ({ shop, variant = "grid", showActions = false }) => {
                 >
                   {copied ? <Check size={12} className="text-green-500" /> : <Share2 size={12} />}
                 </button>
-                <div className="w-8 h-8 rounded-xl bg-[#1A1F36]/[0.03] flex items-center justify-center text-[#1A1F36] group-hover/card:bg-[#FF6A00] group-hover/card:text-white transition-all duration-300">
-                  <ArrowRight size={14} className="transform group-hover/card:translate-x-0.5 transition-transform" />
-                </div>
               </div>
             </div>
           </div>

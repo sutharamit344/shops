@@ -5,6 +5,8 @@ import filterReducer from "./slices/filterSlice";
 import authReducer from "./slices/authSlice";
 import modalReducer from "./slices/modalSlice";
 import searchReducer from "./slices/searchSlice";
+import toastReducer from "./slices/toastSlice";
+import clusterReducer from "./slices/clusterSlice";
 
 export const store = configureStore({
   reducer: {
@@ -14,6 +16,8 @@ export const store = configureStore({
     auth: authReducer,
     modal: modalReducer,
     search: searchReducer,
+    toast: toastReducer,
+    clusters: clusterReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

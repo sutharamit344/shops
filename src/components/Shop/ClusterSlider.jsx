@@ -14,9 +14,13 @@ const ClusterSlider = ({ clusters = [], shops = [], onClusterClick, parsed }) =>
   const currentCategory = (parsed?.category || "").toLowerCase().trim();
   const currentCluster = (parsed?.clusterType || "").toLowerCase().trim();
   const currentLocation = (parsed?.location || "").toLowerCase().trim();
+  const targetCity = (parsed?.city || "").toLowerCase().trim();
+  const targetArea = (parsed?.area || "").toLowerCase().trim();
 
   const clusterData = useMemo(() => {
     // Determine current location context
+    const targetCity = (parsed?.city || "").toLowerCase().trim();
+    const targetArea = (parsed?.area || "").toLowerCase().trim();
     const urlLoc = currentLocation && currentLocation !== "all" ? currentLocation : null;
     const gpsLoc = userLocationName ? userLocationName.split(',')[0].trim().toLowerCase() : null;
     const activeContext = (urlLoc === "current" ? gpsLoc : urlLoc) || gpsLoc;
@@ -27,11 +31,19 @@ const ClusterSlider = ({ clusters = [], shops = [], onClusterClick, parsed }) =>
 
     // Filter shops to the current location context first
     let relevantShops = shops;
-    if (activeContext) {
-      relevantShops = shops.filter(s =>
-        (s.area || "").toLowerCase() === activeContext ||
-        (s.city || "").toLowerCase() === activeContext
-      );
+    if (targetCity || targetArea || activeContext) {
+      relevantShops = shops.filter(s => {
+        const sCity = (s.city || "").toLowerCase();
+        const sArea = (s.area || "").toLowerCase();
+        
+        if (targetArea && sArea === targetArea) return true;
+        if (targetCity && sCity === targetCity && !targetArea) return true;
+        
+        // Fallback to the general context match
+        if (activeContext && (sArea === activeContext || sCity === activeContext || activeContext.includes(sArea) || activeContext.includes(sCity))) return true;
+        
+        return false;
+      });
     }
 
     // Group relevant shops by (clusterType + area) to get accurate localized counts
@@ -45,9 +57,15 @@ const ClusterSlider = ({ clusters = [], shops = [], onClusterClick, parsed }) =>
       if (currentCluster && clusterName.toLowerCase() === currentCluster) return;
       if (currentCategory) {
         const doc = clusterDocMap[clusterName];
-        const cat = (doc?.category || "").toLowerCase();
+        const cat = (doc?.category || shop.category || "").toLowerCase().replace(/&/g, "and");
+        const normalizedSearch = currentCategory.replace(/&/g, "and");
         const nm = clusterName.toLowerCase();
-        if (!cat.includes(currentCategory) && !currentCategory.includes(cat) && !nm.includes(currentCategory)) return;
+
+        const isMatch = cat.includes(normalizedSearch) || 
+                       normalizedSearch.includes(cat) || 
+                       nm.includes(normalizedSearch);
+        
+        if (!isMatch) return;
       }
 
       const key = `${clusterName}__${shopArea}__${shopCity}`;
@@ -67,25 +85,44 @@ const ClusterSlider = ({ clusters = [], shops = [], onClusterClick, parsed }) =>
       groups[key].count += 1;
     });
 
-    return Object.values(groups)
+    const getDistance = (lat1, lon1, lat2, lon2) => {
+      if (!lat1 || !lon1 || !lat2 || !lon2) return Infinity;
+      const R = 6371;
+      const dLat = (lat2 - lat1) * (Math.PI / 180);
+      const dLon = (lon2 - lon1) * (Math.PI / 180);
+      const a =
+        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.cos(lat1 * (Math.PI / 180)) * Math.cos(lat2 * (Math.PI / 180)) *
+        Math.sin(dLon / 2) * Math.sin(dLon / 2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+      return R * c;
+    };
+
+    const finalClusters = Object.values(groups).map(c => ({
+      ...c,
+      distance: getDistance(userCoords?.lat, userCoords?.lng, c.lat, c.lng)
+    }));
+
+    return finalClusters
       .filter(c => c.count > 0)
       .sort((a, b) => {
+        // 1. Sort by distance if available
+        if (a.distance !== b.distance) {
+          return a.distance - b.distance;
+        }
+
+        // 2. Fallback to area matching
         if (typeof window !== 'undefined') {
           const lastArea = (localStorage.getItem('last_area') || "").toLowerCase();
-          const lastCity = (localStorage.getItem('last_city') || "").toLowerCase();
           if (lastArea) {
             const aMatch = a.area.toLowerCase() === lastArea;
             const bMatch = b.area.toLowerCase() === lastArea;
             if (aMatch && !bMatch) return -1;
             if (!aMatch && bMatch) return 1;
           }
-          if (lastCity) {
-            const aMatch = a.city.toLowerCase() === lastCity;
-            const bMatch = b.city.toLowerCase() === lastCity;
-            if (aMatch && !bMatch) return -1;
-            if (!aMatch && bMatch) return 1;
-          }
         }
+        
+        // 3. Fallback to shop count
         return b.count - a.count;
       });
   }, [clusters, shops, currentCategory, currentCluster, currentLocation, userLocationName]);
@@ -139,26 +176,59 @@ const ClusterSlider = ({ clusters = [], shops = [], onClusterClick, parsed }) =>
   const visibleClusters = clusterData.slice(0, visibleLimit);
 
   const getTitle = () => {
-    if (parsed?.type === "nearby") return "Clusters Nearby You";
+    const properCase = (str) => {
+      if (!str) return "";
+      return str
+        .split(/[ -]/)
+        .map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+        .join(' ')
+        .trim();
+    };
+
+    const category = properCase(parsed?.category || "");
+    const city = properCase(parsed?.city || "");
+    const area = properCase(parsed?.area || "");
+    
+    // Determine the most specific location for the title
+    let location = area || city || userLocationName || "";
+
+    // Fix: If the "area" is actually a cluster name (e.g. "City Center Market")
+    // We should show hubs in the parent location instead
+    const isClusterName = (str) => {
+      const lower = str.toLowerCase();
+      return lower.includes("market") || lower.includes("center") || lower.includes("hub") || lower.includes("district");
+    };
+
+    if (area && isClusterName(area)) {
+      location = city || "Nearby Areas";
+    }
+
+    if (parsed?.type === "nearby") return "Specialized Hubs Near You";
 
     // 1. If explicit cluster searched
     if (parsed?.clusterType) {
-      const clusterName = parsed.clusterType.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
-      return `Clusters Nearby ${clusterName}`;
+      const clusterName = properCase(parsed.clusterType);
+      return `Hubs related to ${clusterName}`;
     }
 
-    // 2. If location searched (area or city)
-    if (parsed?.location && parsed?.location !== "all") {
-      const locationName = parsed.location.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
-      return `Clusters Nearby ${locationName}`;
+    // 2. If category searched
+    if (category) {
+      if (location) {
+        return `${category} Markets in ${location}`;
+      }
+      return `Specialized ${category} Hubs`;
     }
 
-    // Default fallback
-    return `Clusters Nearby ${userLocationName || "You"}`;
+    // 3. If location searched
+    if (location) {
+      return `Specialized Hubs in ${location}`;
+    }
+
+    return "Specialized Hubs Near You";
   };
 
   return (
-    <div className="relative mb-6 group">
+    <div className="relative mb-6 group border-b border-[#1A1F36]/[0.08]">
       <div className="flex items-center justify-between mb-4 px-1">
         <div>
           <h2 className="text-[16px] md:text-lg font-bold text-[#1A1F36] flex items-center gap-2">
@@ -216,9 +286,12 @@ const ClusterSlider = ({ clusters = [], shops = [], onClusterClick, parsed }) =>
             }
           }
 
+          const isAreaMatch = targetArea && (cluster.area || "").toLowerCase().includes(targetArea);
+          const isCityMatch = targetCity && (cluster.city || "").toLowerCase().includes(targetCity);
+
           return (
             <div
-              key={cluster.id || idx}
+              key={`${cluster.name}-${cluster.area}-${cluster.city}-${idx}`}
               onClick={() => onClusterClick && onClusterClick(cluster.name, cluster.area || cluster.city)}
               className="flex-shrink-0 w-60 md:w-68 bg-white p-3.5 md:p-4 rounded-[20px] border border-black/[0.06] hover:border-[#FF6A00]/20 transition-all cursor-pointer group/card flex flex-col justify-between h-full"
             >
@@ -242,7 +315,11 @@ const ClusterSlider = ({ clusters = [], shops = [], onClusterClick, parsed }) =>
                 {(cluster.area || cluster.city) && (
                   <div className="mt-2 flex items-center gap-1 text-[10px] text-[#1A1F36]/50">
                     <MapPin size={9} className="text-[#FF6A00]" />
-                    <span className="truncate">{cluster.area || cluster.city}{cluster.area && cluster.city ? `, ${cluster.city}` : ""}</span>
+                    <span className="truncate">
+                      <span className={isAreaMatch ? "text-[#FF6A00] font-black" : ""}>{cluster.area}</span>
+                      {cluster.area && cluster.city && ", "}
+                      <span className={isCityMatch ? "text-[#FF6A00] font-black" : ""}>{cluster.city}</span>
+                    </span>
                     {distanceText && (
                       <span className="font-bold text-[#FF6A00] bg-[#FF6A00]/10 px-1.5 py-0.5 rounded ml-1 whitespace-nowrap">
                         {distanceText}

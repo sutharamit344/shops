@@ -83,14 +83,24 @@ export function parseSmartQuery(query, knownClusters = []) {
     }
   }
 
+  // Helper to clean redundant shop keywords
+  const finalizeCategory = (cat) => {
+    let tokens = cat.trim().split(/\s+/);
+    if (tokens.length >= 2) {
+      const last = tokens[tokens.length - 1].toLowerCase();
+      const secondLast = tokens[tokens.length - 2].toLowerCase();
+      if ((last === "shop" || last === "shops") && (secondLast === "shop" || secondLast === "shops")) {
+        tokens.pop();
+      }
+    }
+    return tokens.join(" ");
+  };
+
   // 4. Pattern: "{category} near me"
   if (normalized.includes("near me")) {
     let category = normalized.replace("near me", "").trim();
-    // Strip trailing "in" if user typed "cafe in near me"
-    if (category.endsWith(" in")) {
-      category = category.slice(0, -3).trim();
-    }
-    return { category, location: "current", clusterType: "", type: "nearby" };
+    if (category.endsWith(" in")) category = category.slice(0, -3).trim();
+    return { category: finalizeCategory(category), location: "current", clusterType: "", type: "nearby" };
   }
 
   // 5. Pattern: "{category} in {location}"
@@ -98,12 +108,12 @@ export function parseSmartQuery(query, knownClusters = []) {
     const parts = normalized.split(" in ");
     const category = parts[0].trim();
     const location = parts.slice(1).join(" in ").trim();
-    return { category, location, clusterType: "", type: "location" };
+    return { category: finalizeCategory(category), location, clusterType: "", type: "location" };
   }
 
   // Fallback: Treat as category by default
   return {
-    category: normalized,
+    category: finalizeCategory(normalized),
     location: "",
     clusterType: "",
     type: "category",

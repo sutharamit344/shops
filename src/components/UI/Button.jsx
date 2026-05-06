@@ -11,10 +11,11 @@ const Button = ({ children, variant = 'primary', size = 'md', className = '', lo
   };
 
   const variants = {
-    primary: 'bg-[#FF6A00] text-white hover:bg-[#E85C25]',
-    outline: 'bg-white border-2 border-[#FF6A00] text-[#FF6A00] hover:bg-[#FF6A00] hover:text-white',
-    whatsapp: 'bg-[#25D366] text-white hover:bg-[#1EB855]',
-    dark: 'bg-[#1A1F36] text-white hover:bg-slate-800',
+    primary: 'bg-[#FF6A00] text-white hover:bg-[#E85C25] shadow-lg shadow-[#FF6A00]/20',
+    outline: 'bg-transparent border-2 border-[#FF6A00] text-[#FF6A00] hover:bg-[#FF6A00] hover:text-white',
+    secondary: 'bg-white/10 border border-white/20 text-white hover:bg-white/20 backdrop-blur-md',
+    whatsapp: 'bg-[#25D366] text-white hover:bg-[#1EB855] shadow-lg shadow-[#25D366]/20',
+    dark: 'bg-[#1A1F36] text-white hover:bg-[#020617]',
     ghost: 'bg-transparent text-[#1A1F36]/60 hover:text-[#1A1F36] hover:bg-[#1A1F36]/[0.06]',
   };
 

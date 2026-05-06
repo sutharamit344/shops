@@ -39,8 +39,41 @@ export default async function ShopPage({ params }) {
     notFound();
   }
 
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "LocalBusiness",
+    "name": shop.name,
+    "description": shop.description || `${shop.name} is a verified ${shop.category} in ${shop.city}.`,
+    "image": shop.logo || `${DOMAIN}/sb-logo.png`,
+    "category": shop.category,
+    "address": {
+      "@type": "PostalAddress",
+      "streetAddress": shop.address || "",
+      "addressLocality": shop.area || "",
+      "addressRegion": shop.city || "",
+      "postalCode": shop.pincode || "",
+      "addressCountry": "IN"
+    },
+    "geo": {
+      "@type": "GeoCoordinates",
+      "latitude": shop.lat || null,
+      "longitude": shop.lng || null
+    },
+    "url": `${DOMAIN}/shop/${slug}`,
+    "telephone": shop.phone || "",
+    "aggregateRating": shop.totalRatings > 0 ? {
+      "@type": "AggregateRating",
+      "ratingValue": shop.avgRating || 0,
+      "reviewCount": shop.totalRatings || 0
+    } : null
+  };
+
   return (
     <div className="min-h-screen bg-[#FAFAF8]">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <ShopProfileClient shop={shop} />
     </div>
   );

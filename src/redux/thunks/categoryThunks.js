@@ -1,18 +1,19 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
-import { getCategories, getClusters } from "@/lib/db";
 
 export const fetchCategories = createAsyncThunk(
   "categories/fetchAll",
   async () => {
-    const categories = await getCategories();
-    return categories;
+    const res = await fetch("/api/categories");
+    if (!res.ok) throw new Error("Failed to fetch categories");
+    return res.json();
   }
 );
 
 export const fetchClusters = createAsyncThunk(
-  "clusters/fetchAll",
+  "categories/fetchClusters",
   async () => {
-    const clusters = await getClusters();
-    return clusters;
+    const res = await fetch("/api/clusters");
+    if (!res.ok) throw new Error("Failed to fetch clusters");
+    return res.json();
   }
 );

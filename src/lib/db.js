@@ -15,8 +15,20 @@ import {
 } from "firebase/firestore";
 import { db } from "./firebase";
 export { db };
-import { unstable_cache } from "next/cache";
 import { slugify } from "./slugify";
+
+// Helper to safely use next/cache only on the server
+let unstable_cache = (fn) => fn;
+if (typeof window === "undefined") {
+  try {
+    const nextCache = require("next/cache");
+    if (nextCache && typeof nextCache.unstable_cache === "function") {
+      unstable_cache = nextCache.unstable_cache;
+    }
+  } catch (e) {
+    console.warn("unstable_cache not found in next/cache, falling back to direct call.");
+  }
+}
 
 const COLLECTION_NAME = "shops";
 const LOGS_COLLECTION = "activity_logs";
@@ -46,9 +58,6 @@ export async function getCachedLocation(name) {
   }
 }
 
-/**
- * Adds or updates a location in the cache.
- */
 export async function updateLocationCache(name, lat, lng, extraData = {}) {
   try {
     if (!name || !lat || !lng) return;
@@ -505,6 +514,29 @@ export async function getShopsByZoneInArea(citySlug, areaSlug, zoneSlug) {
 }
 
 /**
+ * Gets all approved shops by city, area and category.
+ */
+export async function getShopsByCityAreaAndCategory(citySlug, areaSlug, categorySlug) {
+  try {
+    const city = await resolveParameter(citySlug, "city");
+    const area = await resolveParameter(areaSlug, "area");
+    const category = await resolveParameter(categorySlug, "category");
+    const q = query(
+      collection(db, COLLECTION_NAME),
+      where("city", "==", city),
+      where("area", "==", area),
+      where("category", "==", category),
+      where("status", "==", "approved"),
+    );
+    const querySnapshot = await getDocs(q);
+    return querySnapshot.docs.map(standardizeData);
+  } catch (error) {
+    console.error("Error getting shops by city, area and category: ", error);
+    return [];
+  }
+}
+
+/**
  * Gets all approved shops by zone (Legacy/Universal).
  */
 export async function getShopsByZone(zone) {
@@ -767,7 +799,7 @@ export async function proposeCategory(name) {
 /**
  * Admin: Adds an approved category.
  */
-export async function addApprovedCategory(name) {
+export async function addApprovedCategory(name, icon = "Tag") {
   try {
     const q = query(collection(db, "categories"), where("name", "==", name));
     const snap = await getDocs(q);
@@ -776,6 +808,7 @@ export async function addApprovedCategory(name) {
       if (snap.docs[0].data().status === "pending") {
         await updateDoc(doc(db, "categories", snap.docs[0].id), {
           status: "approved",
+          icon: icon || "Tag"
         });
       }
       return { success: true, id: snap.docs[0].id };
@@ -783,6 +816,7 @@ export async function addApprovedCategory(name) {
 
     const docRef = await addDoc(collection(db, "categories"), {
       name,
+      icon: icon || "Tag",
       status: "approved",
       createdAt: serverTimestamp(),
     });
@@ -834,6 +868,118 @@ export async function deleteAndReassignCategory(sourceId, targetName = null) {
   } catch (error) {
     console.error("Error in delete and reassign: ", error);
     return { success: false, error };
+  }
+}
+
+/**
+ * Admin: Updates a category name and cascades the change to shops and clusters.
+ */
+export async function updateCategory(id, newName, newIcon) {
+  try {
+    const docRef = doc(db, "categories", id);
+    const docSnap = await getDoc(docRef);
+    if (!docSnap.exists()) throw new Error("Category not found");
+
+    const oldName = docSnap.data().name;
+
+    // 1. Update the category document
+    const updatePayload = {
+      updatedAt: serverTimestamp()
+    };
+    if (newName) updatePayload.name = newName;
+    if (newIcon) updatePayload.icon = newIcon;
+
+    await updateDoc(docRef, updatePayload);
+
+    // 2. Cascade name change to shops if name changed
+    if (newName && newName !== oldName) {
+      const shopsQ = query(
+        collection(db, COLLECTION_NAME),
+        where("category", "==", oldName)
+      );
+      const shopsSnap = await getDocs(shopsQ);
+      const shopPromises = shopsSnap.docs.map(d => 
+        updateDoc(doc(db, COLLECTION_NAME, d.id), { 
+          category: newName,
+          updatedAt: serverTimestamp()
+        })
+      );
+
+      // 3. Cascade to clusters
+      const clustersQ = query(
+        collection(db, "clusters"),
+        where("category", "==", oldName)
+      );
+      const clustersSnap = await getDocs(clustersQ);
+      const clusterPromises = clustersSnap.docs.map(d => 
+        updateDoc(doc(db, "clusters", d.id), { 
+          category: newName,
+          updatedAt: serverTimestamp()
+        })
+      );
+
+      await Promise.all([...shopPromises, ...clusterPromises]);
+    }
+    return { success: true };
+  } catch (error) {
+    console.error("Error updating category:", error);
+    return { success: false, error: error.message };
+  }
+}
+
+/**
+ * Admin: Subcategory Management
+ */
+export async function getSubCategories() {
+  try {
+    const q = query(collection(db, "subcategories"), orderBy("createdAt", "desc"));
+    const snap = await getDocs(q);
+    return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  } catch (error) {
+    console.error("Error fetching subcategories:", error);
+    return [];
+  }
+}
+
+export async function addSubCategory(name, parentCategory, icon = "Layers") {
+  try {
+    const docRef = await addDoc(collection(db, "subcategories"), {
+      name,
+      parentCategory,
+      icon,
+      createdAt: serverTimestamp()
+    });
+    return { success: true, id: docRef.id };
+  } catch (error) {
+    console.error("Error adding subcategory:", error);
+    return { success: false, error: error.message };
+  }
+}
+
+export async function updateSubCategory(id, name, parentCategory, icon) {
+  try {
+    const updatePayload = {
+      updatedAt: serverTimestamp()
+    };
+    if (name) updatePayload.name = name;
+    if (parentCategory) updatePayload.parentCategory = parentCategory;
+    if (icon) updatePayload.icon = icon;
+
+    await updateDoc(doc(db, "subcategories", id), updatePayload);
+    return { success: true };
+  } catch (error) {
+    console.error("Error updating subcategory:", error);
+    return { success: false, error: error.message };
+  }
+}
+
+export async function deleteSubCategory(id) {
+  try {
+    await deleteDoc(doc(db, "subcategories", id));
+    return { success: true };
+  } catch (error) {
+    console.error("Error deleting subcategory:", error);
+    return { success: false, error: error.message };
   }
 }
 
@@ -1268,5 +1414,74 @@ export async function getEntityLogs(entityId, limitCount = 5) {
   } catch (error) {
     console.error("Error fetching entity logs:", error);
     return [];
+  }
+}
+
+
+/**
+ * BLOG SYSTEM
+ */
+
+export async function getBlogs(limitCount = 50) {
+  try {
+    const q = query(collection(db, "blogs"), orderBy("createdAt", "desc"), limit(limitCount));
+    const snap = await getDocs(q);
+    return snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+  } catch (error) {
+    console.error("Error fetching blogs:", error);
+    return [];
+  }
+}
+
+export async function getBlogBySlug(slug) {
+  try {
+    const q = query(collection(db, "blogs"), where("slug", "==", slug), limit(1));
+    const snap = await getDocs(q);
+    if (snap.empty) return null;
+    return { id: snap.docs[0].id, ...snap.docs[0].data() };
+  } catch (error) {
+    console.error("Error fetching blog by slug:", error);
+    return null;
+  }
+}
+
+export async function addBlog(blogData) {
+  try {
+    const docRef = await addDoc(collection(db, "blogs"), {
+      ...blogData,
+      slug: slugify(blogData.title),
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    });
+    return { success: true, id: docRef.id };
+  } catch (error) {
+    console.error("Error adding blog:", error);
+    return { success: false, error: error.message };
+  }
+}
+
+export async function updateBlog(id, blogData) {
+  try {
+    const docRef = doc(db, "blogs", id);
+    await updateDoc(docRef, {
+      ...blogData,
+      slug: slugify(blogData.title),
+      updatedAt: serverTimestamp(),
+    });
+    return { success: true };
+  } catch (error) {
+    console.error("Error updating blog:", error);
+    return { success: false, error: error.message };
+  }
+}
+
+export async function deleteBlog(id) {
+  try {
+    const docRef = doc(db, "blogs", id);
+    await deleteDoc(docRef);
+    return { success: true };
+  } catch (error) {
+    console.error("Error deleting blog:", error);
+    return { success: false, error: error.message };
   }
 }

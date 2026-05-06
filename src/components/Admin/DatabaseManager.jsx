@@ -5,9 +5,10 @@ import { collection, addDoc, getDocs, writeBatch, serverTimestamp, getCountFromS
 import { db } from "@/lib/db";
 import { slugify } from "@/lib/slugify";
 import Button from "@/components/UI/Button";
-import { Loader2, Check, Zap, ShieldCheck, Trash2, Database, BarChart3, Package, MapPin, Tag, RefreshCw, ShieldAlert, Navigation, GitBranch } from "lucide-react";
+import { Loader2, Check, Zap, ShieldCheck, Trash2, Database, BarChart3, Package, MapPin, Tag, RefreshCw, ShieldAlert, Navigation, GitBranch, History, FileText } from "lucide-react";
 import { seedShopCoords } from "@/lib/seedShopCoords";
 import { migrateClusterLocations } from "@/lib/migrateClusterLocations";
+import { seedBlogs } from "@/lib/seedBlogs";
 
 const AREAS = [
   { name: "Gota", lat: 23.1058, lng: 72.5413, pincode: "382481" },
@@ -35,7 +36,8 @@ const CATEGORIES = [
   { name: "Pharmacy", adjectives: ["Lifeline", "Wellness", "City", "Health", "Care", "Global"], nouns: ["Pharmacy", "Medicals", "Health Care", "Pharma"], img: "https://images.unsplash.com/photo-1587854692152-cbe660dbbb88?w=800&q=80" },
   { name: "Hardware Store", adjectives: ["Bharat", "National", "Shakti", "Diamond", "Everest"], nouns: ["Hardware", "Sanitary", "Paints", "Tools"], img: "https://images.unsplash.com/photo-1530124560677-bdaea027df01?w=800&q=80" },
   { name: "Toy Shop", adjectives: ["Kids", "Magic", "Dream", "Toy", "Little", "Fun"], nouns: ["World", "Zone", "Kingdom", "Planet"], img: "https://images.unsplash.com/photo-1536640712247-c575adcfc623?w=800&q=80" },
-  { name: "Pet Store", adjectives: ["Pet", "Doggy", "Happy", "Furry", "Tail", "Smart"], nouns: ["Store", "Groomers", "Planet", "Care"], img: "https://images.unsplash.com/photo-1601758124510-52d02ddb7cbd?w=800&q=80" }
+  { name: "Pet Store", adjectives: ["Pet", "Doggy", "Happy", "Furry", "Tail", "Smart"], nouns: ["Store", "Groomers", "Planet", "Care"], img: "https://images.unsplash.com/photo-1601758124510-52d02ddb7cbd?w=800&q=80" },
+  { name: "Electrical Store", adjectives: ["Power", "Volt", "Current", "Super", "Shock", "Global"], nouns: ["Electricals", "Electrics", "Solutions", "Store"], img: "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=800&q=80" }
 ];
 
 const CLUSTERS = ["Ahmedabad West Hub", "City Center Market", "North Zone Bazaar", "Satellite Business District", "Maninagar Heritage Lane"];
@@ -182,6 +184,50 @@ const DatabaseManager = () => {
         await addDoc(collection(db, "shops"), shopData);
         setProgress(prev => ({ ...prev, current: i + 1 }));
       }
+      setStatus("finished");
+      fetchStats();
+    } catch (err) {
+      console.error(err);
+      setStatus("idle");
+    }
+  };
+
+  const seedLogs = async () => {
+    setStatus("seeding_logs");
+    setProgress({ current: 0, total: 20 });
+    try {
+      const actions = [
+        { action: "Shop Approved", type: "shop", details: "Registration verified and published." },
+        { action: "Shop Rejected", type: "shop", details: "Insufficient documentation provided." },
+        { action: "Category Added", type: "category", details: "New platform taxonomy entry." },
+        { action: "Settings Updated", type: "system", details: "Global platform configuration modified." },
+        { action: "Bulk Audit", type: "shop", details: "Processed 10 pending applications." }
+      ];
+
+      for (let i = 0; i < 20; i++) {
+        const act = actions[Math.floor(Math.random() * actions.length)];
+        await addDoc(collection(db, "activity_logs"), {
+          action: act.action,
+          details: act.details,
+          entityId: "seed_" + i,
+          entityType: act.type,
+          performedBy: Math.random() > 0.5 ? "webiestindiasolution@gmail.com" : "sutharamit344@gmail.com",
+          timestamp: serverTimestamp()
+        });
+        setProgress(prev => ({ ...prev, current: i + 1 }));
+      }
+      setStatus("finished");
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleSeedBlogs = async () => {
+    setStatus("seeding_blogs");
+    try {
+      await seedBlogs((current, total) => {
+        setProgress({ current, total });
+      });
       setStatus("finished");
       fetchStats();
     } catch (err) {
@@ -355,6 +401,32 @@ const DatabaseManager = () => {
              clusterMigStatus === "done" ? <><Check size={16} /> Done!</> : "Run Cluster Migration"}
           </button>
         </div>
+
+        {/* Seed Logs */}
+        <div className="bg-white rounded-3xl border border-[#1A1F36]/[0.06] p-7 shadow-sm space-y-5">
+          <div className="flex items-center gap-4">
+            <div className="w-11 h-11 rounded-2xl bg-emerald-50 text-emerald-500 flex items-center justify-center flex-shrink-0">
+              <History size={20} />
+            </div>
+            <div>
+              <h3 className="text-[16px] font-bold text-[#1A1F36]">Seed Activity Logs</h3>
+              <p className="text-[12px] text-[#999]">Generate 20 realistic audit logs to test the global activity feed.</p>
+            </div>
+          </div>
+          <div className="h-28 flex items-center justify-center bg-gray-50 rounded-2xl border border-dashed border-gray-200">
+             <div className="text-center">
+                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Status</p>
+                <p className="text-[12px] font-black text-[#1A1F36]">{status === "seeding_logs" ? "Generating..." : "Ready to Seed"}</p>
+             </div>
+          </div>
+          <button
+            onClick={seedLogs}
+            disabled={status !== "idle" && status !== "finished"}
+            className="w-full h-11 bg-emerald-600 text-white rounded-xl font-bold text-[13px] flex items-center justify-center gap-2 hover:bg-emerald-700 transition-all disabled:opacity-50"
+          >
+            {status === "seeding_logs" ? <><Loader2 size={16} className="animate-spin" /> Seeding...</> : "Seed 20 Audit Logs"}
+          </button>
+        </div>
       </div>
 
       {/* Seed + Progress */}
@@ -371,18 +443,44 @@ const DatabaseManager = () => {
             </div>
           </div>
 
-          <div className="grid grid-cols-3 gap-4">
-            {[50, 100, 500].map(amount => (
-              <button
-                key={amount}
+          <div className="space-y-4">
+             <div className="flex items-center justify-between">
+                <span className="text-[11px] font-bold text-gray-400 uppercase tracking-widest">Marketplace Shops</span>
+                <div className="h-px bg-gray-100 flex-1 ml-4"></div>
+             </div>
+             <div className="grid grid-cols-3 gap-4">
+               {[50, 100, 500].map(amount => (
+                 <button
+                   key={amount}
+                   disabled={status !== "idle" && status !== "finished"}
+                   onClick={() => seedData(amount)}
+                   className="h-20 rounded-2xl border-2 border-dashed border-[#1A1F36]/[0.1] hover:border-[#FF6A00] hover:bg-[#FF6A00]/5 transition-all flex flex-col items-center justify-center gap-1 group disabled:opacity-50"
+                 >
+                   <span className="text-xl font-black text-[#1A1F36] group-hover:text-[#FF6A00]">{amount}</span>
+                   <span className="text-[9px] font-bold text-[#999] uppercase tracking-widest">Shops</span>
+                 </button>
+               ))}
+             </div>
+          </div>
+
+          <div className="space-y-4">
+             <div className="flex items-center justify-between">
+                <span className="text-[11px] font-bold text-gray-400 uppercase tracking-widest">Editorial Journal</span>
+                <div className="h-px bg-gray-100 flex-1 ml-4"></div>
+             </div>
+             <button
                 disabled={status !== "idle" && status !== "finished"}
-                onClick={() => seedData(amount)}
-                className="h-24 rounded-2xl border-2 border-dashed border-[#1A1F36]/[0.1] hover:border-[#FF6A00] hover:bg-[#FF6A00]/5 transition-all flex flex-col items-center justify-center gap-2 group disabled:opacity-50"
-              >
-                <span className="text-2xl font-black text-[#1A1F36] group-hover:text-[#FF6A00]">{amount}</span>
-                <span className="text-[10px] font-bold text-[#999] uppercase tracking-widest">Shops</span>
-              </button>
-            ))}
+                onClick={handleSeedBlogs}
+                className="w-full h-14 rounded-2xl border-2 border-dashed border-emerald-200 hover:border-emerald-500 hover:bg-emerald-50 transition-all flex items-center justify-center gap-3 group disabled:opacity-50"
+             >
+                <div className="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center">
+                   <FileText size={16} />
+                </div>
+                <div className="text-left">
+                   <span className="block text-sm font-bold text-[#1A1F36]">Seed Premium Blogs</span>
+                   <span className="block text-[10px] text-gray-400 font-medium">4 Ready-to-publish articles</span>
+                </div>
+             </button>
           </div>
 
           <div className="p-6 bg-red-50 rounded-3xl border border-red-100 space-y-4">
@@ -431,7 +529,9 @@ const DatabaseManager = () => {
               </div>
               <div className="space-y-2">
                 <h3 className="text-2xl font-bold tracking-tight">
-                  {status === "clearing" ? "Clearing Database..." : `Seeding ${progress.total} Shops...`}
+                  {status === "clearing" ? "Clearing Database..." : 
+                   status === "seeding_logs" ? "Seeding Activity Logs..." :
+                   `Seeding ${progress.total} Shops...`}
                 </h3>
                 <p className="text-white/40 text-[13px] uppercase tracking-widest font-bold">
                   {status === "seeding" ? `${progress.current} / ${progress.total} Completed` : "Processing cleanup"}

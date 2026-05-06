@@ -18,6 +18,8 @@ const initialState = {
   recentSearches: [],
   loading: false,
   error: null,
+  sortBy: "relevance",
+  tags: {},
 };
 
 const searchSlice = createSlice({
@@ -57,7 +59,10 @@ const searchSlice = createSlice({
       })
       .addCase(fetchSearchResults.fulfilled, (state, action) => {
         state.loading = false;
-        state.results = action.payload;
+        state.results = action.payload.shops;
+        if (action.payload.correctedParsed) {
+          state.parsed = { ...state.parsed, ...action.payload.correctedParsed };
+        }
       })
       .addCase(fetchSearchResults.rejected, (state, action) => {
         state.loading = false;

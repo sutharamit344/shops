@@ -4,9 +4,9 @@ import React from "react";
 import Link from "next/link";
 import { useAuth } from "@/hooks/useAuth";
 import { 
-  ShieldCheck, LayoutDashboard, Store, Tag, 
+  ShieldCheck, LayoutDashboard, Store, Tag, Layers,
   History, LogOut, ArrowLeft, ExternalLink, Settings, X,
-  ChevronLeft, ChevronRight, Database
+  ChevronLeft, ChevronRight, Database, FileText, MessageSquare
 } from "lucide-react";
 
 const Sidebar = ({ activeTab, onTabChange, isOpen, onClose, isCollapsed, onToggleCollapse }) => {
@@ -15,7 +15,10 @@ const Sidebar = ({ activeTab, onTabChange, isOpen, onClose, isCollapsed, onToggl
   const navItems = [
     { id: 'dashboard', label: 'Overview', icon: LayoutDashboard },
     { id: 'shops', label: 'Businesses', icon: Store },
+    { id: 'blogs', label: 'Journal', icon: FileText },
+    { id: 'inquiries', label: 'Inquiries', icon: MessageSquare },
     { id: 'categories', label: 'Categories', icon: Tag },
+    { id: 'subcategories', label: 'Subcategories', icon: Layers },
     { id: 'database', label: 'Database', icon: Database },
     { id: 'activity', label: 'Global Logs', icon: History }
   ];
@@ -81,7 +84,7 @@ const Sidebar = ({ activeTab, onTabChange, isOpen, onClose, isCollapsed, onToggl
             } ${
               activeTab === item.id 
                 ? "bg-[#1A1F36] text-white shadow-md shadow-[#1A1F36]/10" 
-                : "text-[#1A1F36]/60 hover:bg-[#FAFAF8] hover:text-[#1A1F36]"
+                : "text-[#1A1F36]/75 hover:bg-[#FAFAF8] hover:text-[#1A1F36]"
             }`}
             title={isCollapsed ? item.label : ""}
           >
@@ -110,7 +113,7 @@ const Sidebar = ({ activeTab, onTabChange, isOpen, onClose, isCollapsed, onToggl
             href="/"
             className={`flex items-center rounded-xl transition-all ${
               isCollapsed ? "w-12 h-12 justify-center" : "w-full px-4 py-3 gap-3"
-            } text-[#1A1F36]/60 hover:bg-[#FAFAF8] hover:text-[#1A1F36]`}
+            } text-[#1A1F36]/75 hover:bg-[#FAFAF8] hover:text-[#1A1F36]`}
             title={isCollapsed ? "Public Site" : ""}
           >
             <ExternalLink size={18} className="text-[#ccc]" />
@@ -121,7 +124,7 @@ const Sidebar = ({ activeTab, onTabChange, isOpen, onClose, isCollapsed, onToggl
           <button 
             className={`flex items-center rounded-xl transition-all ${
               isCollapsed ? "w-12 h-12 justify-center" : "w-full px-4 py-3 gap-3"
-            } text-[#1A1F36]/60 hover:bg-[#FAFAF8] hover:text-[#1A1F36]`}
+            } text-[#1A1F36]/75 hover:bg-[#FAFAF8] hover:text-[#1A1F36]`}
             title={isCollapsed ? "Settings" : ""}
           >
             <Settings size={18} className="text-[#ccc]" />
@@ -136,7 +139,7 @@ const Sidebar = ({ activeTab, onTabChange, isOpen, onClose, isCollapsed, onToggl
       <div className="hidden lg:block absolute -right-5 top-20 z-[400]">
         <button 
           onClick={onToggleCollapse}
-          className="w-10 h-10 rounded-full bg-white border border-[#1A1F36]/[0.07] flex items-center justify-center text-[#1A1F36]/60 hover:bg-[#1A1F36] hover:text-white transition-all shadow-md group active:scale-90"
+          className="w-10 h-10 rounded-full bg-white border border-[#1A1F36]/[0.07] flex items-center justify-center text-[#1A1F36]/75 hover:bg-[#1A1F36] hover:text-white transition-all shadow-md group active:scale-90"
         >
           {isCollapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
         </button>

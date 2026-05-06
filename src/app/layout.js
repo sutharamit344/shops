@@ -5,8 +5,10 @@ import AuthInit from "@/components/AuthInit";
 import LocationInit from "@/components/LocationInit";
 import ModalContainer from "@/components/ModalContainer";
 import PWARegistration from "@/components/PWARegistration";
+import Toast from "@/components/UI/Toast";
 
 import { BRAND, DOMAIN } from "@/lib/config";
+import AppWrapper from "@/components/AppWrapper";
 
 const jakarta = Plus_Jakarta_Sans({
   subsets: ["latin"],
@@ -35,9 +37,7 @@ export const metadata = {
       { url: "/sb-logo.png", sizes: "192x192", type: "image/png" },
       { url: "/sb-logo.png", sizes: "512x512", type: "image/png" },
     ],
-    apple: [
-      { url: "/sb-logo.png", sizes: "180x180", type: "image/png" },
-    ],
+    apple: [{ url: "/sb-logo.png", sizes: "180x180", type: "image/png" }],
   },
 };
 
@@ -48,8 +48,6 @@ export const viewport = {
   maximumScale: 1,
 };
 
-import AppWrapper from "@/components/AppWrapper";
-
 export default function RootLayout({ children }) {
   return (
     <html lang="en" className={`${jakarta.variable} h-full`}>
@@ -59,9 +57,8 @@ export default function RootLayout({ children }) {
           <LocationInit />
           <ModalContainer />
           <PWARegistration />
-          <AppWrapper>
-            {children}
-          </AppWrapper>
+          <AppWrapper>{children}</AppWrapper>
+          <Toast />
         </ReduxProvider>
       </body>
     </html>

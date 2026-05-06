@@ -142,12 +142,12 @@ const ShopProfileClient = ({ shop }) => {
       {/* Hero Banner */}
       <div className="relative h-56 md:h-72 w-full overflow-hidden bg-gradient-to-r from-[#FF6A00]/20 to-[#FF9A72]/20">
         {shop.coverImage ? (
-          <Image 
-            src={shop.coverImage} 
-            alt={shop.name} 
-            fill 
+          <Image
+            src={shop.coverImage}
+            alt={shop.name}
+            fill
             priority
-            className="object-cover" 
+            className="object-cover"
             sizes="100vw"
           />
         ) : (
@@ -191,12 +191,12 @@ const ShopProfileClient = ({ shop }) => {
             <div className="flex flex-col md:flex-row gap-5 mb-5">
               <div className="w-20 h-20 rounded-xl bg-white border border-black/[0.06] overflow-hidden flex-shrink-0 relative">
                 {shop.logo ? (
-                  <Image 
-                    src={shop.logo.includes(" ") ? shop.logo.replace(/\s/g, "%20") : shop.logo} 
-                    alt={shop.name} 
-                    fill 
+                  <Image
+                    src={shop.logo.includes(" ") ? shop.logo.replace(/\s/g, "%20") : shop.logo}
+                    alt={shop.name}
+                    fill
                     unoptimized
-                    className="object-cover" 
+                    className="object-cover"
                     sizes="80px"
                   />
                 ) : (
@@ -324,11 +324,11 @@ const ShopProfileClient = ({ shop }) => {
                   >
                     <div className="w-14 h-14 rounded-lg bg-gray-50 flex items-center justify-center overflow-hidden flex-shrink-0 relative">
                       {item.image ? (
-                        <Image 
-                          src={item.image} 
-                          alt={item.name} 
-                          fill 
-                          className="object-cover" 
+                        <Image
+                          src={item.image}
+                          alt={item.name}
+                          fill
+                          className="object-cover"
                           sizes="56px"
                         />
                       ) : (
@@ -371,11 +371,11 @@ const ShopProfileClient = ({ shop }) => {
                         >
                           <div className="w-14 h-14 rounded-lg bg-gray-50 flex items-center justify-center overflow-hidden flex-shrink-0 relative">
                             {item.image ? (
-                              <Image 
-                                src={item.image} 
-                                alt={item.name} 
-                                fill 
-                                className="object-cover group-hover:scale-105 transition-transform" 
+                              <Image
+                                src={item.image}
+                                alt={item.name}
+                                fill
+                                className="object-cover group-hover:scale-105 transition-transform"
                                 sizes="56px"
                               />
                             ) : (
@@ -574,11 +574,11 @@ const ShopProfileClient = ({ shop }) => {
                     key={idx}
                     className="aspect-square rounded-xl overflow-hidden cursor-pointer hover:opacity-90 transition-all border border-black/[0.06] relative"
                   >
-                    <Image 
-                      src={img} 
-                      alt={`Gallery ${idx + 1}`} 
-                      fill 
-                      className="object-cover" 
+                    <Image
+                      src={img}
+                      alt={`Gallery ${idx + 1}`}
+                      fill
+                      className="object-cover"
                       sizes="(max-width: 768px) 50vw, 33vw"
                     />
                   </div>
@@ -740,11 +740,11 @@ const ShopProfileClient = ({ shop }) => {
           <div className="flex flex-col">
             <div className="relative aspect-square w-full bg-gray-50 overflow-hidden rounded-t-2xl">
               {selectedItem.image ? (
-                <Image 
-                  src={selectedItem.image} 
-                  alt={selectedItem.name} 
-                  fill 
-                  className="object-cover" 
+                <Image
+                  src={selectedItem.image}
+                  alt={selectedItem.name}
+                  fill
+                  className="object-cover"
                   sizes="(max-width: 768px) 100vw, 448px"
                 />
               ) : (

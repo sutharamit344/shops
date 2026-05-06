@@ -7,13 +7,12 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useSelector, useDispatch } from "react-redux";
 import { loginWithGoogle, logout } from "@/redux/thunks/authThunks";
 import {
-  Store, Menu as MenuIcon, X,
-  LogOut, Navigation, SlidersHorizontal
+  Menu as MenuIcon, X,
+  LogOut, SlidersHorizontal
 } from "lucide-react";
 import { isUserAdmin } from "@/lib/db";
 import Button from "@/components/UI/Button";
 import SmartSearch from "@/components/Search/SmartSearch";
-import { setCity, setArea, setAllFilters, resetFilters } from "@/redux/slices/filterSlice";
 import { slugify } from "@/lib/slugify";
 import FilterModal from "@/components/Search/FilterModal";
 
@@ -23,17 +22,26 @@ const Navbar = () => {
   const dispatch = useDispatch();
   const router = useRouter();
   const pathname = usePathname();
-  const searchParams = useSearchParams();
   const { user } = useSelector((state) => state.auth);
-  const { nearby: isNearbyActive } = useSelector((state) => state.filters);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
-  const [isDetecting, setIsDetecting] = useState(false);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [currentCity, setCurrentCity] = useState("ahmedabad");
+  const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
     setMounted(true);
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('last_city');
+      if (saved) setCurrentCity(slugify(saved));
+
+      const handleScroll = () => {
+        setScrolled(window.scrollY > 50);
+      };
+      window.addEventListener("scroll", handleScroll);
+      return () => window.removeEventListener("scroll", handleScroll);
+    }
   }, []);
 
   useEffect(() => {
@@ -48,173 +56,99 @@ const Navbar = () => {
     checkAdmin();
   }, [user]);
 
-  const detectLocation = () => {
-    if (!navigator.geolocation) return;
-    setIsDetecting(true);
-    navigator.geolocation.getCurrentPosition(
-      async (position) => {
-        try {
-          const { latitude, longitude } = position.coords;
-          const res = await fetch(
-            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`,
-            { headers: { "User-Agent": `${BRAND}/1.0 (contact: sutharamit344@gmail.com)` } }
-          );
-          const data = await res.json();
-          const address = data.address || {};
-          const city = address.city || address.city_district || address.state_district || address.town || "";
-          let area = address.suburb ||
-            address.neighbourhood ||
-            address.residential ||
-            address.quarter ||
-            address.industrial ||
-            address.village ||
-            address.hamlet || "";
+  const isHome = pathname === "/";
 
-          // CLEANUP: Remove redundant or overly generic names
-          if (area.toLowerCase() === city.toLowerCase()) area = "";
+  // Refined Color Logic
+  const isDarkTheme = isHome && !scrolled;
 
-          if (city) {
-            const cleanCity = city.replace(/ District| Division/g, "");
-            const cleanArea = area ? area.replace(/ District| Division/g, "") : "";
+  const navStyles = (isHome && !scrolled && !isMenuOpen)
+    ? "bg-transparent border-transparent py-5 md:py-7"
+    : (isDarkTheme
+      ? "bg-[#020617] border-white/10 shadow-xl py-3 md:py-4"
+      : "bg-white border-black/[0.05] shadow-lg py-3 md:py-4");
 
-            dispatch(setCity(cleanCity));
-            if (cleanArea) dispatch(setArea(cleanArea));
+  const textColor = isDarkTheme ? "text-white" : "text-[#1A1F36]";
+  const linkColor = isDarkTheme ? "text-white/70" : "text-[#1A1F36]/60";
+  const logoMainColor = isDarkTheme ? "text-white" : "text-[#1A1F36]";
 
-            const params = new URLSearchParams(searchParams.toString());
-            params.set("city", slugify(cleanCity));
-            if (cleanArea) params.set("area", slugify(cleanArea));
-            params.set("nearby", "true");
-
-            router.push(`/explore?${params.toString()}`);
-
-            // CACHE LOCATION
-            localStorage.setItem('last_city', cleanCity);
-            if (cleanArea) localStorage.setItem('last_area', cleanArea);
-            localStorage.setItem('last_lat', latitude.toString());
-            localStorage.setItem('last_lng', longitude.toString());
-          }
-        } catch (error) {
-          console.error("Location error:", error);
-        } finally {
-          setIsDetecting(false);
-        }
-      },
-      (error) => {
-        setIsDetecting(false);
-        alert("Location access denied. Please enable location permissions in your browser.");
-      }
-    );
-  };
-
-  const handleNearbyToggle = () => {
-    if (isNearbyActive) {
-      dispatch(setAllFilters({ nearby: false, city: "", area: "" }));
-      const params = new URLSearchParams(searchParams.toString());
-      params.delete("nearby");
-      params.delete("city");
-      params.delete("area");
-      router.push(`/explore?${params.toString()}`);
-    } else {
-      dispatch(setAllFilters({ nearby: true }));
-      const params = new URLSearchParams(searchParams.toString());
-      params.set("nearby", "true");
-      router.push(`/explore?${params.toString()}`);
-      detectLocation();
-    }
-  };
-
-  const handleReset = () => {
-    dispatch(resetFilters());
-    router.push("/explore");
-  };
+  if (!mounted) return <div className="h-24" />;
 
   return (
     <>
-      <nav className="fixed top-0 left-0 right-0 z-[100] h-16 flex items-center px-6 md:px-12 bg-white/95 backdrop-blur-md border-b border-[#1A1F36]/[0.06]">
+      <nav className={`fixed top-0 left-0 right-0 z-50 flex items-center px-5 md:px-16 transition-all duration-500 border-b ${navStyles}`}>
         {/* Logo */}
-        {mounted && (
-          <Link href="/" prefetch={false} className="flex items-center gap-2.5 flex-shrink-0 group">
-            <div className="w-9 h-9 rounded-xl overflow-hidden flex items-center justify-center transition-transform group-hover:scale-105 border border-black/5 shadow-sm">
-              <Image
-                src="/sb-logo.png"
-                alt={BRAND}
-                width={36}
-                height={36}
-                className="object-cover"
-              />
-            </div>
-            <span className="text-[18px] font-black tracking-tighter text-[#020617]">
-              {BRAND.startsWith("Shop") ? (
-                <>
-                  Shop<span className="text-[#FF6A00]">{BRAND.replace("Shop", "")}</span>
-                </>
-              ) : (
-                BRAND
-              )}
-            </span>
-          </Link>
-        )}
+        <Link href="/" prefetch={false} className="flex items-center gap-3 md:gap-4 flex-shrink-0 group">
+          <div className={`w-11 h-11 md:w-14 md:h-14 rounded-xl md:rounded-2xl overflow-hidden flex items-center justify-center transition-all duration-300 group-hover:scale-105 border ${isDarkTheme ? "border-white/20 bg-white/5" : "border-black/5 bg-white shadow-md"}`}>
+            <Image
+              src="/sb-logo.png"
+              alt={BRAND}
+              width={48}
+              height={48}
+              className="object-cover"
+            />
+          </div>
+          <span className={`text-[22px] md:text-[32px] font-black tracking-tighter transition-colors duration-300 ${logoMainColor}`}>
+            {BRAND.startsWith("Shop") ? (
+              <>
+                Shop<span className="text-[#FF6A00]">{BRAND.replace("Shop", "")}</span>
+              </>
+            ) : (
+              BRAND
+            )}
+          </span>
+        </Link>
 
-        {/* Desktop Search Section */}
-        {pathname !== "/" && (
-          <div className="hidden lg:flex flex-1 items-center justify-center max-w-3xl mx-12 gap-3 group">
-            <div className="flex-1 min-w-[320px]">
+        {/* Desktop Search Section (Hidden on Home Hero) */}
+        {!isHome && (
+          <div className="hidden lg:flex flex-1 items-center justify-center max-w-2xl mx-8 gap-3">
+            <div className="flex-1">
               <SmartSearch />
             </div>
-            <div className="flex items-center gap-2 group-focus-within:hidden">
-              <button
-                onClick={() => setIsFilterOpen(true)}
-                className="h-10 px-4 rounded-xl border border-black/[0.06] bg-white text-[#1A1F36] hover:bg-gray-50 flex items-center gap-2 text-[13px] font-bold transition-all"
-                title="Sort & Filter"
-              >
-                <SlidersHorizontal size={16} className="text-[#FF6A00]" />
-                <span>Filter</span>
-              </button>
-            </div>
+            <button
+              onClick={() => setIsFilterOpen(true)}
+              className="h-11 px-5 rounded-xl border border-black/[0.06] bg-white text-[#1A1F36] hover:bg-gray-50 flex items-center gap-2 text-[13px] font-bold transition-all shadow-sm"
+            >
+              <SlidersHorizontal size={16} className="text-[#FF6A00]" />
+              <span>Filter</span>
+            </button>
           </div>
         )}
 
         {/* Navigation & Auth */}
-        <div className="ml-auto flex items-center gap-5 flex-shrink-0">
-          <div className="hidden md:flex items-center gap-8 mr-4">
-            <Link href="/explore" className="text-[15px] font-bold text-[#1A1F36]/40 hover:text-[#FF6A00] transition-colors">Marketplace</Link>
-            {isAdmin && <Link href="/admin" className="text-[15px] font-bold text-[#1A1F36]/40 hover:text-[#FF6A00] transition-colors">Admin</Link>}
+        <div className="ml-auto flex items-center gap-3 md:gap-8 flex-shrink-0">
+          <div className="hidden md:flex items-center gap-8">
+            <Link href={`/${currentCity}`} className={`text-[15px] font-black uppercase tracking-widest ${linkColor} hover:text-[#FF6A00] transition-colors`}>Marketplace</Link>
+            {isAdmin && <Link href="/admin" className={`text-[15px] font-black uppercase tracking-widest ${linkColor} hover:text-[#FF6A00] transition-colors`}>Admin</Link>}
           </div>
 
           {user ? (
-            <Link href="/dashboard" className="flex items-center gap-3 hover:opacity-80 transition-all md:p-1.5 md:pr-5 bg-[#1A1F36]/[0.03] border border-[#1A1F36]/[0.06] rounded-full relative">
+            <Link href="/dashboard" className={`hidden lg:flex items-center gap-3 hover:opacity-80 transition-all p-1.5 pr-4 md:pr-6 ${isDarkTheme ? "bg-white/10 border-white/10" : "bg-[#1A1F36]/[0.03] border-[#1A1F36]/[0.06]"} border rounded-full relative`}>
               {user.photoURL ? (
-                <div className="w-7 h-7 rounded-full overflow-hidden border border-[#1A1F36]/10 relative">
-                  <Image
-                    src={user.photoURL}
-                    alt="Profile"
-                    fill
-                    className="object-cover"
-                    sizes="28px"
-                  />
+                <div className=" w-8 h-8 md:w-9 md:h-9 rounded-full overflow-hidden border border-black/10 relative">
+                  <Image src={user.photoURL} alt="Profile" fill className="object-cover" />
                 </div>
               ) : (
-                <div className="w-7 h-7 rounded-full bg-[#1A1F36] text-white flex items-center justify-center text-[11px] font-bold">
-                  {user.email?.charAt(0).toUpperCase()}
+                <div className="hidden lg:block w-8 h-8 md:w-9 md:h-9 rounded-full bg-[#1A1F36] text-white flex items-center justify-center text-[12px] font-bold uppercase">
+                  {user.email?.charAt(0)}
                 </div>
               )}
-              <span className="hidden md:block text-[14px] font-bold text-[#1A1F36]">
+              <span className={`hidden sm:block text-[14px] font-black uppercase tracking-wide ${textColor}`}>
                 {user.displayName?.split(' ')[0] || "Account"}
               </span>
             </Link>
           ) : (
-            <div className="hidden sm:flex items-center gap-8">
+            <div className="hidden sm:flex items-center gap-6">
               <button
                 onClick={() => dispatch(loginWithGoogle())}
-                className="text-[14px] font-bold text-[#1A1F36]/40 hover:text-[#1A1F36] transition-colors"
+                className={`text-[14px] font-black uppercase tracking-widest ${linkColor} hover:text-[#FF6A00] transition-colors`}
               >
                 Sign in
               </button>
               <Button
-                variant="dark"
-                size="sm"
-                className="h-10 px-6 text-[13px] font-bold"
-                onClick={() => window.location.href = '/create'}
+                variant={isDarkTheme ? "primary" : "dark"}
+                size="md"
+                className="h-11 px-8 rounded-xl text-[12px] font-black uppercase tracking-widest shadow-lg"
+                onClick={() => router.push('/create')}
               >
                 List shop
               </Button>
@@ -223,30 +157,68 @@ const Navbar = () => {
 
           {/* Mobile Menu Toggle */}
           <button
-            className="lg:hidden text-[#1A1F36] p-2 hover:bg-[#1A1F36]/5 rounded-xl transition-colors"
+            className={`lg:hidden p-2 rounded-xl transition-colors ${isDarkTheme ? "text-white hover:bg-white/10" : "text-[#1A1F36] hover:bg-black/5"}`}
             onClick={() => setIsMenuOpen(!isMenuOpen)}
           >
-            {isMenuOpen ? <X size={22} /> : <MenuIcon size={22} />}
+            {isMenuOpen ? <X size={24} /> : <MenuIcon size={24} />}
           </button>
         </div>
 
         {/* Mobile Menu Overlay */}
         {isMenuOpen && (
-          <div className="absolute top-16 left-0 right-0 bg-white border-b border-[#1A1F36]/[0.06] p-8 flex flex-col gap-8 lg:hidden animate-in slide-in-from-top-4 duration-300 shadow-2xl z-50">
-            <div className="flex flex-col gap-6">
-              <Link href="/explore" onClick={() => setIsMenuOpen(false)} className="text-xl font-bold text-[#1A1F36] tracking-tight">Marketplace</Link>
-              <Link href="/create" onClick={() => setIsMenuOpen(false)} className="text-xl font-bold text-[#1A1F36] tracking-tight">List Your Business</Link>
+          <div className={`fixed inset-0 top-[71px] z-[200] ${isDarkTheme ? "bg-[#020617]" : "bg-white"} p-6 flex flex-col lg:hidden animate-in fade-in slide-in-from-right-4 duration-500`}>
+            <div className="flex flex-col gap-1 pt-6">
+              <Link
+                href={`/${currentCity}`}
+                onClick={() => setIsMenuOpen(false)}
+                className={`py-4 px-2 text-[20px] font-bold tracking-tight ${textColor} border-b ${isDarkTheme ? "border-white/5" : "border-black/5"}`}
+              >
+                Marketplace
+              </Link>
+
+              <Link
+                href="/create"
+                onClick={() => setIsMenuOpen(false)}
+                className={`py-4 px-2 text-[20px] font-bold tracking-tight ${textColor} border-b ${isDarkTheme ? "border-white/5" : "border-black/5"}`}
+              >
+                List Your Business
+              </Link>
+
+              {isAdmin && (
+                <Link
+                  href="/admin"
+                  onClick={() => setIsMenuOpen(false)}
+                  className={`py-4 px-2 text-[20px] font-bold tracking-tight ${textColor} border-b ${isDarkTheme ? "border-white/5" : "border-black/5"}`}
+                >
+                  Admin Panel
+                </Link>
+              )}
             </div>
 
-            <div className="pt-8 border-t border-[#1A1F36]/[0.06] flex flex-col gap-4">
+            <div className="mt-auto pb-8 flex flex-col gap-4">
               {!user ? (
-                <Button onClick={() => { dispatch(loginWithGoogle()); setIsMenuOpen(false); }} variant="dark" className="w-full h-14 text-base">Sign In with Google</Button>
+                <Button
+                  onClick={() => { dispatch(loginWithGoogle()); setIsMenuOpen(false); }}
+                  variant="primary"
+                  className="w-full h-14 text-[14px] font-black uppercase tracking-widest rounded-xl shadow-lg"
+                >
+                  Sign In with Google
+                </Button>
               ) : (
                 <>
-                  <Link href="/dashboard" onClick={() => setIsMenuOpen(false)} className="w-full h-14 flex items-center justify-center bg-[#1A1F36] rounded-xl text-[15px] font-bold text-white shadow-lg">Go to Dashboard</Link>
-                  <button onClick={() => { dispatch(logout()); setIsMenuOpen(false); }} className="w-full h-14 text-red-500 text-[15px] font-bold flex items-center justify-center gap-2">
-                    <LogOut size={18} />
-                    Logout Account
+                  <Link
+                    href="/dashboard"
+                    onClick={() => setIsMenuOpen(false)}
+                    className={`w-full h-14 flex items-center justify-center ${isDarkTheme ? "bg-white text-black" : "bg-[#1A1F36] text-white"} rounded-xl text-[14px] font-black uppercase tracking-widest shadow-xl`}
+                  >
+                    My Dashboard
+                  </Link>
+                  <button
+                    onClick={() => { dispatch(logout()); setIsMenuOpen(false); }}
+                    className={`w-full h-12 ${isDarkTheme ? "text-white/40" : "text-black/40"} text-[12px] font-black uppercase tracking-widest flex items-center justify-center gap-2 mt-2`}
+                  >
+                    <LogOut size={16} />
+                    Sign Out Account
                   </button>
                 </>
               )}

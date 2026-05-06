@@ -5,7 +5,6 @@ import { BRAND } from "@/lib/config";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Navbar from "@/components/Navbar";
-import { getCategories } from "@/lib/db";
 import {
   Store,
   MessageSquare,
@@ -22,524 +21,545 @@ import {
   ChevronRight,
   Phone,
   Award,
+  Sparkles,
+  Rocket,
+  Shield,
 } from "lucide-react";
 import { slugify } from "@/lib/slugify";
 import Button from "@/components/UI/Button";
-import Input from "@/components/UI/Input";
 import Card from "@/components/UI/Card";
+import Footer from "@/components/Footer";
 import SmartSearch from "@/components/Search/SmartSearch";
 
 export default function Home() {
   const router = useRouter();
-  const [query, setQuery] = useState("");
   const [categories, setCategories] = useState([]);
+  const [shops, setShops] = useState([]);
+  const [featuredShop, setFeaturedShop] = useState(null);
+  const [currentCity, setCurrentCity] = useState("ahmedabad");
+  const [currentArea, setCurrentArea] = useState("");
+  const [searchFocused, setSearchFocused] = useState(false);
 
   useEffect(() => {
-    async function fetchCategories() {
-      try {
-        const cats = await getCategories();
-        if (cats && cats.length > 0) setCategories(cats);
-      } catch (error) {
-        console.error("Error fetching categories:", error);
-      }
+    if (typeof window !== "undefined") {
+      const savedCity = localStorage.getItem("last_city");
+      const savedArea = localStorage.getItem("last_area");
+      if (savedCity) setCurrentCity(slugify(savedCity));
+      if (savedArea) setCurrentArea(slugify(savedArea));
     }
-    fetchCategories();
   }, []);
 
-  const handleSearch = (e) => {
-    e.preventDefault();
-    router.push(
-      query.trim()
-        ? `/explore?q=${encodeURIComponent(query.trim())}`
-        : "/explore",
-    );
-  };
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        const savedCity =
+          typeof window !== "undefined"
+            ? localStorage.getItem("last_city")
+            : "";
+        const savedArea =
+          typeof window !== "undefined"
+            ? localStorage.getItem("last_area")
+            : "";
+
+        const [catsRes, shopsRes] = await Promise.all([
+          fetch("/api/categories"),
+          fetch("/api/shops"),
+        ]);
+
+        if (catsRes.ok) {
+          const cats = await catsRes.json();
+          setCategories(cats);
+        }
+
+        if (shopsRes.ok) {
+          const allShops = await shopsRes.json();
+          setShops(allShops);
+
+          if (allShops.length > 0) {
+            // Filter by location if available
+            let filtered = allShops;
+            if (savedCity) {
+              const cityShops = allShops.filter((s) =>
+                (s.city || "").toLowerCase().includes(savedCity.toLowerCase()),
+              );
+              if (cityShops.length > 0) {
+                filtered = cityShops;
+                // Further filter by area if possible
+                if (savedArea) {
+                  const areaShops = cityShops.filter((s) =>
+                    (s.area || "")
+                      .toLowerCase()
+                      .includes(savedArea.toLowerCase()),
+                  );
+                  if (areaShops.length > 0) filtered = areaShops;
+                }
+              }
+            }
+
+            const random =
+              filtered[Math.floor(Math.random() * filtered.length)];
+            setFeaturedShop(random);
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      }
+    }
+    fetchData();
+  }, []);
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#FAFAF8] overflow-x-hidden">
+    <div className="flex flex-col min-h-screen bg-[#FAFAF8] overflow-x-hidden selection:bg-[#FF6A00]/20 selection:text-[#FF6A00]">
       <Navbar />
-      {/* ── HERO SECTION ───────────────────────────────────────── */}
-      <section className="pt-32 pb-20 px-6 md:px-12 max-w-7xl mx-auto w-full">
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_420px] gap-16 items-center">
-          <div className="space-y-10 max-w-2xl">
-            <div className="space-y-4">
-              <p className="text-[11px] font-bold text-[#FF6A00] uppercase tracking-[0.15em] animate-in fade-in slide-in-from-bottom-2 duration-500">
-                1000+ Shops Already Joined!
-              </p>
-              <h1 className="text-[56px] md:text-[72px] font-extrabold text-[#1A1F36] leading-[0.95] tracking-[-0.03em] animate-in fade-in slide-in-from-bottom-4 duration-700">
-                Your shop,
-                <br />
-                <span className="text-[#FF6A00]">found online.</span>
-              </h1>
+
+      {/* ── HERO SECTION (DARK PREMIUM) ─────────────────────────── */}
+      <section className="relative min-h-screen pt-24 pb-10 lg:pt-28 lg:pb-32 overflow-hidden bg-[#020617]">
+        {/* Animated Background Elements */}
+        <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
+          <div className="absolute -top-[20%] -left-[10%] w-[60%] h-[60%] bg-[#FF6A00]/10 rounded-full blur-[120px] animate-pulse-glow" />
+          <div className="absolute -bottom-[20%] -right-[10%] w-[50%] h-[50%] bg-[#FF6A00]/5 rounded-full blur-[100px] animate-pulse-glow delay-1000" />
+          <div className="absolute top-[20%] right-[20%] w-[30%] h-[30%] bg-blue-500/5 rounded-full blur-[80px] animate-float" />
+        </div>
+
+        <div className="max-w-7xl mx-auto px-4 md:px-12  xl:pt-28 relative z-10">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16 items-center">
+            <div className="space-y-4 md:space-y-6 text-center lg:text-left">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 backdrop-blur-md animate-in fade-in slide-in-from-bottom-4 duration-500 mx-auto lg:mx-0">
+                <div className="w-1.5 h-1.5 rounded-full bg-[#FF6A00] animate-pulse" />
+                <span className="text-[10px] font-bold text-white/70 uppercase tracking-[0.2em]">
+                  1000+ Premium Shops Online
+                </span>
+              </div>
+
+              <div className="space-y-3">
+                <h1 className="text-[32px] xs:text-[36px] sm:text-[48px] md:text-[56px] lg:text-[64px] font-black text-white leading-[1.1] lg:leading-[1] tracking-tight animate-in fade-in slide-in-from-bottom-6 duration-700">
+                  Your business,
+                  <br />
+                  <span className="text-gradient">redefined online.</span>
+                </h1>
+                <p className="text-[14px] md:text-[16px] lg:text-[18px] text-white/40 leading-relaxed max-w-lg mx-auto lg:mx-0 font-medium animate-in fade-in slide-in-from-bottom-8 duration-1000 px-2 sm:px-0">
+                  Launch a professional digital presence in 5 minutes. No
+                  coding, zero commission, direct WhatsApp connections.
+                </p>
+              </div>
+
+              <div className={`max-w-lg mx-auto lg:mx-0 transition-all duration-300 ${searchFocused ? "static" : "relative z-30 animate-in fade-in slide-in-from-bottom-10 duration-1000"}`}>
+                <div className={searchFocused ? "" : "glass-dark p-1 rounded-2xl glow-orange"}>
+                  <SmartSearch onFocusStateChange={setSearchFocused} />
+                </div>
+              </div>
+
+              <div className="flex flex-col sm:flex-row flex-wrap items-center justify-center lg:justify-start gap-4 md:gap-5 animate-in fade-in slide-in-from-bottom-12 duration-1000">
+                <Link href={`/${currentCity}`} className="w-full sm:w-auto">
+                  <Button
+                    variant="primary"
+                    size="lg"
+                    icon={ArrowRight}
+                    iconPosition="right"
+                    className="w-full sm:w-auto shadow-xl shadow-[#FF6A00]/10 h-12 md:h-14 rounded-xl px-6 md:px-8 text-[14px] md:text-[15px]"
+                  >
+                    Explore Marketplace
+                  </Button>
+                </Link>
+                <div className="flex items-center gap-4">
+                  <div className="flex -space-x-2">
+                    {[1, 2, 3, 4].map((i) => (
+                      <div
+                        key={i}
+                        className="w-8 h-8 md:w-10 md:h-10 rounded-full border-2 border-[#020617] bg-[#1A1F36] flex items-center justify-center overflow-hidden"
+                      >
+                        <img
+                          src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${i + 10}`}
+                          alt="user"
+                        />
+                      </div>
+                    ))}
+                    <div className="w-8 h-8 md:w-10 md:h-10 rounded-full border-2 border-[#020617] bg-[#FF6A00] flex items-center justify-center text-[10px] md:text-[11px] font-black text-white">
+                      +1k
+                    </div>
+                  </div>
+                  <p className="text-[11px] md:text-[13px] font-bold text-white/30 uppercase tracking-widest whitespace-nowrap">
+                    Joined this month
+                  </p>
+                </div>
+              </div>
             </div>
 
-            <p className="text-[17px] text-[#1A1F36]/60 leading-relaxed max-w-lg font-medium animate-in fade-in slide-in-from-bottom-6 duration-1000">
-              Create a Google-friendly page for your shop in 5 minutes. Get
-              discovered and receive customers directly on WhatsApp — no website
-              or tech knowledge needed.
-            </p>
-
-            {/* Search bar */}
-            <div className="max-w-lg animate-in fade-in slide-in-from-bottom-8 duration-1000">
-              <SmartSearch />
-            </div>
-
-            <div className="flex items-center gap-4 animate-in fade-in slide-in-from-bottom-10 duration-1000">
-              <Link href="/cafe-near-me">
-                <Button
-                  variant="outline"
-                  size="lg"
-                  icon={Navigation}
-                  className="bg-white"
-                >
-                  Find Cafe Near Me
-                </Button>
-              </Link>
+            {/* Right side - Premium Card/Device Mockup */}
+            <div className="relative hidden lg:block animate-in zoom-in-95 duration-1000">
+              <div className="absolute inset-0 bg-[#FF6A00]/20 rounded-[40px] blur-[80px] animate-rotate-slow opacity-30" />
               <Link
-                href="/explore"
-                className="text-[13px] font-bold text-[#1A1F36]/40 hover:text-[#FF6A00] transition-colors"
+                href={featuredShop ? `/shop/${featuredShop.slug}` : "/explore"}
+                className="block cursor-pointer"
               >
-                Explore Local Shops
-              </Link>
-            </div>
+                <div className="relative glass-dark p-1 border-white/20 rounded-[32px] overflow-hidden rotate-3 hover:rotate-0 transition-transform duration-700 shadow-[0_40px_80px_-15px_rgba(0,0,0,0.5)] group">
+                  <div className="bg-[#1A1F36] rounded-[30px] p-8">
+                    <div className="flex items-center justify-between mb-10">
+                      <div className="flex items-center gap-4">
+                        <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#FF6A00] to-[#FF9A3C] flex items-center justify-center text-white font-black text-2xl shadow-lg uppercase">
+                          {featuredShop?.name?.charAt(0) || "S"}
+                        </div>
+                        <div>
+                          <h3 className="text-xl font-bold text-white tracking-tight">
+                            {featuredShop?.name || "Sharma Organics"}
+                          </h3>
+                          <p className="text-white/40 text-sm font-bold flex items-center gap-1">
+                            <MapPin size={12} />{" "}
+                            {featuredShop?.area ? `${featuredShop.area}, ` : ""}
+                            {featuredShop?.city || "Ahmedabad"}, India
+                          </p>
+                        </div>
+                      </div>
+                      <div
+                        className={`w-10 h-10 rounded-full bg-white/5 flex items-center justify-center ${featuredShop?.isVerified ? "text-blue-400" : "text-gray-600"}`}
+                      >
+                        <ShieldCheck size={20} />
+                      </div>
+                    </div>
 
-            {/* Trust tags */}
-            <div className="flex items-center flex-wrap gap-6 pt-4">
+                    <div className="space-y-4 mb-10">
+                      {(featuredShop?.products?.length > 0
+                        ? featuredShop.products.slice(0, 3)
+                        : [
+                            { name: "Premium Almonds", price: "₹850" },
+                            { name: "Organic Honey", price: "₹450" },
+                            { name: "Saffron Spices", price: "₹1,200" },
+                          ]
+                      ).map((item, idx) => (
+                        <div
+                          key={idx}
+                          className="flex items-center justify-between p-4 rounded-2xl bg-white/[0.03] border border-white/5 group-hover:bg-white/[0.05] transition-colors"
+                        >
+                          <span className="text-white/70 font-bold">
+                            {item.name}
+                          </span>
+                          <span className="text-[#FF6A00] font-black">
+                            {item.price.toString().startsWith("₹")
+                              ? item.price
+                              : `₹${item.price}`}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          window.open(
+                            `https://wa.me/${featuredShop?.whatsapp || featuredShop?.phone || ""}`,
+                            "_blank",
+                          );
+                        }}
+                        className="h-14 rounded-2xl bg-[#25D366] flex items-center justify-center gap-2 font-black text-white shadow-lg shadow-[#25D366]/20 hover:scale-[1.02] transition-transform"
+                      >
+                        <MessageSquare size={18} /> WhatsApp
+                      </div>
+                      <div
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          window.location.href = `tel:${featuredShop?.phone || ""}`;
+                        }}
+                        className="h-14 rounded-2xl bg-white/10 flex items-center justify-center gap-2 font-black text-white hover:bg-white/20 transition-colors hover:scale-[1.02] transition-transform"
+                      >
+                        <Phone size={18} /> Contact
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </Link>
+
+              {/* Stats Overlay */}
+              <div className="absolute -bottom-6 -left-12 glass-dark p-6 rounded-[24px] border border-white/10 shadow-2xl animate-float">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-xl bg-[#FF6A00]/10 flex items-center justify-center text-[#FF6A00]">
+                    <TrendingUp size={24} />
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-bold text-white/30 uppercase tracking-[0.2em]">
+                      Local Reach
+                    </p>
+                    <p className="text-2xl font-black text-white">
+                      +
+                      {featuredShop?.avgRating
+                        ? (featuredShop.avgRating * 25).toFixed(0)
+                        : "148"}
+                      %
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── TICKER SECTION (SOCIAL PROOF) ─────────────────────── */}
+      <section className="py-10 bg-white border-y border-black/[0.05] overflow-hidden whitespace-nowrap">
+        <div className="flex animate-ticker items-center">
+          {[...Array(2)].map((_, i) => (
+            <div key={i} className="flex items-center gap-16 pr-16">
               {[
-                "No coding needed",
-                "Free forever",
-                "SEO optimised",
-                "WhatsApp ready",
-              ].map((t) => (
-                <div
-                  key={t}
-                  className="flex items-center gap-2 text-[12px] font-bold text-[#1A1F36]/30 uppercase tracking-tight"
-                >
-                  <CheckCircle2 size={13} className="text-[#25D366]" />
-                  {t}
+                "Kirana Store",
+                "Bakery",
+                "Clothing",
+                "Electronics",
+                "Jewellery",
+                "Restaurant",
+                "Salon",
+                "Pharma",
+                "Hardware",
+                "Electrical",
+              ].map((cat) => (
+                <div key={cat} className="flex items-center gap-3">
+                  <div className="w-2 h-2 rounded-full bg-[#FF6A00]" />
+                  <span className="text-[16px] font-black text-[#1A1F36]/30 uppercase tracking-widest">
+                    {cat}
+                  </span>
                 </div>
               ))}
             </div>
-          </div>
-
-          {/* Right — Shop Mockup */}
-          <div className="relative hidden lg:block animate-in zoom-in-95 duration-1000">
-            <div className="absolute inset-0 bg-[#FF6A00]/5 rounded-3xl blur-3xl scale-110" />
-
-            <Card className="relative overflow-hidden border-[#1A1F36]/[0.08] shadow-md scale-105 group/mock">
-              <div className="h-1 bg-[#FF6A00]" />
-              <div className="p-6">
-                <div className="flex items-start justify-between mb-6">
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-xl bg-[#1A1F36] text-white flex items-center justify-center font-bold text-xl flex-shrink-0">
-                      S
-                    </div>
-                    <div>
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-[15px] font-bold text-[#1A1F36]">
-                          Sharma Kirana Store
-                        </span>
-                        <ShieldCheck size={14} className="text-[#FF6A00]" />
-                      </div>
-                      <div className="flex items-center gap-1 mt-0.5">
-                        <MapPin size={11} className="text-[#1A1F36]/30" />
-                        <span className="text-[11px] text-[#1A1F36]/40 font-semibold">
-                          Maninagar, Ahmedabad
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-1 text-[#FF6A00]">
-                    <Star size={12} className="fill-[#FF6A00]" />
-                    <span className="text-[12px] font-bold">4.9</span>
-                  </div>
-                </div>
-
-                <div className="space-y-2 mb-6">
-                  {[
-                    { name: "Atta — 5kg", price: "₹220" },
-                    { name: "Basmati Rice — 5kg", price: "₹380" },
-                  ].map((item) => (
-                    <div
-                      key={item.name}
-                      className="flex items-center justify-between py-2 border-b border-[#1A1F36]/[0.05] last:border-0"
-                    >
-                      <span className="text-[13px] font-medium text-[#1A1F36]/70">
-                        {item.name}
-                      </span>
-                      <span className="text-[14px] font-bold text-[#FF6A00] font-mono">
-                        {item.price}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-
-                <div className="grid grid-cols-2 gap-3">
-                  <Button variant="whatsapp" size="sm" icon={MessageSquare}>
-                    WhatsApp
-                  </Button>
-                  <Button variant="dark" size="sm" icon={Phone}>
-                    Call Now
-                  </Button>
-                </div>
-              </div>
-            </Card>
-
-            {/* Floating Stat Card */}
-            <div className="absolute -top-6 -right-6 bg-[#1A1F36] text-white rounded-2xl p-5 shadow-md animate-theme-float">
-              <p className="text-[10px] font-bold text-white/40 uppercase tracking-widest mb-1">
-                Growth this week
-              </p>
-              <div className="text-3xl font-bold">
-                +42 <span className="text-[#25D366] text-sm">leads</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-      {/* ── SOCIAL PROOF ──────────────────────────────────────── */}
-      <section className="py-12 border-y border-[#1A1F36]/[0.06] bg-white">
-        <div className="max-w-7xl mx-auto px-6 md:px-12 text-center">
-          <div className="inline-flex items-center gap-2 mb-10 px-4 py-2 bg-[#FAFAF8] rounded-full border border-[#1A1F36]/[0.04]">
-            <div className="w-2 h-2 rounded-full bg-[#25D366] animate-pulse" />
-            <span className="text-[10px] font-bold text-[#1A1F36]/50 uppercase tracking-wider">
-              Trusted by 1,000+ businesses across Bharat
-            </span>
-          </div>
-
-          <div className="flex items-center justify-center flex-wrap gap-3">
-            {(categories.length > 0
-              ? categories
-              : [
-                  { name: "Kirana Store" },
-                  { name: "Salon" },
-                  { name: "Restaurant" },
-                  { name: "Medical Store" },
-                  { name: "Bakery" },
-                ]
-            ).map((cat) => (
-              <Link
-                key={cat.id || cat.name}
-                href={`/explore?category=${encodeURIComponent(slugify(cat.name))}`}
-                className="px-5 py-2.5 bg-[#FAFAF8] hover:bg-white rounded-full text-[13px] font-bold text-[#1A1F36]/60 hover:text-[#FF6A00] border border-[#1A1F36]/[0.06] hover:border-[#FF6A00]/30 transition-all shadow-md"
-              >
-                {cat.name}
-              </Link>
-            ))}
-          </div>
-        </div>
-      </section>
-      {/* ── SEARCH GUIDE ───────────────────────────────────────── */}
-      <section className="py-24 px-6 md:px-12 max-w-7xl mx-auto w-full">
-        <div className="text-center mb-16">
-          <p className="text-[11px] font-bold text-[#FF6A00] uppercase tracking-[0.15em] mb-4">
-            Search Like a Pro
-          </p>
-          <h2 className="text-[32px] md:text-[48px] font-bold text-[#1A1F36] leading-tight tracking-tight">
-            How to find exactly what you need
-          </h2>
-          <p className="text-[16px] text-[#1A1F36]/50 mt-4 max-w-2xl mx-auto font-medium">
-            Our smart search understands natural language. Use these structures
-            for the best results.
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {[
-            {
-              title: "Category + Location",
-              example: '"Bakery in Thaltej"',
-              desc: "Best for finding specific types of shops in a particular neighborhood.",
-              icon: MapPin,
-              color: "bg-blue-50 text-blue-500",
-            },
-            {
-              title: "Intent Based",
-              example: '"Salon near me"',
-              desc: "Uses your real-time GPS to find the closest verified businesses.",
-              icon: Navigation,
-              color: "bg-emerald-50 text-emerald-500",
-            },
-            {
-              title: "Direct Hubs",
-              example: '"Food Park"',
-              desc: "Search for market names or specialized business clusters directly.",
-              icon: Award,
-              color: "bg-amber-50 text-amber-500",
-            },
-            {
-              title: "Top Rated",
-              example: '"Best Cafe in Gota"',
-              desc: "Finds high-rated businesses in your area with verified reviews.",
-              icon: Star,
-              color: "bg-purple-50 text-purple-500",
-            },
-          ].map((item, i) => (
-            <Card
-              key={i}
-              className="p-8 border-[#1A1F36]/[0.04] hover:border-[#FF6A00]/20 transition-all group"
-            >
-              <div
-                className={`w-12 h-12 rounded-2xl flex items-center justify-center mb-6 ${item.color}`}
-              >
-                <item.icon size={22} />
-              </div>
-              <h3 className="text-[17px] font-bold text-[#1A1F36] mb-2">
-                {item.title}
-              </h3>
-              <div className="bg-[#FAFAF8] rounded-xl px-4 py-3 mb-4 border border-black/[0.03]">
-                <code className="text-[13px] font-bold text-[#FF6A00]">
-                  {item.example}
-                </code>
-              </div>
-              <p className="text-[13px] text-[#1A1F36]/50 leading-relaxed font-medium">
-                {item.desc}
-              </p>
-            </Card>
           ))}
         </div>
       </section>
-      {/* ── FEATURES ───────────────────────────────────────────── */}
-      <section className="py-24 px-6 md:px-12 max-w-7xl mx-auto w-full">
-        <div className="mb-20 flex flex-col md:flex-row md:items-end justify-between gap-8">
-          <div className="max-w-2xl">
-            <p className="text-[11px] font-bold text-[#FF6A00] uppercase tracking-[0.15em] mb-4">
-              The {BRAND} Advantage
-            </p>
-            <h2 className="text-[40px] md:text-[52px] font-bold text-[#1A1F36] leading-[1] tracking-tight">
-              Everything your shop needs to grow online
-            </h2>
-          </div>
-          <Button
-            variant="dark"
-            size="lg"
-            icon={ArrowRight}
-            iconPosition="right"
-            className="flex-shrink-0"
-            onClick={() => router.push("/create")}
-          >
-            Get Started Free
-          </Button>
-        </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {[
-            {
-              icon: Globe,
-              title: "Unique Shop URL",
-              desc: "A dedicated, shareable link optimized for Google and perfect for your Instagram bio.",
-              accent: "#FF6A00",
-            },
-            {
-              icon: Store,
-              title: "Smart Catalog",
-              desc: "List your full menu or products with photos and prices. Update anytime from your phone.",
-              accent: "#1A1F36",
-            },
-            {
-              icon: MessageSquare,
-              title: "Direct WhatsApp Orders",
-              desc: "Every enquiry lands straight in your WhatsApp. Zero commission, zero middlemen.",
-              accent: "#25D366",
-            },
-            {
-              icon: Search,
-              title: "Local SEO Built-in",
-              desc: "Each page is server-rendered with structured data and category keywords baked in.",
-              accent: "#FF6A00",
-            },
-            {
-              icon: ShieldCheck,
-              title: "Verified Trust Badge",
-              desc: "Our team reviews and verifies every listing, giving customers the trust signal they need.",
-              accent: "#1A1F36",
-            },
-            {
-              icon: TrendingUp,
-              title: "Live Insights",
-              desc: "Track page views, WhatsApp clicks, and calls to know exactly how your shop is performing.",
-              accent: "#FF6A00",
-            },
-          ].map((f, i) => (
-            <Card
-              key={i}
-              className="p-8 group hover:-translate-y-1 transition-all"
-            >
-              <div className="w-12 h-12 rounded-2xl flex items-center justify-center mb-6 transition-colors duration-300 bg-[#FAFAF8] text-[#1A1F36]/20 group-hover:bg-[#FF6A00]/10 group-hover:text-[#FF6A00]">
-                <f.icon size={22} />
-              </div>
-              <h3 className="text-[17px] font-bold text-[#1A1F36] mb-3">
-                {f.title}
-              </h3>
-              <p className="text-[14px] text-[#1A1F36]/50 leading-relaxed font-medium">
-                {f.desc}
-              </p>
-            </Card>
-          ))}
-        </div>
-      </section>
-      {/* ── PROCESS SECTION ───────────────────────────────────── */}
-      <section className="py-24 bg-[#1A1F36] text-white overflow-hidden relative">
-        <div className="absolute top-0 right-0 w-64 h-64 bg-[#FF6A00]/10 rounded-full -translate-y-1/2 translate-x-1/4 blur-[100px]" />
-
+      {/* ── VALUE PROPOSITION ──────────────────────────────────── */}
+      <section className="py-32 bg-[#FAFAF8] relative">
         <div className="max-w-7xl mx-auto px-6 md:px-12">
-          <div className="mb-20 text-center">
-            <p className="text-[11px] font-bold text-[#FF6A00] uppercase tracking-[0.15em] mb-4">
-              Simple 3-Step Process
+          <div className="text-center max-w-3xl mx-auto mb-20">
+            <p className="text-[#FF6A00] font-black text-[13px] uppercase tracking-[0.25em] mb-4">
+              Why Choose {BRAND}
             </p>
-            <h2 className="text-[40px] md:text-[52px] font-bold tracking-tight">
-              Go live in 24 hours
+            <h2 className="text-[40px] md:text-[56px] font-black text-[#1A1F36] leading-tight tracking-tighter">
+              Stop waiting,{" "}
+              <span className="text-gradient">start growing.</span>
             </h2>
+            <p className="mt-6 text-lg text-[#1A1F36]/50 font-medium">
+              We've stripped away the complexity of traditional e-commerce to
+              give local businesses the tools they actually need.
+            </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 relative">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {[
               {
-                n: "01",
-                title: "Add Your Details",
-                desc: "Name, category, and phone number. We handle the technical SEO setup automatically.",
+                icon: Zap,
+                title: "Instant Launch",
+                desc: "Go live in less than 5 minutes. No domains, no hosting, no technical headaches.",
+                color: "orange",
               },
               {
-                n: "02",
-                title: "Upload Products",
-                desc: "List your top items with prices. Clear photos help attract 3x more customers.",
+                icon: Globe,
+                title: "SEO Optimized",
+                desc: "Every shop page is server-rendered for peak performance and Google rankings.",
+                color: "blue",
               },
               {
-                n: "03",
-                title: "Start Receiving Leads",
-                desc: "Your shop goes live on our marketplace and Google. Customers reach out on WhatsApp.",
+                icon: MessageSquare,
+                title: "WhatsApp Integrated",
+                desc: "Receive orders directly where you talk to customers. Zero middleman commission.",
+                color: "emerald",
               },
-            ].map((step, i) => (
+            ].map((feature, idx) => (
               <div
-                key={i}
-                className="relative bg-white/[0.03] border border-white/10 rounded-2xl p-8 hover:bg-white/[0.05] transition-all"
+                key={idx}
+                className="group p-10 rounded-[32px] bg-white border border-black/[0.03] hover:border-[#FF6A00]/20 transition-all duration-500 shadow-sm hover:shadow-xl hover:shadow-[#FF6A00]/5"
               >
-                <div className="w-10 h-10 rounded-full bg-[#FF6A00]/20 border border-[#FF6A00]/40 flex items-center justify-center text-[#FF6A00] text-[13px] font-bold mb-6">
-                  {step.n}
+                <div className="w-16 h-16 rounded-2xl bg-[#FAFAF8] flex items-center justify-center mb-8 group-hover:scale-110 group-hover:bg-[#FF6A00] group-hover:text-white transition-all duration-500">
+                  <feature.icon size={28} />
                 </div>
-                <h3 className="text-[19px] font-bold mb-3">{step.title}</h3>
-                <p className="text-[14px] text-white/40 leading-relaxed font-medium">
-                  {step.desc}
+                <h3 className="text-2xl font-black text-[#1A1F36] mb-4 tracking-tight">
+                  {feature.title}
+                </h3>
+                <p className="text-[#1A1F36]/50 font-medium leading-relaxed">
+                  {feature.desc}
                 </p>
               </div>
             ))}
           </div>
+        </div>
+      </section>
 
-          <div className="mt-16 text-center">
-            <Button
-              variant="primary"
-              size="lg"
-              className="h-14 px-10 shadow-md"
-              onClick={() => router.push("/create")}
-            >
-              Create Your Free Page <ArrowRight size={16} className="ml-2" />
-            </Button>
-          </div>
-        </div>
-      </section>
-      {/* ── FINAL CTA ─────────────────────────────────────────── */}
-      <section className="mx-6 md:mx-12 my-24 rounded-[32px] bg-[#FF6A00] p-12 md:p-24 text-white text-center relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-96 h-96 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/3 blur-3xl" />
-        <div className="relative z-10 max-w-2xl mx-auto">
-          <h2 className="text-[40px] md:text-[56px] font-bold leading-tight tracking-tight mb-6">
-            Ready to get found?
-          </h2>
-          <p className="text-white/80 text-[18px] mb-10 font-medium leading-relaxed">
-            Join 1,000+ businesses. No technical knowledge needed. Free listing
-            forever.
-          </p>
-          <Button
-            variant="dark"
-            size="xl"
-            className="shadow-md"
-            onClick={() => router.push("/create")}
-          >
-            Create your shop page <ArrowRight size={18} className="ml-2" />
-          </Button>
-        </div>
-      </section>
-      {/* ── FOOTER ────────────────────────────────────────────── */}
-      <footer className="border-t border-[#1A1F36]/[0.06] bg-white">
-        <div className="max-w-7xl mx-auto px-6 md:px-12 py-20 grid grid-cols-1 md:grid-cols-5 gap-12">
-          <div className="md:col-span-2">
-            <Link href="/" className="flex items-center gap-2.5 mb-6 group">
-              <div className="w-8 h-8 rounded-lg overflow-hidden flex items-center justify-center border border-black/5">
-                <img
-                  src="/sb-logo.png"
-                  alt={BRAND}
-                  className="w-full h-full object-cover"
-                />
+      {/* ── STATS SECTION ──────────────────────────────────────── */}
+      <section className="py-20 md:py-24 bg-[#1A1F36] relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-b from-[#FF6A00]/5 to-transparent" />
+        <div className="max-w-7xl mx-auto px-6 md:px-12 relative z-10">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-8 md:gap-12 lg:gap-24 text-center">
+            {[
+              { label: "Active Shops", value: "1.2k+" },
+              { label: "Monthly Visits", value: "450k" },
+              { label: "Cities covered", value: "50+" },
+              { label: "WhatsApp Leads", value: "85k" },
+            ].map((stat, idx) => (
+              <div key={idx} className="space-y-1">
+                <p className="text-[36px] sm:text-[48px] md:text-[64px] font-black text-white tracking-tighter leading-tight">
+                  {stat.value}
+                </p>
+                <p className="text-[9px] md:text-[11px] font-black text-white/30 uppercase tracking-[0.3em]">
+                  {stat.label}
+                </p>
               </div>
-              <span className="text-[18px] font-bold tracking-tight text-[#1A1F36]">
-                {BRAND.startsWith("Shop") ? (
-                  <>
-                    Shop
-                    <span className="text-[#FF6A00]">
-                      {BRAND.replace("Shop", "")}
-                    </span>
-                  </>
-                ) : (
-                  BRAND
-                )}
-              </span>
-            </Link>
-            <p className="text-[14px] text-[#1A1F36]/50 leading-relaxed max-w-sm font-medium">
-              Empowering Bharat's local businesses with a world-class digital
-              presence. Found on Google, connected via WhatsApp.
-            </p>
+            ))}
           </div>
+        </div>
+      </section>
 
-          {[
-            {
-              heading: "Explore",
-              links: ["All Shops", "Kirana Stores", "Restaurants", "Salons"],
-            },
-            {
-              heading: "Business",
-              links: ["List Your Shop", "Pricing", "How it Works", "Dashboard"],
-            },
-            {
-              heading: "Company",
-              links: ["About", "Contact", "Privacy Policy", "Terms"],
-            },
-          ].map(({ heading, links }) => (
-            <div key={heading}>
-              <h6 className="text-[11px] font-bold text-[#1A1F36] uppercase tracking-[0.15em] mb-6">
-                {heading}
-              </h6>
-              <ul className="space-y-4">
-                {links.map((link) => (
-                  <li key={link}>
-                    <Link
-                      href={
-                        link === "Privacy Policy"
-                          ? "/privacy"
-                          : link === "Terms"
-                            ? "/terms"
-                            : "#"
-                      }
-                      className="text-[14px] font-bold text-[#1A1F36]/40 hover:text-[#FF6A00] transition-colors"
-                    >
-                      {link}
-                    </Link>
-                  </li>
+      {/* ── PROCESS SECTION (PREMIUM) ─────────────────────────── */}
+      <section className="py-24 md:py-32 bg-white overflow-hidden">
+        <div className="max-w-7xl mx-auto px-6 md:px-12">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 md:gap-24 items-center">
+            <div className="space-y-10 md:space-y-12">
+              <div className="text-center lg:text-left">
+                <p className="text-[#FF6A00] font-black text-[12px] md:text-[13px] uppercase tracking-[0.25em] mb-4">
+                  The Process
+                </p>
+                <h2 className="text-[32px] md:text-[48px] lg:text-[56px] font-black text-[#1A1F36] leading-[1.1] tracking-tighter">
+                  Simple for you, <br className="hidden sm:block" />
+                  <span className="text-gradient">powerful for business.</span>
+                </h2>
+              </div>
+
+              <div className="space-y-8 md:space-y-10">
+                {[
+                  {
+                    n: "01",
+                    title: "List Your Shop",
+                    desc: "Enter your basic business details and location.",
+                  },
+                  {
+                    n: "02",
+                    title: "Add Products",
+                    desc: "Upload your catalog with prices and high-quality photos.",
+                  },
+                  {
+                    n: "03",
+                    title: "Receive Leads",
+                    desc: "Get direct WhatsApp enquiries from local customers.",
+                  },
+                ].map((step, idx) => (
+                  <div key={idx} className="flex gap-5 md:gap-6 group">
+                    <div className="flex-shrink-0 w-10 h-10 md:w-12 md:h-12 rounded-xl bg-[#FAFAF8] border border-black/[0.05] flex items-center justify-center font-black text-[#1A1F36] group-hover:bg-[#FF6A00] group-hover:text-white transition-all duration-300 text-sm md:text-base">
+                      {step.n}
+                    </div>
+                    <div>
+                      <h3 className="text-lg md:text-xl font-bold text-[#1A1F36] mb-1 md:mb-2">
+                        {step.title}
+                      </h3>
+                      <p className="text-[14px] md:text-base text-[#1A1F36]/50 font-medium leading-relaxed">
+                        {step.desc}
+                      </p>
+                    </div>
+                  </div>
                 ))}
-              </ul>
-            </div>
-          ))}
-        </div>
+              </div>
 
-        <div className="border-t border-[#1A1F36]/[0.06] px-6 md:px-12 py-8 flex flex-col md:flex-row items-center justify-between gap-4">
-          <p className="text-[12px] font-bold text-[#1A1F36]/20">
-            © 2026 {BRAND} Technologies Pvt Ltd.
-          </p>
-          <div className="flex items-center gap-6">
-            <span className="text-[11px] font-bold text-[#1A1F36]/40 uppercase tracking-widest cursor-default">
-              Designed for Bharat
-            </span>
+              <div className="text-center lg:text-left">
+                <Button
+                  variant="dark"
+                  size="xl"
+                  className="w-full sm:w-auto h-14 md:h-16 px-8 md:px-10 rounded-xl md:rounded-2xl shadow-xl"
+                  onClick={() => router.push("/create")}
+                >
+                  Start Listing Now
+                </Button>
+              </div>
+            </div>
+
+            <div className="relative mt-8 lg:mt-0">
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-[#FF6A00]/5 rounded-full blur-[100px]" />
+              <div className="relative rounded-[32px] md:rounded-[40px] overflow-hidden border border-black/[0.05] shadow-2xl shadow-black/5">
+                <img
+                  src="https://images.unsplash.com/photo-1556740734-7f95837d053d?q=80&w=2070&auto=format&fit=crop"
+                  alt="Shop management"
+                  className="w-full h-full object-cover aspect-[4/5] sm:aspect-video lg:aspect-[4/5] scale-110 hover:scale-100 transition-transform duration-1000"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-[#1A1F36]/80 to-transparent" />
+                <div className="absolute bottom-6 left-6 right-6 md:bottom-10 md:left-10 md:right-10 p-5 md:p-8 glass rounded-[24px] md:rounded-[32px] border-white/20">
+                  <div className="flex items-center gap-3 md:gap-4 mb-4">
+                    <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl md:rounded-2xl bg-[#FF6A00] flex items-center justify-center text-white">
+                      <Sparkles className="w-5 h-5 md:w-6 md:h-6" />
+                    </div>
+                    <div>
+                      <p className="text-[11px] md:text-sm font-black text-[#1A1F36] uppercase tracking-widest">
+                        Real-time Analytics
+                      </p>
+                      <p className="text-[10px] md:text-[12px] font-bold text-[#1A1F36]/50">
+                        Updated 2 minutes ago
+                      </p>
+                    </div>
+                  </div>
+                  <div className="h-1.5 md:h-2 w-full bg-black/5 rounded-full overflow-hidden">
+                    <div className="h-full bg-[#FF6A00] w-[75%] animate-pulse" />
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
-      </footer>
+      </section>
+
+      {/* ── FINAL CTA ─────────────────────────────────────────── */}
+      <section className="px-5 md:px-12 py-24 md:py-32 bg-white">
+        <div className="max-w-7xl mx-auto rounded-[32px] md:rounded-[48px] bg-[#020617] p-8 sm:p-16 md:p-32 text-center relative overflow-hidden group">
+          <div className="absolute top-0 right-0 w-64 md:w-96 h-64 md:h-96 bg-[#FF6A00]/10 rounded-full -translate-y-1/2 translate-x-1/3 blur-[100px] group-hover:scale-150 transition-transform duration-1000" />
+          <div className="absolute bottom-0 left-0 w-64 md:w-96 h-64 md:h-96 bg-blue-500/10 rounded-full translate-y-1/2 -translate-x-1/3 blur-[100px]" />
+
+          <div className="relative z-10 max-w-3xl mx-auto space-y-8 md:space-y-10">
+            <div className="space-y-4">
+              <h2 className="text-[36px] sm:text-[48px] md:text-[72px] font-black text-white leading-tight tracking-tighter">
+                Take your shop <br className="hidden sm:block" />
+                <span className="text-gradient">to the next level.</span>
+              </h2>
+              <p className="text-base md:text-xl text-white/40 font-medium">
+                Join thousands of businesses across Bharat.{" "}
+                <br className="hidden sm:block" />
+                Launch your professional shop page for free today.
+              </p>
+            </div>
+
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 md:gap-6">
+              <Button
+                variant="primary"
+                size="xl"
+                className="w-full sm:w-auto h-16 md:h-20 px-10 md:px-12 rounded-2xl md:rounded-3xl text-lg md:text-xl shadow-[0_20px_40px_-10px_rgba(255,106,0,0.4)] glow-orange"
+                onClick={() => router.push("/create")}
+              >
+                Get Started Free
+              </Button>
+              <Button
+                variant="secondary"
+                size="xl"
+                className="w-full sm:w-auto h-16 md:h-20 px-10 md:px-12 rounded-2xl md:rounded-3xl text-lg md:text-xl transition-all"
+              >
+                How it Works
+              </Button>
+            </div>
+
+            <div className="flex flex-wrap items-center justify-center gap-6 md:gap-8 pt-4 md:pt-8">
+              {[
+                { icon: Shield, label: "Secure Data" },
+                { icon: Rocket, label: "Fast Loading" },
+                { icon: Sparkles, label: "AI Powered" },
+              ].map((item, idx) => (
+                <div
+                  key={idx}
+                  className="flex items-center gap-2 text-white/30"
+                >
+                  <item.icon className="w-3.5 h-3.5 md:w-4 md:h-4" />
+                  <span className="text-[10px] md:text-[12px] font-bold uppercase tracking-widest">
+                    {item.label}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── FOOTER ────────────────────────────────────────────── */}
+      <Footer />
     </div>
   );
 }

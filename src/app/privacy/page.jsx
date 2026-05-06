@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Shield, Lock, Eye, FileText, ChevronLeft, Globe, Mail, Phone, AlertTriangle } from "lucide-react";
 
 import { BRAND } from "@/lib/config";
+import Footer from "@/components/Footer";
 
 export const metadata = {
   title: `Privacy Policy | ${BRAND}`,
@@ -148,9 +149,7 @@ export default function PrivacyPolicy() {
       </main>
 
       {/* Footer */}
-      <footer className="py-24 text-center border-t border-[#1A1F36]/[0.06] bg-white">
-        <p className="text-[#1A1F36]/20 text-[10px] font-bold uppercase tracking-[0.3em]">{BRAND} Marketplace Authority • 2026</p>
-      </footer>
+      <Footer />
     </div>
   );
 }

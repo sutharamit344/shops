@@ -1,160 +1,149 @@
 "use client";
 
 import React, { useState } from "react";
-import { collection, addDoc, getDocs, writeBatch, serverTimestamp } from "firebase/firestore";
-import { db } from "@/lib/db";
-import { slugify } from "@/lib/slugify";
 import Button from "@/components/UI/Button";
-import { Loader2, Check, Zap, ShieldCheck, Trash2 } from "lucide-react";
-
-const AREAS = [
-  { name: "Gota", lat: 23.1058, lng: 72.5413, pincode: "382481" },
-  { name: "Sola", lat: 23.0754, lng: 72.5254, pincode: "380060" },
-  { name: "Thaltej", lat: 23.0500, lng: 72.5100, pincode: "380059" },
-  { name: "Bopal", lat: 23.0341, lng: 72.4632, pincode: "380058" },
-  { name: "Satellite", lat: 23.0305, lng: 72.5221, pincode: "380015" },
-  { name: "Prahlad Nagar", lat: 23.0120, lng: 72.5030, pincode: "380015" },
-  { name: "Vastrapur", lat: 23.0351, lng: 72.5293, pincode: "380015" },
-  { name: "Chandkheda", lat: 23.1116, lng: 72.5833, pincode: "382424" },
-  { name: "Nikol", lat: 23.0494, lng: 72.6743, pincode: "382350" },
-  { name: "Maninagar", lat: 22.9965, lng: 72.6015, pincode: "380008" }
-];
-
-const CATEGORIES = [
-  { name: "Grocery Store", adjectives: ["Shree", "Krishna", "Om", "Jai", "Best", "Fresh"], nouns: ["Mart", "Provision Store", "Bazaar", "Kirana"], img: "https://images.unsplash.com/photo-1534723452862-4c874018d66d?w=800&q=80" },
-  { name: "Electronics Shop", adjectives: ["A-1", "Modern", "Super", "Digital", "Prime", "Elite"], nouns: ["Electronics", "Mobile", "Gadget Zone", "Computers"], img: "https://images.unsplash.com/photo-1550009158-9ebf69173e03?w=800&q=80" },
-  { name: "Fashion Boutique", adjectives: ["Style", "Modern", "Ethnic", "Classic", "Glamour", "New"], nouns: ["Boutique", "Collection", "Wear", "Fabrics"], img: "https://images.unsplash.com/photo-1441984904996-e0b6ba687e12?w=800&q=80" },
-  { name: "Bakery & Cafe", adjectives: ["Sweet", "Brown", "Oven", "Deli", "Tasty", "Classic"], nouns: ["Bakery", "Bakes", "Cafe", "Treats"], img: "https://images.unsplash.com/photo-1555507036-ab1f4038808a?w=800&q=80" },
-  { name: "Pharmacy", adjectives: ["Lifeline", "Wellness", "City", "Health", "Care", "Global"], nouns: ["Pharmacy", "Medicals", "Health Care", "Pharma"], img: "https://images.unsplash.com/photo-1587854692152-cbe660dbbb88?w=800&q=80" },
-  { name: "Hardware Store", adjectives: ["Bharat", "National", "Shakti", "Diamond", "Everest"], nouns: ["Hardware", "Sanitary", "Paints", "Tools"], img: "https://images.unsplash.com/photo-1530124560677-bdaea027df01?w=800&q=80" },
-  { name: "Toy Shop", adjectives: ["Kids", "Magic", "Dream", "Toy", "Little", "Fun"], nouns: ["World", "Zone", "Kingdom", "Planet"], img: "https://images.unsplash.com/photo-1536640712247-c575adcfc623?w=800&q=80" },
-  { name: "Pet Store", adjectives: ["Pet", "Doggy", "Happy", "Furry", "Tail", "Smart"], nouns: ["Store", "Groomers", "Planet", "Care"], img: "https://images.unsplash.com/photo-1601758124510-52d02ddb7cbd?w=800&q=80" }
-];
-
-const BUILDINGS = ["Capital Heights", "Galaxy Arcade", "Sun Moon Plaza", "Fortune Business Hub", "Shreeji Towers", "Akshar Residency", "Silicon Valley Center", "Maruti Complex", "Shukan Mall", "City Center"];
+import { Loader2, Check, Zap, ShieldCheck, Trash2, Database, Rocket, FileText } from "lucide-react";
+import { seedQuickTest, clearAllData } from "@/lib/seedQuickTest";
+import { seedTestShops } from "@/lib/seedShops";
+import { seedBlogs } from "@/lib/seedBlogs";
 
 export default function SeederPage() {
   const [status, setStatus] = useState("idle"); // idle, clearing, seeding, finished
-  const [progress, setProgress] = useState(0);
+  const [progress, setProgress] = useState({ current: 0, total: 0 });
+  const [error, setError] = useState(null);
 
-  const clearCollection = async (collectionName) => {
-    const colRef = collection(db, collectionName);
-    const snapshot = await getDocs(colRef);
-    
-    const batches = [];
-    let currentBatch = writeBatch(db);
-    let count = 0;
-
-    for (const doc of snapshot.docs) {
-      currentBatch.delete(doc.ref);
-      count++;
-      if (count === 500) {
-        batches.push(currentBatch.commit());
-        currentBatch = writeBatch(db);
-        count = 0;
+  const handleAction = async (action) => {
+    setError(null);
+    try {
+      if (action === "clear") {
+        setStatus("clearing");
+        await clearAllData();
+        setStatus("finished");
+        return;
       }
+
+      if (action === "quick") {
+        setStatus("seeding_quick");
+        await seedQuickTest((current, total) => {
+          setProgress({ current, total });
+        });
+        setStatus("finished");
+        return;
+      }
+
+      if (action === "full") {
+        setStatus("seeding_full");
+        await seedTestShops(200, (current, total) => {
+          setProgress({ current, total });
+        });
+        setStatus("finished");
+        return;
+      }
+      
+      if (action === "blogs") {
+        setStatus("seeding_blogs");
+        await seedBlogs((current, total) => {
+          setProgress({ current, total });
+        });
+        setStatus("finished");
+        return;
+      }
+    } catch (err) {
+      console.error("Action failed", err);
+      setError(err.message);
+      setStatus("idle");
     }
-    
-    if (count > 0) batches.push(currentBatch.commit());
-    await Promise.all(batches);
   };
 
-  const generateShops = async () => {
-    try {
-      // 1. CLEAR COLLECTIONS
-      setStatus("clearing");
-      await Promise.all([
-        clearCollection("shops"),
-        clearCollection("locations")
-      ]);
-
-      // 2. START SEEDING
-      setStatus("seeding");
-      const total = 500;
-      
-      for (let i = 0; i < total; i++) {
-        const area = AREAS[Math.floor(Math.random() * AREAS.length)];
-        const cat = CATEGORIES[Math.floor(Math.random() * CATEGORIES.length)];
-        const building = BUILDINGS[Math.floor(Math.random() * BUILDINGS.length)];
-        
-        const adj = cat.adjectives[Math.floor(Math.random() * cat.adjectives.length)];
-        const noun = cat.nouns[Math.floor(Math.random() * cat.nouns.length)];
-        const shopName = `${adj} ${noun} - ${area.name} Unit ${i + 1}`;
-        
-        const lat = area.lat + (Math.random() - 0.5) * 0.015;
-        const lng = area.lng + (Math.random() - 0.5) * 0.015;
-
-        const shopData = {
-          name: shopName,
-          slug: slugify(shopName),
-          category: cat.name,
-          city: "Ahmedabad",
-          state: "Gujarat",
-          area: area.name,
-          pincode: area.pincode,
-          village: "",
-          zone: "Main Road",
-          building: building,
-          shopNo: `G-${Math.floor(Math.random() * 50) + 1}`,
-          phone: `9${Math.floor(Math.random() * 900000000) + 100000000}`,
-          description: `Premium ${cat.name} providing top-quality service in ${area.name}. We specialize in a wide range of ${cat.name.toLowerCase()} products and services with customer satisfaction as our priority.`,
-          rating: (Math.random() * (5.0 - 4.0) + 4.0).toFixed(1),
-          status: "approved",
-          createdAt: serverTimestamp(),
-          approvedAt: serverTimestamp(),
-          lat,
-          lng,
-          logo: `https://api.dicebear.com/7.x/shapes/svg?seed=${shopName}`,
-          coverImage: cat.img,
-          ownerId: "system_seeder",
-          isCertified: true,
-          businessHours: "9:00 AM - 9:00 PM",
-          primaryColor: "#FF6A00",
-          secondaryColor: "#1A1F36"
-        };
-
-        await addDoc(collection(db, "shops"), shopData);
-        setProgress(i + 1);
-      }
-      setStatus("finished");
-    } catch (err) {
-      console.error("Seeding failed", err);
-      setStatus("idle");
-      alert("Error clearing/seeding database. Check console.");
+  const getStatusText = () => {
+    switch (status) {
+      case "clearing": return "Wiping database...";
+      case "seeding_quick": return "Generating Gota Test Data...";
+      case "seeding_full": return "Populating Marketplace...";
+      case "seeding_blogs": return "Writing Journal Articles...";
+      case "finished": return "Platform Ready!";
+      default: return "Ready to Seed";
     }
+  };
+
+  const getPercentage = () => {
+    if (progress.total === 0) return 0;
+    return (progress.current / progress.total) * 100;
   };
 
   return (
     <div className="min-h-screen bg-[#FAFAF8] flex items-center justify-center p-6">
-      <div className="max-w-md w-full bg-white rounded-[40px] p-10 shadow-2xl shadow-[#1A1F36]/5 border border-[#1A1F36]/[0.02]">
+      <div className="max-w-xl w-full bg-white rounded-[40px] p-8 md:p-12 shadow-2xl shadow-[#1A1F36]/5 border border-[#1A1F36]/[0.02]">
         <div className="flex flex-col items-center text-center">
           <div className="w-20 h-20 rounded-[28px] bg-[#FF6A00]/10 flex items-center justify-center text-[#FF6A00] mb-8">
-            {status === "clearing" ? <Trash2 className="animate-pulse" size={40} /> : <ShieldCheck size={40} />}
+            {status === "clearing" ? <Trash2 className="animate-pulse" size={40} /> : 
+             status === "finished" ? <Check size={40} /> : <Database size={40} />}
           </div>
           
-          <h1 className="text-3xl font-black text-[#1A1F36] mb-4 tracking-tight">Marketplace Reset & Seed</h1>
-          <p className="text-[#1A1F36]/50 font-medium mb-10 text-[15px] leading-relaxed">
-            {status === "clearing" 
-              ? "Wiping old data to ensure a clean slate..." 
-              : "Generating 500 premium shop profiles in Ahmedabad with proper GPS, addresses, and images."}
+          <h1 className="text-3xl font-black text-[#1A1F36] mb-4 tracking-tight">Platform Data Engine</h1>
+          <p className="text-[#1A1F36]/50 font-medium mb-10 text-[15px] leading-relaxed max-w-sm">
+            Quickly populate or reset your marketplace data for testing location-based discovery and filters.
           </p>
 
           {status === "idle" && (
-            <Button size="lg" className="w-full shadow-lg shadow-[#FF6A00]/20" icon={Zap} onClick={generateShops}>
-              Clear & Seed 500 Shops
-            </Button>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
+              <button
+                onClick={() => handleAction("quick")}
+                className="group flex flex-col items-center gap-4 p-6 bg-[#FAFAF8] hover:bg-[#FF6A00] hover:text-white rounded-[32px] border border-black/[0.03] transition-all duration-300"
+              >
+                <div className="w-12 h-12 rounded-2xl bg-white flex items-center justify-center text-[#FF6A00] group-hover:scale-110 transition-transform">
+                  <Rocket size={24} />
+                </div>
+                <div className="text-left w-full">
+                  <h3 className="font-bold text-[15px]">Quick Test</h3>
+                  <p className="text-[11px] opacity-60 font-bold uppercase tracking-wider mt-1">Gota, Ahmedabad Focus</p>
+                </div>
+              </button>
+
+              <button
+                onClick={() => handleAction("full")}
+                className="group flex flex-col items-center gap-4 p-6 bg-[#FAFAF8] hover:bg-[#1A1F36] hover:text-white rounded-[32px] border border-black/[0.03] transition-all duration-300"
+              >
+                <div className="w-12 h-12 rounded-2xl bg-white flex items-center justify-center text-[#1A1F36] group-hover:scale-110 transition-transform">
+                  <Zap size={24} />
+                </div>
+                <div className="text-left w-full">
+                  <h3 className="font-bold text-[15px]">Distributed Seed</h3>
+                  <p className="text-[11px] opacity-60 font-bold uppercase tracking-wider mt-1">200 Shops Across States</p>
+                </div>
+              </button>
+              <button
+                onClick={() => handleAction("blogs")}
+                className="group flex flex-col items-center gap-4 p-6 bg-[#FAFAF8] hover:bg-emerald-600 hover:text-white rounded-[32px] border border-black/[0.03] transition-all duration-300"
+              >
+                <div className="w-12 h-12 rounded-2xl bg-white flex items-center justify-center text-emerald-600 group-hover:scale-110 transition-transform">
+                  <FileText size={24} />
+                </div>
+                <div className="text-left w-full">
+                  <h3 className="font-bold text-[15px]">Seed Journal</h3>
+                  <p className="text-[11px] opacity-60 font-bold uppercase tracking-wider mt-1">4 Premium Articles</p>
+                </div>
+              </button>
+              <button
+                onClick={() => handleAction("clear")}
+                className="md:col-span-2 group flex items-center gap-4 p-5 bg-red-50 hover:bg-red-500 text-red-500 hover:text-white rounded-[24px] transition-all duration-300"
+              >
+                <Trash2 size={20} />
+                <span className="font-bold text-sm">Wipe All Marketplace Data</span>
+              </button>
+            </div>
           )}
 
-          {(status === "seeding" || status === "clearing") && (
+          {(status.startsWith("seeding") || status === "clearing") && (
             <div className="w-full space-y-6">
               <div className="flex items-center justify-between font-bold text-sm mb-1">
-                <span className="text-[#FF6A00]">{status === "clearing" ? "Clearing Database..." : "Pushing Records..."}</span>
-                <span className="text-[#1A1F36]/40">{status === "clearing" ? "---" : `${progress} / 500`}</span>
+                <span className="text-[#FF6A00]">{getStatusText()}</span>
+                <span className="text-[#1A1F36]/40">{status === "clearing" ? "Wait..." : `${progress.current} / ${progress.total}`}</span>
               </div>
               <div className="h-4 w-full bg-[#FAFAF8] rounded-full overflow-hidden border border-[#1A1F36]/[0.04]">
                 <div 
-                  className="h-full bg-gradient-to-r from-[#FF6A00] to-[#FF8C61] transition-all duration-300"
-                  style={{ width: status === "clearing" ? "100%" : `${(progress / 500) * 100}%` }}
+                  className="h-full bg-[#FF6A00] transition-all duration-300"
+                  style={{ width: status === "clearing" ? "100%" : `${getPercentage()}%` }}
                 />
               </div>
             </div>
@@ -162,13 +151,26 @@ export default function SeederPage() {
 
           {status === "finished" && (
             <div className="w-full space-y-6 animate-in zoom-in duration-500">
-              <div className="p-5 bg-green-50 text-green-600 rounded-3xl flex flex-col items-center gap-2 font-bold">
-                <Check size={24} />
-                <span>Platform is now clean & populated!</span>
+              <div className="p-6 bg-emerald-50 text-emerald-600 rounded-[32px] flex flex-col items-center gap-3 font-bold">
+                <div className="w-10 h-10 rounded-full bg-emerald-500 text-white flex items-center justify-center">
+                  <Check size={20} />
+                </div>
+                <span>Data Processed Successfully!</span>
               </div>
-              <Button variant="dark" size="lg" className="w-full" onClick={() => window.location.href = '/explore'}>
-                Launch Marketplace
-              </Button>
+              <div className="flex flex-col gap-3">
+                <Button size="lg" className="w-full" onClick={() => window.location.href = '/explore'}>
+                  Explore Marketplace
+                </Button>
+                <button onClick={() => setStatus("idle")} className="text-[13px] font-bold text-[#1A1F36]/40 hover:text-[#1A1F36]">
+                  Back to Tools
+                </button>
+              </div>
+            </div>
+          )}
+
+          {error && (
+            <div className="mt-6 p-4 bg-red-50 text-red-600 rounded-2xl text-sm font-bold w-full">
+              Error: {error}
             </div>
           )}
         </div>

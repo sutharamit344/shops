@@ -44,7 +44,7 @@ const FilterModal = ({ isOpen, onClose }) => {
                 className={`flex items-center justify-between p-4 rounded-xl border-2 transition-all ${
                   sortBy === option.id
                     ? "border-[#FF6A00] bg-[#FF6A00]/5 text-[#FF6A00]"
-                    : "border-black/[0.04] bg-white text-[#1A1F36]/60 hover:border-black/[0.1]"
+                    : "border-black/[0.04] bg-white text-[#1A1F36]/75 hover:border-black/[0.1]"
                 }`}
               >
                 <div className="flex items-center gap-3">
@@ -72,7 +72,7 @@ const FilterModal = ({ isOpen, onClose }) => {
                 className={`flex items-center justify-between p-4 rounded-xl border-2 transition-all ${
                   tags[tag.id]
                     ? "border-[#FF6A00] bg-[#FF6A00]/5 text-[#FF6A00]"
-                    : "border-black/[0.04] bg-white text-[#1A1F36]/60 hover:border-black/[0.1]"
+                    : "border-black/[0.04] bg-white text-[#1A1F36]/75 hover:border-black/[0.1]"
                 }`}
               >
                 <div className="flex items-center gap-3">

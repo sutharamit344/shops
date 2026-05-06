@@ -11,9 +11,12 @@ import { useModal } from "@/hooks/useModal";
 import AdminShopCard from "@/components/Admin/ShopCard";
 
 import CategoryManager from "@/components/Admin/CategoryManager";
+import SubCategoryManager from "@/components/Admin/SubCategoryManager";
 import GlobalActivity from "@/components/Admin/GlobalActivity";
 import DatabaseManager from "@/components/Admin/DatabaseManager";
 import Sidebar from "@/components/Admin/Sidebar";
+import BlogManager from "@/components/Admin/BlogManager";
+import InquiryManager from "@/components/Admin/InquiryManager";
 import Pagination from "@/components/UI/Pagination";
 import { ShieldCheck, RefreshCw, AlertCircle, ShieldAlert, LayoutDashboard, Tag, LogOut, Loader2, History, Search, Store, ArrowRight, CheckCircle2, Clock, ChevronLeft, ChevronRight, Menu } from "lucide-react";
 
@@ -243,6 +246,10 @@ const AdminDashboard = () => {
                   System Overview
                 </h1>
                 <p className="text-[14px] text-[#666]">Real-time platform performance and audit status.</p>
+                <div className="mt-4 px-4 py-2 bg-gray-100 rounded-lg inline-flex items-center gap-2">
+                   <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Logged in as:</span>
+                   <span className="text-[11px] font-black text-[#1A1F36]">{user?.email}</span>
+                </div>
               </div>
 
               {/* High-Impact Stat Dashboard */}
@@ -332,7 +339,7 @@ const AdminDashboard = () => {
                             <div key={cat}>
                               <div className="flex items-center justify-between mb-1">
                                 <span className="text-[13px] font-bold text-[#1A1F36] truncate max-w-[140px]">{cat}</span>
-                                <span className="text-[11px] font-bold text-[#1A1F36]/60">{count}</span>
+                                <span className="text-[11px] font-bold text-[#1A1F36]/75">{count}</span>
                               </div>
                               <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
                                 <div
@@ -489,7 +496,7 @@ const AdminDashboard = () => {
                       className={`px-6 py-3 rounded-xl text-[11px] font-bold uppercase tracking-wider transition-all whitespace-nowrap flex items-center gap-2.5 ${
                         activeSubTab === tab.id 
                           ? 'bg-[#1A1F36] text-white shadow-md shadow-[#1A1F36]/10' 
-                          : 'text-[#1A1F36]/60 hover:text-[#1A1F36] hover:bg-gray-50'
+                          : 'text-[#1A1F36]/75 hover:text-[#1A1F36] hover:bg-gray-50'
                       }`}
                     >
                       {tab.label}
@@ -503,6 +510,22 @@ const AdminDashboard = () => {
                 </div>
 
                 <div className="flex items-center gap-4">
+                  {searchQuery && (
+                    <div className="hidden md:flex items-center gap-2 px-3 py-2 bg-[#FF6A00]/5 border border-[#FF6A00]/10 rounded-xl animate-in fade-in zoom-in duration-300">
+                      <span className="text-[11px] font-bold text-[#FF6A00] uppercase tracking-widest">
+                        {(activeSubTab === 'pending' ? shops : activeSubTab === 'updates' ? updatedShops : activeSubTab === 'approved' ? approvedShops : rejectedShops)
+                          .filter(shop => {
+                            const q = searchQuery.toLowerCase();
+                            return (
+                              shop.name?.toLowerCase().includes(q) ||
+                              shop.ownerEmail?.toLowerCase().includes(q) ||
+                              shop.city?.toLowerCase().includes(q) ||
+                              shop.category?.toLowerCase().includes(q)
+                            );
+                          }).length} Found
+                      </span>
+                    </div>
+                  )}
                   <div className="relative group flex-1 md:w-80">
                     <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-[#1A1F36]/30 group-focus-within:text-[#FF6A00] transition-colors" size={18} />
                     <input
@@ -516,7 +539,7 @@ const AdminDashboard = () => {
                   <button
                     onClick={fetchShops}
                     disabled={loading}
-                    className="w-14 h-14 bg-white border border-[#1A1F36]/[0.07] rounded-xl flex items-center justify-center hover:border-[#FF6A00]/30 transition-all text-[#1A1F36]/60 shadow-md"
+                    className="w-14 h-14 bg-white border border-[#1A1F36]/[0.07] rounded-xl flex items-center justify-center hover:border-[#FF6A00]/30 transition-all text-[#1A1F36]/75 shadow-md"
                   >
                     <RefreshCw size={20} className={loading ? "animate-spin text-[#FF6A00]" : ""} />
                   </button>
@@ -640,6 +663,18 @@ const AdminDashboard = () => {
           ) : activeMainTab === "categories" ? (
             <div className="mx-auto max-w-7xl w-full">
               <CategoryManager />
+            </div>
+          ) : activeMainTab === "subcategories" ? (
+            <div className="mx-auto max-w-7xl w-full">
+              <SubCategoryManager />
+            </div>
+          ) : activeMainTab === "blogs" ? (
+            <div className="mx-auto max-w-7xl w-full">
+              <BlogManager />
+            </div>
+          ) : activeMainTab === "inquiries" ? (
+            <div className="mx-auto max-w-7xl w-full">
+              <InquiryManager />
             </div>
           ) : (
             <div className="mx-auto max-w-7xl w-full">

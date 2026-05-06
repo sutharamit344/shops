@@ -67,84 +67,100 @@ const ShopHeader = ({ name, phone, shareUrl, logo, isSticky, onQRClick }) => {
 
   return (
     <>
-      <header className={`sticky top-0 z-50 bg-white border-b border-black/[0.06] transition-all duration-300 ${isScrolled ? 'shadow-sm bg-white/95 backdrop-blur-sm' : ''
-        }`}>
-        <div className="flex items-center justify-between px-4 h-14 max-w-7xl mx-auto">
+      <header
+        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${isScrolled
+            ? 'bg-white/80 backdrop-blur-xl border-b border-black/[0.05] py-2 shadow-[0_2px_20px_-5px_rgba(0,0,0,0.05)]'
+            : 'bg-transparent py-4'
+          }`}
+      >
+        <div className="flex items-center justify-between px-4 h-12 max-w-7xl mx-auto">
           {/* Left Section - Back Button & Logo */}
           <div className="flex items-center gap-3">
             <button
               onClick={() => router.back()}
-              className="w-8 h-8 rounded-lg flex items-center justify-center text-[#666] hover:bg-gray-100 hover:text-[#0F0F0F] transition-all"
+              className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all ${isScrolled
+                  ? 'bg-black/[0.03] text-[#0F0F0F] hover:bg-black/[0.08]'
+                  : 'bg-white/10 backdrop-blur-md text-white border border-white/20 hover:bg-white/20'
+                }`}
               aria-label="Go back"
             >
-              <ChevronLeft size={18} />
+              <ChevronLeft size={20} strokeWidth={2.5} />
             </button>
 
-            {logo && (
-              <div className="w-8 h-8 rounded-lg overflow-hidden bg-gray-50 border border-black/[0.06]">
-                <img src={logo} alt={name} className="w-full h-full object-cover" />
-              </div>
-            )}
+            <div className={`flex items-center gap-3 transition-all duration-500 ${isScrolled ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4 pointer-events-none'}`}>
+              {logo && (
+                <div className="w-8 h-8 rounded-lg overflow-hidden bg-white border border-black/[0.06] shadow-sm">
+                  <img src={logo} alt={name} className="w-full h-full object-cover" />
+                </div>
+              )}
 
-            <h1 className="text-[15px] font-semibold text-[#0F0F0F] truncate max-w-[150px] md:max-w-md">
-              {name}
-            </h1>
+              <h1 className="text-[15px] font-bold text-[#0F0F0F] truncate max-w-[150px] md:max-w-md tracking-tight">
+                {name}
+              </h1>
+            </div>
           </div>
 
           {/* Right Section - Actions */}
           <div className="flex items-center gap-2">
-            {/* WhatsApp Button - Desktop */}
-            <button
-              onClick={handleWhatsApp}
-              className="hidden md:flex items-center gap-1.5 px-3 py-1.5 bg-[#25D366] text-white text-[11px] font-semibold rounded-lg hover:bg-[#20BD5A] transition-all"
-            >
-              <MessageCircle size={14} />
-              <span>WhatsApp</span>
-            </button>
-
-            {/* Call Button - Desktop */}
-            <button
-              onClick={() => window.location.href = `tel:+91${phone}`}
-              className="hidden md:flex items-center gap-1.5 px-3 py-1.5 bg-[#0F0F0F] text-white text-[11px] font-semibold rounded-lg hover:bg-[#333] transition-all"
-            >
-              <Phone size={14} />
-              <span>Call</span>
-            </button>
-
-            {/* Action Icons */}
-            <button
-              onClick={handleWhatsApp}
-              className="md:hidden w-8 h-8 rounded-lg flex items-center justify-center text-[#25D366] hover:bg-[#25D366]/10 transition-all"
-              aria-label="WhatsApp"
-            >
-              <MessageCircle size={18} />
-            </button>
-
-            <button
-              onClick={() => window.location.href = `tel:+91${phone}`}
-              className="md:hidden w-8 h-8 rounded-lg flex items-center justify-center text-[#666] hover:bg-gray-100 hover:text-[#0F0F0F] transition-all"
-              aria-label="Call"
-            >
-              <Phone size={18} />
-            </button>
-
-            <button
-              onClick={handleShare}
-              className="w-8 h-8 rounded-lg flex items-center justify-center text-[#666] hover:bg-gray-100 hover:text-[#0F0F0F] transition-all"
-              aria-label="Share"
-            >
-              <Share2 size={18} />
-            </button>
-
-            {onQRClick && (
+            {/* Desktop Quick Actions */}
+            <div className="hidden md:flex items-center gap-2">
               <button
-                onClick={onQRClick}
-                className="w-8 h-8 rounded-lg flex items-center justify-center text-[#666] hover:bg-gray-100 hover:text-[#0F0F0F] transition-all"
-                aria-label="QR Code"
+                onClick={handleWhatsApp}
+                className="flex items-center gap-2 px-4 py-2 bg-[#25D366] text-white text-[12px] font-bold rounded-xl hover:shadow-[0_4px_15px_-3px_rgba(37,211,102,0.4)] transition-all hover:-translate-y-0.5 active:translate-y-0"
               >
-                <QrCode size={18} />
+                <MessageCircle size={16} />
+                <span>WhatsApp</span>
               </button>
-            )}
+
+              <button
+                onClick={() => window.location.href = `tel:+91${phone}`}
+                className={`flex items-center gap-2 px-4 py-2 text-[12px] font-bold rounded-xl transition-all hover:-translate-y-0.5 active:translate-y-0 ${isScrolled
+                    ? 'bg-[#0F0F0F] text-white shadow-lg shadow-black/10'
+                    : 'bg-white text-[#0F0F0F] shadow-lg shadow-black/5'
+                  }`}
+              >
+                <Phone size={16} />
+                <span>Call Shop</span>
+              </button>
+            </div>
+
+            {/* Mobile/Compact Icons */}
+            <div className="flex items-center gap-1.5">
+              <button
+                onClick={handleWhatsApp}
+                className={`md:hidden w-9 h-9 rounded-xl flex items-center justify-center transition-all ${isScrolled
+                    ? 'bg-[#25D366]/10 text-[#25D366] hover:bg-[#25D366]/20'
+                    : 'bg-white/10 backdrop-blur-md text-white border border-white/20 hover:bg-white/20'
+                  }`}
+                aria-label="WhatsApp"
+              >
+                <MessageCircle size={18} strokeWidth={2.5} />
+              </button>
+
+              <button
+                onClick={handleShare}
+                className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all ${isScrolled
+                    ? 'bg-black/[0.03] text-[#0F0F0F] hover:bg-black/[0.08]'
+                    : 'bg-white/10 backdrop-blur-md text-white border border-white/20 hover:bg-white/20'
+                  }`}
+                aria-label="Share"
+              >
+                <Share2 size={18} strokeWidth={2.5} />
+              </button>
+
+              {onQRClick && (
+                <button
+                  onClick={onQRClick}
+                  className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all ${isScrolled
+                      ? 'bg-black/[0.03] text-[#0F0F0F] hover:bg-black/[0.08]'
+                      : 'bg-white/10 backdrop-blur-md text-white border border-white/20 hover:bg-white/20'
+                    }`}
+                  aria-label="QR Code"
+                >
+                  <QrCode size={18} strokeWidth={2.5} />
+                </button>
+              )}
+            </div>
           </div>
         </div>
       </header>

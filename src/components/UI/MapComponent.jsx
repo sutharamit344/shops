@@ -26,7 +26,10 @@ const MapCenterUpdater = ({ center }) => {
   const map = useMap();
   useEffect(() => {
     if (center && center.lat && center.lng) {
-      map.setView(center, map.getZoom());
+      map.flyTo(center, map.getZoom(), {
+        duration: 1.5,
+        easeLinearity: 0.25
+      });
     }
   }, [center, map]);
   return null;
