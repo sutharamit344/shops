@@ -2,76 +2,14 @@
 
 import React, { useState, useEffect } from "react";
 import Button from "@/components/UI/Button";
-import { Plus, Check, X, Tag, Loader2, AlertCircle, Trash2, Edit2, Search, Layers, ChevronDown, Utensils, Coffee, Shirt, Smartphone, Stethoscope, ShoppingBag, Hammer, Pill, Scissors, Dumbbell, Camera, Car, Gift, Home, Briefcase, Store, Hash, Wrench, Settings, Plug, PaintBucket, Construction, HardHat, Bike, Truck, Fuel, Cake, IceCream, Dog, Flower2, Book, Apple, UtensilsCrossed, Pizza, Beef, Beer, Wine, Sandwich, Egg, Fish, Cookie, Croissant, Bean, Candy, Soup, Milk, Gamepad2, Music, Mic2, ChefHat, Glasses, PawPrint } from "lucide-react";
+import { Plus, Check, X, Tag, Loader2, AlertCircle, Trash2, Edit2, Search, ChevronDown } from "lucide-react";
 import {
   getCategories,
   getSubCategories, addSubCategory, updateSubCategory, deleteSubCategory
 } from "@/lib/db";
 import Dialog from "@/components/UI/Dialog";
 import { useToast } from "@/hooks/useToast";
-import IconSlider from "./IconSlider";
-
-const ICON_OPTIONS = [
-  { name: "Layers", icon: Layers },
-  { name: "Tag", icon: Tag },
-  { name: "Utensils", icon: Utensils },
-  { name: "UtensilsCrossed", icon: UtensilsCrossed },
-  { name: "Coffee", icon: Coffee },
-  { name: "Croissant", icon: Croissant },
-  { name: "Cookie", icon: Cookie },
-  { name: "Cake", icon: Cake },
-  { name: "IceCream", icon: IceCream },
-  { name: "Pizza", icon: Pizza },
-  { name: "Sandwich", icon: Sandwich },
-  { name: "Soup", icon: Soup },
-  { name: "Beef", icon: Beef },
-  { name: "Fish", icon: Fish },
-  { name: "Egg", icon: Egg },
-  { name: "Milk", icon: Milk },
-  { name: "Bean", icon: Bean },
-  { name: "Candy", icon: Candy },
-  { name: "Beer", icon: Beer },
-  { name: "Wine", icon: Wine },
-  { name: "ChefHat", icon: ChefHat },
-  { name: "Shirt", icon: Shirt },
-  { name: "Smartphone", icon: Smartphone },
-  { name: "Stethoscope", icon: Stethoscope },
-  { name: "ShoppingBag", icon: ShoppingBag },
-  { name: "Hammer", icon: Hammer },
-  { name: "Pill", icon: Pill },
-  { name: "Scissors", icon: Scissors },
-  { name: "Dumbbell", icon: Dumbbell },
-  { name: "Camera", icon: Camera },
-  { name: "Gamepad2", icon: Gamepad2 },
-  { name: "Music", icon: Music },
-  { name: "Mic2", icon: Mic2 },
-  { name: "Car", icon: Car },
-  { name: "Bike", icon: Bike },
-  { name: "Truck", icon: Truck },
-  { name: "Fuel", icon: Fuel },
-  { name: "Gift", icon: Gift },
-  { name: "Home", icon: Home },
-  { name: "Briefcase", icon: Briefcase },
-  { name: "Store", icon: Store },
-  { name: "Wrench", icon: Wrench },
-  { name: "Settings", icon: Settings },
-  { name: "Plug", icon: Plug },
-  { name: "PaintBucket", icon: PaintBucket },
-  { name: "Construction", icon: Construction },
-  { name: "HardHat", icon: HardHat },
-  { name: "Dog", icon: Dog },
-  { name: "PawPrint", icon: PawPrint },
-  { name: "Flower2", icon: Flower2 },
-  { name: "Book", icon: Book },
-  { name: "Apple", icon: Apple },
-  { name: "Glasses", icon: Glasses }
-];
-
-const SubCategoryIcon = ({ name, className = "w-4 h-4" }) => {
-  const option = ICON_OPTIONS.find(o => o.name === name) || ICON_OPTIONS[0];
-  const IconComponent = option.icon;
-  return <IconComponent className={className} />;
-};
+import CategoryIcon from "@/components/UI/CategoryIcon";
 
 const SubCategoryManager = () => {
   const [categories, setCategories] = useState([]);
@@ -88,11 +26,9 @@ const SubCategoryManager = () => {
   // Form State
   const [newName, setNewName] = useState("");
   const [newParent, setNewParent] = useState("");
-  const [newIcon, setNewIcon] = useState("Layers");
   const [subToEdit, setSubToEdit] = useState(null);
   const [editedName, setEditedName] = useState("");
   const [editedParent, setEditedParent] = useState("");
-  const [editedIcon, setEditedIcon] = useState("Layers");
   const [subToDelete, setSubToDelete] = useState(null);
 
   // Action Loading
@@ -124,10 +60,9 @@ const SubCategoryManager = () => {
     e.preventDefault();
     if (!newName.trim() || !newParent) return;
     setIsProcessing(true);
-    const res = await addSubCategory(newName.trim(), newParent, newIcon);
+    const res = await addSubCategory(newName.trim(), newParent);
     if (res.success) {
       setNewName("");
-      setNewIcon("Layers");
       setShowAddModal(false);
       success("Subcategory added successfully!");
       fetchData();
@@ -141,7 +76,7 @@ const SubCategoryManager = () => {
     e.preventDefault();
     if (!editedName.trim() || !editedParent || !subToEdit) return;
     setIsProcessing(true);
-    const res = await updateSubCategory(subToEdit.id, editedName.trim(), editedParent, editedIcon);
+    const res = await updateSubCategory(subToEdit.id, editedName.trim(), editedParent);
     if (res.success) {
       setShowEditModal(false);
       success("Subcategory updated successfully!");
@@ -228,7 +163,7 @@ const SubCategoryManager = () => {
                   <td className="px-8 py-5">
                     <div className="flex items-center gap-4">
                       <div className="w-10 h-10 bg-[#1A1F36]/5 text-[#1A1F36] rounded-xl flex items-center justify-center group-hover:bg-[#FF6A00] group-hover:text-white transition-all">
-                        <SubCategoryIcon name={sub.icon} size={18} />
+                        <CategoryIcon name={sub.name} size={18} />
                       </div>
                       <span className="font-bold text-[#1A1F36] text-[15px]">{sub.name}</span>
                     </div>
@@ -246,7 +181,6 @@ const SubCategoryManager = () => {
                           setSubToEdit(sub);
                           setEditedName(sub.name);
                           setEditedParent(sub.parentCategory);
-                          setEditedIcon(sub.icon || "Layers");
                           setShowEditModal(true);
                         }}
                         className="w-10 h-10 bg-gray-50 text-[#1A1F36]/60 rounded-xl hover:bg-[#1A1F36] hover:text-white transition-all flex items-center justify-center border border-black/[0.03]"
@@ -303,16 +237,6 @@ const SubCategoryManager = () => {
               </div>
             </div>
 
-            <div className="space-y-3">
-              <label className="text-[11px] font-bold text-[#999] uppercase tracking-widest ml-1">Select Icon</label>
-              <IconSlider 
-                options={ICON_OPTIONS} 
-                selected={newIcon} 
-                onSelect={setNewIcon} 
-                activeColor="#FF6A00"
-              />
-            </div>
-
             <div className="flex gap-3 pt-2">
               <button type="button" onClick={() => setShowAddModal(false)} className="flex-1 h-12 bg-white border border-[#1A1F36]/[0.06] rounded-xl text-[#1A1F36] font-bold text-[13px] hover:bg-gray-50 transition-all">Cancel</button>
               <button type="submit" disabled={isProcessing || !newName.trim()} className="flex-1 h-12 bg-[#FF6A00] text-white rounded-xl font-bold text-[13px] shadow-md hover:bg-[#E85C25] transition-all disabled:opacity-50">{isProcessing ? <Loader2 className="animate-spin mx-auto" size={18} /> : "Initialize"}</button>
@@ -344,16 +268,6 @@ const SubCategoryManager = () => {
                 </select>
                 <ChevronDown className="absolute right-5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={16} />
               </div>
-            </div>
-
-            <div className="space-y-3">
-              <label className="text-[11px] font-bold text-[#999] uppercase tracking-widest ml-1">Change Icon</label>
-              <IconSlider 
-                options={ICON_OPTIONS} 
-                selected={editedIcon} 
-                onSelect={setEditedIcon} 
-                activeColor="#1A1F36"
-              />
             </div>
 
             <div className="flex gap-3 pt-2">

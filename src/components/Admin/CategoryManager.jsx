@@ -3,15 +3,7 @@
 import React, { useState, useEffect } from "react";
 import Button from "@/components/UI/Button";
 import {
-  Plus, Check, X, Tag, Loader2, AlertCircle, Trash2, Edit2, Search,
-  Utensils, Coffee, Shirt, Smartphone, Stethoscope, ShoppingBag,
-  Hammer, Pill, Scissors, Dumbbell, Camera,
-  Car, Gift, Home, Briefcase, Store, Hash,
-  Wrench, Settings, Plug, PaintBucket, Construction, HardHat,
-  Bike, Truck, Fuel, Cake, IceCream, Dog, Flower2, Book, Apple,
-  UtensilsCrossed, Pizza, Beef, Beer, Wine, Sandwich, Egg, Fish,
-  Cookie, Croissant, Bean, Candy, Soup, Milk, Gamepad2, Music, Mic2,
-  ChefHat, Glasses, PawPrint
+  Plus, Check, X, Tag, Loader2, AlertCircle, Trash2, Edit2, Search, Hash
 } from "lucide-react";
 import {
   getCategories, getPendingCategories, approveCategory,
@@ -20,68 +12,7 @@ import {
 } from "@/lib/db";
 import Dialog from "@/components/UI/Dialog";
 import { useToast } from "@/hooks/useToast";
-import IconSlider from "./IconSlider";
-
-const ICON_OPTIONS = [
-  { name: "Tag", icon: Tag },
-  { name: "Utensils", icon: Utensils },
-  { name: "UtensilsCrossed", icon: UtensilsCrossed },
-  { name: "Coffee", icon: Coffee },
-  { name: "Croissant", icon: Croissant },
-  { name: "Cookie", icon: Cookie },
-  { name: "Cake", icon: Cake },
-  { name: "IceCream", icon: IceCream },
-  { name: "Pizza", icon: Pizza },
-  { name: "Sandwich", icon: Sandwich },
-  { name: "Soup", icon: Soup },
-  { name: "Beef", icon: Beef },
-  { name: "Fish", icon: Fish },
-  { name: "Egg", icon: Egg },
-  { name: "Milk", icon: Milk },
-  { name: "Bean", icon: Bean },
-  { name: "Candy", icon: Candy },
-  { name: "Beer", icon: Beer },
-  { name: "Wine", icon: Wine },
-  { name: "ChefHat", icon: ChefHat },
-  { name: "Shirt", icon: Shirt },
-  { name: "Smartphone", icon: Smartphone },
-  { name: "Stethoscope", icon: Stethoscope },
-  { name: "ShoppingBag", icon: ShoppingBag },
-  { name: "Hammer", icon: Hammer },
-  { name: "Pill", icon: Pill },
-  { name: "Scissors", icon: Scissors },
-  { name: "Dumbbell", icon: Dumbbell },
-  { name: "Camera", icon: Camera },
-  { name: "Gamepad2", icon: Gamepad2 },
-  { name: "Music", icon: Music },
-  { name: "Mic2", icon: Mic2 },
-  { name: "Car", icon: Car },
-  { name: "Bike", icon: Bike },
-  { name: "Truck", icon: Truck },
-  { name: "Fuel", icon: Fuel },
-  { name: "Gift", icon: Gift },
-  { name: "Home", icon: Home },
-  { name: "Briefcase", icon: Briefcase },
-  { name: "Store", icon: Store },
-  { name: "Wrench", icon: Wrench },
-  { name: "Settings", icon: Settings },
-  { name: "Plug", icon: Plug },
-  { name: "PaintBucket", icon: PaintBucket },
-  { name: "Construction", icon: Construction },
-  { name: "HardHat", icon: HardHat },
-  { name: "Dog", icon: Dog },
-  { name: "PawPrint", icon: PawPrint },
-  { name: "Flower2", icon: Flower2 },
-  { name: "Book", icon: Book },
-  { name: "Apple", icon: Apple },
-  { name: "Glasses", icon: Glasses }
-];
-
-const CategoryIcon = ({ name, className = "w-4 h-4" }) => {
-  const option = ICON_OPTIONS.find(o => o.name === name) || ICON_OPTIONS[0];
-  const IconComponent = option.icon;
-  return <IconComponent className={className} />;
-};
+import CategoryIcon from "@/components/UI/CategoryIcon";
 
 const CategoryManager = () => {
   const [categories, setCategories] = useState([]);
@@ -97,10 +28,8 @@ const CategoryManager = () => {
 
   // Form State
   const [newCat, setNewCat] = useState("");
-  const [newIcon, setNewIcon] = useState("Tag");
   const [catToEdit, setCatToEdit] = useState(null);
   const [editedName, setEditedName] = useState("");
-  const [editedIcon, setEditedIcon] = useState("Tag");
   const [catToDelete, setCatToDelete] = useState(null);
   const [replacementName, setReplacementName] = useState("");
 
@@ -138,10 +67,9 @@ const CategoryManager = () => {
     e.preventDefault();
     if (!newCat.trim()) return;
     setIsProcessing(true);
-    const res = await addApprovedCategory(newCat.trim(), newIcon);
+    const res = await addApprovedCategory(newCat.trim());
     if (res.success) {
       setNewCat("");
-      setNewIcon("Tag");
       setShowAddModal(false);
       success("Category initialized successfully!");
       fetchData();
@@ -155,7 +83,7 @@ const CategoryManager = () => {
     e.preventDefault();
     if (!editedName.trim() || !catToEdit) return;
     setIsProcessing(true);
-    const res = await updateCategory(catToEdit.id, editedName.trim(), editedIcon);
+    const res = await updateCategory(catToEdit.id, editedName.trim());
     if (res.success) {
       setShowEditModal(false);
       success("Global taxonomy updated.");
@@ -210,7 +138,7 @@ const CategoryManager = () => {
             {pending.map(cat => (
               <div key={cat.id} className="p-4 bg-white border border-yellow-200 rounded-2xl flex items-center justify-between shadow-sm">
                 <div className="flex items-center gap-3">
-                  <Tag size={16} className="text-yellow-500" />
+                  <CategoryIcon name={cat.name} size={16} className="text-yellow-500" />
                   <span className="font-bold text-[#1A1F36]">{cat.name}</span>
                   <span className="text-[9px] font-black px-2 py-0.5 bg-yellow-100 text-yellow-700 rounded-full uppercase tracking-wider">New Category</span>
                 </div>
@@ -288,7 +216,7 @@ const CategoryManager = () => {
                     <td className="px-8 py-5">
                       <div className="flex items-center gap-4">
                         <div className="w-10 h-10 bg-[#FF6A00]/10 text-[#FF6A00] rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
-                          <CategoryIcon name={cat.icon} className="w-5 h-5" />
+                          <CategoryIcon name={cat.name} className="w-5 h-5" />
                         </div>
                         <span className="font-bold text-[#1A1F36] text-[15px]">{cat.name}</span>
                       </div>
@@ -304,7 +232,6 @@ const CategoryManager = () => {
                           onClick={() => {
                             setCatToEdit(cat);
                             setEditedName(cat.name);
-                            setEditedIcon(cat.icon || "Tag");
                             setShowEditModal(true);
                           }}
                           className="w-10 h-10 bg-gray-50 text-[#1A1F36]/75 rounded-xl hover:bg-[#1A1F36] hover:text-white transition-all flex items-center justify-center border border-black/[0.03]"
@@ -342,16 +269,6 @@ const CategoryManager = () => {
               <input autoFocus value={newCat} onChange={e => setNewCat(e.target.value)} className="w-full h-14 rounded-xl bg-gray-50 border border-[#1A1F36]/[0.08] px-5 font-bold outline-none focus:border-[#FF6A00] transition-all" placeholder="e.g. Wellness Spa" />
             </div>
 
-            <div className="space-y-3">
-              <label className="text-[11px] font-bold text-[#999] uppercase tracking-widest ml-1">Select Visual Icon</label>
-              <IconSlider 
-                options={ICON_OPTIONS} 
-                selected={newIcon} 
-                onSelect={setNewIcon} 
-                activeColor="#FF6A00"
-              />
-            </div>
-
             <div className="flex gap-3 pt-2">
               <button type="button" onClick={() => setShowAddModal(false)} className="flex-1 h-12 bg-white border border-[#1A1F36]/[0.06] rounded-xl text-[#1A1F36] font-bold text-[13px] hover:bg-gray-50 transition-all">Cancel</button>
               <button type="submit" disabled={isProcessing || !newCat.trim()} className="flex-1 h-12 bg-[#FF6A00] text-white rounded-xl font-bold text-[13px] shadow-md hover:bg-[#E85C25] transition-all disabled:opacity-50">{isProcessing ? <Loader2 className="animate-spin mx-auto" size={18} /> : "Initialize"}</button>
@@ -368,16 +285,6 @@ const CategoryManager = () => {
             <div className="space-y-2">
               <label className="text-[11px] font-bold text-[#999] uppercase tracking-widest ml-1">New Name</label>
               <input autoFocus value={editedName} onChange={e => setEditedName(e.target.value)} className="w-full h-14 rounded-xl bg-gray-50 border border-[#1A1F36]/[0.08] px-5 font-bold outline-none focus:border-[#FF6A00] transition-all" />
-            </div>
-
-            <div className="space-y-3">
-              <label className="text-[11px] font-bold text-[#999] uppercase tracking-widest ml-1">Change Icon</label>
-              <IconSlider 
-                options={ICON_OPTIONS} 
-                selected={editedIcon} 
-                onSelect={setEditedIcon} 
-                activeColor="#1A1F36"
-              />
             </div>
 
             <div className="flex gap-3 pt-2">

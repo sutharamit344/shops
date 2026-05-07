@@ -76,9 +76,13 @@ const Footer = () => {
           {/* Brand Info */}
           <div className="lg:col-span-2 space-y-8">
             <Link href="/" className="flex items-center gap-3 group">
-              <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-[#FF6A00] flex items-center justify-center shadow-lg shadow-[#FF6A00]/20 group-hover:scale-105 transition-all">
-                <Store size={22} className="text-white" />
-              </div>
+              <Image
+                src="/brand-logo-v1.png"
+                alt={BRAND}
+                width={48}
+                height={48}
+                className="w-12 h-12 md:w-14 md:h-14 object-contain transition-all duration-300 group-hover:scale-105"
+              />
               <span className="text-2xl md:text-3xl font-black tracking-tighter text-[#1A1F36]">
                 Shop<span className="text-[#FF6A00]">Bajar</span>
               </span>

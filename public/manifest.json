@@ -1,6 +1,6 @@
 {
-  "name": "ShopBajar",
-  "short_name": "ShopBajar",
+  "name": "Shop Bajar",
+  "short_name": "Shop Bajar",
   "description": "Find shops, services, and businesses near you",
   "start_url": "/",
   "display": "standalone",
@@ -8,19 +8,19 @@
   "theme_color": "#0F172A",
   "icons": [
     {
-      "src": "/sb-logo.png",
+      "src": "/android-chrome-192x192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/sb-logo.png",
+      "src": "/android-chrome-512x512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/sb-logo.png",
+      "src": "/android-chrome-512x512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"

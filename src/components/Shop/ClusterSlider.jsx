@@ -3,6 +3,7 @@
 import React, { useRef, useState, useMemo, useEffect } from "react";
 import { useSelector } from "react-redux";
 import { Award, ChevronRight, ChevronLeft, Store, MapPin } from "lucide-react";
+import CategoryIcon from "@/components/UI/CategoryIcon";
 
 const ClusterSlider = ({ clusters = [], shops = [], onClusterClick, parsed }) => {
   const { userCoords, userLocationName } = useSelector((state) => state.search);
@@ -298,7 +299,7 @@ const ClusterSlider = ({ clusters = [], shops = [], onClusterClick, parsed }) =>
               <div>
                 <div className="flex items-start justify-between mb-2.5">
                   <div className="w-8 h-8 md:w-9 md:h-9 rounded-xl bg-[#FF6A00]/10 flex items-center justify-center text-[#FF6A00]">
-                    <Store className="w-4 h-4 md:w-4.5 md:h-4.5" />
+                    <CategoryIcon name={cluster.category} size={18} />
                   </div>
                   <span className="text-[10px] font-bold bg-[#1A1F36] text-white px-2.5 py-1 rounded-full">
                     {cluster.count} Shops

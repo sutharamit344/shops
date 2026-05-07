@@ -25,16 +25,14 @@ const FullLoader = ({ message = "Loading experience..." }) => {
             <div className="absolute inset-0 bg-white shadow-[0_20px_50px_rgba(255,106,0,0.12)] border border-[#FF6A00]/10 animate-liquid" />
 
             {/* Logo */}
-            <div className="relative z-10 p-5 transform transition-transform duration-700 group-hover:scale-110 rounded-full overflow-hidden">
-              <Image
-                src="/sb-logo.png"
-                alt={BRAND}
-                width={64}
-                height={64}
-                className="object-contain animate-in zoom-in duration-1000 fade-in rounded-full overflow-hidden"
-                priority
-              />
-            </div>
+            <Image
+              src="/brand-logo-v1.png"
+              alt={BRAND}
+              width={72}
+              height={72}
+              className="relative z-10 w-full h-full object-contain animate-in zoom-in duration-1000 fade-in transition-transform duration-700 group-hover:scale-110"
+              priority
+            />
           </div>
 
           {/* Floating Particles */}

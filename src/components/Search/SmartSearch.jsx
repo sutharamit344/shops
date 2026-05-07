@@ -3,7 +3,8 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { useRouter } from "next/navigation";
-import { Search, MapPin, History, X, Phone, MessageSquare, LayoutGrid, Store, Award, ArrowLeft, ChevronRight } from "lucide-react";
+import { Search, MapPin, History, X, Phone, MessageSquare, Store, Award, ArrowLeft, ChevronRight } from "lucide-react";
+import CategoryIcon from "@/components/UI/CategoryIcon";
 import { setQuery, setSuggestions, addRecentSearch } from "@/redux/slices/searchSlice";
 import { parseSmartQuery } from "@/lib/searchParser";
 import { generateDiscoveryUrl } from "@/lib/urlArchitect";
@@ -302,7 +303,7 @@ const SmartSearch = ({ onFocusStateChange }) => {
                                 'bg-gray-50 text-gray-400'
                         }`}>
                         {item.type === 'history' ? <History size={18} /> :
-                          item.type === 'category' ? <LayoutGrid size={18} /> :
+                          item.type === 'category' ? <CategoryIcon name={item.text} size={18} /> :
                             item.type === 'shop' ? <Store size={18} /> :
                               item.type === 'cluster' ? <Award size={18} /> :
                                 item.type === 'location' ? <MapPin size={18} /> :

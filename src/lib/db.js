@@ -799,7 +799,7 @@ export async function proposeCategory(name) {
 /**
  * Admin: Adds an approved category.
  */
-export async function addApprovedCategory(name, icon = "Tag") {
+export async function addApprovedCategory(name) {
   try {
     const q = query(collection(db, "categories"), where("name", "==", name));
     const snap = await getDocs(q);
@@ -808,7 +808,7 @@ export async function addApprovedCategory(name, icon = "Tag") {
       if (snap.docs[0].data().status === "pending") {
         await updateDoc(doc(db, "categories", snap.docs[0].id), {
           status: "approved",
-          icon: icon || "Tag"
+          status: "approved",
         });
       }
       return { success: true, id: snap.docs[0].id };
@@ -816,7 +816,7 @@ export async function addApprovedCategory(name, icon = "Tag") {
 
     const docRef = await addDoc(collection(db, "categories"), {
       name,
-      icon: icon || "Tag",
+
       status: "approved",
       createdAt: serverTimestamp(),
     });
@@ -874,7 +874,7 @@ export async function deleteAndReassignCategory(sourceId, targetName = null) {
 /**
  * Admin: Updates a category name and cascades the change to shops and clusters.
  */
-export async function updateCategory(id, newName, newIcon) {
+export async function updateCategory(id, newName) {
   try {
     const docRef = doc(db, "categories", id);
     const docSnap = await getDoc(docRef);
@@ -887,7 +887,7 @@ export async function updateCategory(id, newName, newIcon) {
       updatedAt: serverTimestamp()
     };
     if (newName) updatePayload.name = newName;
-    if (newIcon) updatePayload.icon = newIcon;
+
 
     await updateDoc(docRef, updatePayload);
 
@@ -941,12 +941,12 @@ export async function getSubCategories() {
   }
 }
 
-export async function addSubCategory(name, parentCategory, icon = "Layers") {
+export async function addSubCategory(name, parentCategory) {
   try {
     const docRef = await addDoc(collection(db, "subcategories"), {
       name,
       parentCategory,
-      icon,
+
       createdAt: serverTimestamp()
     });
     return { success: true, id: docRef.id };
@@ -956,14 +956,14 @@ export async function addSubCategory(name, parentCategory, icon = "Layers") {
   }
 }
 
-export async function updateSubCategory(id, name, parentCategory, icon) {
+export async function updateSubCategory(id, name, parentCategory) {
   try {
     const updatePayload = {
       updatedAt: serverTimestamp()
     };
     if (name) updatePayload.name = name;
     if (parentCategory) updatePayload.parentCategory = parentCategory;
-    if (icon) updatePayload.icon = icon;
+
 
     await updateDoc(doc(db, "subcategories", id), updatePayload);
     return { success: true };

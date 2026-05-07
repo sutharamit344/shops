@@ -1,9 +1,11 @@
-const CACHE_NAME = "shopbajar-v1";
+const CACHE_NAME = "shopbajar-v2";
 const ASSETS_TO_CACHE = [
   "/",
   "/manifest.json",
-  "/icon-192.png",
-  "/icon-512.png"
+  "/android-chrome-192x192.png",
+  "/android-chrome-512x512.png",
+  "/logo-original.png",
+  "/brand-logo-v1.png"
 ];
 
 self.addEventListener("install", (event) => {

@@ -78,15 +78,13 @@ const Navbar = () => {
       <nav className={`fixed top-0 left-0 right-0 z-50 flex items-center px-5 md:px-16 transition-all duration-500 border-b ${navStyles}`}>
         {/* Logo */}
         <Link href="/" prefetch={false} className="flex items-center gap-3 md:gap-4 flex-shrink-0 group">
-          <div className={`w-11 h-11 md:w-14 md:h-14 rounded-xl md:rounded-2xl overflow-hidden flex items-center justify-center transition-all duration-300 group-hover:scale-105 border ${isDarkTheme ? "border-white/20 bg-white/5" : "border-black/5 bg-white shadow-md"}`}>
-            <Image
-              src="/sb-logo.png"
-              alt={BRAND}
-              width={48}
-              height={48}
-              className="object-cover"
-            />
-          </div>
+          <Image
+            src="/brand-logo-v1.png"
+            alt={BRAND}
+            width={44}
+            height={44}
+            className="w-11 h-11 md:w-14 md:h-14 object-contain transition-all duration-300 group-hover:scale-105"
+          />
           <span className={`text-[22px] md:text-[32px] font-black tracking-tighter transition-colors duration-300 ${logoMainColor}`}>
             {BRAND.startsWith("Shop") ? (
               <>

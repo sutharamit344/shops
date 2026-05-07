@@ -30,6 +30,7 @@ import Button from "@/components/UI/Button";
 import Card from "@/components/UI/Card";
 import Footer from "@/components/Footer";
 import SmartSearch from "@/components/Search/SmartSearch";
+import CategoryGrid from "@/components/Home/CategoryGrid";
 
 export default function Home() {
   const router = useRouter();
@@ -113,7 +114,7 @@ export default function Home() {
       <Navbar />
 
       {/* ── HERO SECTION (DARK PREMIUM) ─────────────────────────── */}
-      <section className="relative min-h-screen pt-24 pb-10 lg:pt-28 lg:pb-32 overflow-hidden bg-[#020617]">
+      <section className="relative  pt-24 pb-10 lg:pt-28 lg:pb-32 overflow-hidden bg-[#020617]">
         {/* Animated Background Elements */}
         <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
           <div className="absolute -top-[20%] -left-[10%] w-[60%] h-[60%] bg-[#FF6A00]/10 rounded-full blur-[120px] animate-pulse-glow" />
@@ -143,8 +144,16 @@ export default function Home() {
                 </p>
               </div>
 
-              <div className={`max-w-lg mx-auto lg:mx-0 transition-all duration-300 ${searchFocused ? "static" : "relative z-30 animate-in fade-in slide-in-from-bottom-10 duration-1000"}`}>
-                <div className={searchFocused ? "" : "glass-dark p-1 rounded-2xl glow-orange"}>
+              <div
+                className={`max-w-lg mx-auto lg:mx-0 transition-all duration-300 ${searchFocused ? "static" : "relative z-30 animate-in fade-in slide-in-from-bottom-10 duration-1000"}`}
+              >
+                <div
+                  className={
+                    searchFocused
+                      ? ""
+                      : "glass-dark p-1 rounded-2xl glow-orange"
+                  }
+                >
                   <SmartSearch onFocusStateChange={setSearchFocused} />
                 </div>
               </div>
@@ -296,34 +305,10 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── TICKER SECTION (SOCIAL PROOF) ─────────────────────── */}
-      <section className="py-10 bg-white border-y border-black/[0.05] overflow-hidden whitespace-nowrap">
-        <div className="flex animate-ticker items-center">
-          {[...Array(2)].map((_, i) => (
-            <div key={i} className="flex items-center gap-16 pr-16">
-              {[
-                "Kirana Store",
-                "Bakery",
-                "Clothing",
-                "Electronics",
-                "Jewellery",
-                "Restaurant",
-                "Salon",
-                "Pharma",
-                "Hardware",
-                "Electrical",
-              ].map((cat) => (
-                <div key={cat} className="flex items-center gap-3">
-                  <div className="w-2 h-2 rounded-full bg-[#FF6A00]" />
-                  <span className="text-[16px] font-black text-[#1A1F36]/30 uppercase tracking-widest">
-                    {cat}
-                  </span>
-                </div>
-              ))}
-            </div>
-          ))}
-        </div>
-      </section>
+
+      
+      {/* ── CATEGORY GRID (INTERACTIVE) ────────────────────────── */}
+      <CategoryGrid categories={categories} currentCity={currentCity} />
 
       {/* ── VALUE PROPOSITION ──────────────────────────────────── */}
       <section className="py-32 bg-[#FAFAF8] relative">
