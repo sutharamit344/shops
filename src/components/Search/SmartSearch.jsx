@@ -9,6 +9,7 @@ import { setQuery, setSuggestions, addRecentSearch } from "@/redux/slices/search
 import { parseSmartQuery } from "@/lib/searchParser";
 import { generateDiscoveryUrl } from "@/lib/urlArchitect";
 import { slugify } from "@/lib/slugify";
+import { BRAND } from "@/lib/config";
 import { getSuggestions, getSmartSuggestions, getDefaultSuggestions } from "@/lib/searchEngine";
 import { fetchCategories, fetchClusters } from "@/redux/thunks/categoryThunks";
 import { fetchApprovedShops } from "@/redux/thunks/shopThunks";
@@ -206,10 +207,10 @@ const SmartSearch = ({ onFocusStateChange }) => {
             const lat = parseFloat(geoData[0].lat);
             const lng = parseFloat(geoData[0].lon);
             await updateLocationCache(searchCity, lat, lng);
-            localStorage.setItem('last_city', searchCity.split(',').pop().trim());
+            // Removed localStorage.setItem to keep "Current Location" sticky
           }
         } else {
-          localStorage.setItem('last_city', cached.name.split(',').pop().trim());
+          // Removed localStorage.setItem to keep "Current Location" sticky
         }
       } catch (e) { console.error(e); }
     }
@@ -236,7 +237,7 @@ const SmartSearch = ({ onFocusStateChange }) => {
   if (!mounted) return null;
 
   return (
-    <div ref={containerRef} className={`w-full transition-all duration-300 z-50 md:max-w-2xl mx-auto ${isFocused ? "fixed inset-0 mt-20 lg:mt-0 lg:top-0 bg-white z-[999] p-4 flex flex-col md:relative md:p-0 md:bg-transparent md:z-50 md:flex-none" : "relative"}`}>
+    <div ref={containerRef} className={`w-full transition-all duration-300 z-50 md:max-w-2xl mx-auto ${isFocused ? "fixed inset-0 mt-[69px] lg:mt-0 lg:top-0 bg-white z-[999] p-4 flex flex-col md:relative md:p-0 md:bg-transparent md:z-50 md:flex-none" : "relative"}`}>
       <div className={`relative flex items-center bg-white transition-all ${isFocused ? "rounded-t-[20px] md:rounded-2xl border-b md:border-2 border-[#FF6A00] ring-0 md:ring-4 md:ring-[#FF6A00]/10 shadow-xl" : "rounded-[20px] md:rounded-2xl border-2 border-black/[0.06] hover:border-black/[0.15]"}`}>
         {isFocused ? (
           <button onClick={() => { setIsOpen(false); setIsFocused(false); }} className="ml-3 lg:hidden p-2 text-gray-400">
@@ -289,10 +290,10 @@ const SmartSearch = ({ onFocusStateChange }) => {
                   </div>
                 ) : (
                   <div className="group relative">
-                    <button
+                    <div
                       onClick={() => handleSearch(item)}
                       onMouseEnter={() => setActiveIndex(index)}
-                      className={`w-full px-5 py-4 md:py-3.5 flex items-center gap-4 text-left transition-colors ${activeIndex === index ? "bg-[#FAFAF8]" : ""}`}
+                      className={`w-full px-5 py-4 md:py-3.5 flex items-center gap-4 text-left cursor-pointer transition-colors ${activeIndex === index ? "bg-[#FAFAF8]" : ""}`}
                       role="option"
                     >
                       <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${item.type === 'history' ? 'bg-gray-50 text-gray-400' :
@@ -320,11 +321,38 @@ const SmartSearch = ({ onFocusStateChange }) => {
                       </div>
 
                       {item.type === 'shop' && (
-                        <div className="flex gap-2">
-                          <div className="w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center text-gray-400"><ChevronRight size={14} /></div>
+                        <div className="flex gap-2 pr-2">
+                          {item.whatsapp && (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                const msg = encodeURIComponent(`Hi! Found your shop *${item.text}* on ${BRAND}!`);
+                                window.open(`https://wa.me/91${item.whatsapp.replace(/\D/g, '')}?text=${msg}`, '_blank');
+                              }}
+                              className="w-10 h-10 rounded-xl bg-[#25D366]/10 text-[#25D366] flex items-center justify-center hover:bg-[#25D366] hover:text-white transition-all active:scale-90"
+                              title="WhatsApp"
+                            >
+                              <MessageSquare size={16} />
+                            </button>
+                          )}
+                          {item.phone && (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                window.location.href = `tel:${item.phone}`;
+                              }}
+                              className="w-10 h-10 rounded-xl bg-[#0F0F0F]/5 text-[#0F0F0F] flex items-center justify-center hover:bg-[#0F0F0F] hover:text-white transition-all active:scale-90"
+                              title="Call Now"
+                            >
+                              <Phone size={16} />
+                            </button>
+                          )}
+                          <div className="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center text-gray-400 group-hover:bg-[#FF6A00]/5 group-hover:text-[#FF6A00] transition-all">
+                            <ChevronRight size={16} />
+                          </div>
                         </div>
                       )}
-                    </button>
+                    </div>
                   </div>
                 )}
               </React.Fragment>

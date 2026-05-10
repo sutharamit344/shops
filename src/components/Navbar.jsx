@@ -28,13 +28,16 @@ const Navbar = () => {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [currentCity, setCurrentCity] = useState("ahmedabad");
+  const [currentArea, setCurrentArea] = useState("");
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
     setMounted(true);
     if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('last_city');
-      if (saved) setCurrentCity(slugify(saved));
+      const savedCity = localStorage.getItem('last_city');
+      const savedArea = localStorage.getItem('last_area');
+      if (savedCity) setCurrentCity(slugify(savedCity));
+      if (savedArea) setCurrentArea(slugify(savedArea));
 
       const handleScroll = () => {
         setScrolled(window.scrollY > 50);
@@ -115,7 +118,7 @@ const Navbar = () => {
         {/* Navigation & Auth */}
         <div className="ml-auto flex items-center gap-3 md:gap-8 flex-shrink-0">
           <div className="hidden md:flex items-center gap-8">
-            <Link href={`/${currentCity}`} className={`text-[15px] font-black uppercase tracking-widest ${linkColor} hover:text-[#FF6A00] transition-colors`}>Marketplace</Link>
+            <Link href={currentArea ? `/${currentCity}/${currentArea}` : `/${currentCity}`} className={`text-[15px] font-black uppercase tracking-widest ${linkColor} hover:text-[#FF6A00] transition-colors`}>Marketplace</Link>
             {isAdmin && <Link href="/admin" className={`text-[15px] font-black uppercase tracking-widest ${linkColor} hover:text-[#FF6A00] transition-colors`}>Admin</Link>}
           </div>
 
@@ -167,7 +170,7 @@ const Navbar = () => {
           <div className={`fixed inset-0 top-[71px] z-[200] ${isDarkTheme ? "bg-[#020617]" : "bg-white"} p-6 flex flex-col lg:hidden animate-in fade-in slide-in-from-right-4 duration-500`}>
             <div className="flex flex-col gap-1 pt-6">
               <Link
-                href={`/${currentCity}`}
+                href={currentArea ? `/${currentCity}/${currentArea}` : `/${currentCity}`}
                 onClick={() => setIsMenuOpen(false)}
                 className={`py-4 px-2 text-[20px] font-bold tracking-tight ${textColor} border-b ${isDarkTheme ? "border-white/5" : "border-black/5"}`}
               >

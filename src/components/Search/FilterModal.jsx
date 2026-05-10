@@ -29,6 +29,15 @@ const FilterModal = ({ isOpen, onClose }) => {
       title="Sort & Filter"
       subtitle="Refine your shop discovery"
       maxWidth="max-w-sm"
+      footer={
+        <Button
+          variant="dark"
+          className="w-full h-14 rounded-2xl text-[15px] font-bold shadow-lg"
+          onClick={onClose}
+        >
+          Apply Filters
+        </Button>
+      }
     >
       <div className="space-y-8">
         {/* Sort Section */}
@@ -90,14 +99,6 @@ const FilterModal = ({ isOpen, onClose }) => {
             ))}
           </div>
         </div>
-
-        <Button
-          variant="dark"
-          className="w-full h-14 rounded-2xl text-[15px] font-bold shadow-lg"
-          onClick={onClose}
-        >
-          Apply Filters
-        </Button>
       </div>
     </Dialog>
   );

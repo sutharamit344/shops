@@ -13,6 +13,30 @@ L.Icon.Default.mergeOptions({
   shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
 });
 
+const DraggableMarker = ({ position, onLocationSelect }) => {
+  const markerRef = React.useRef(null);
+  const eventHandlers = React.useMemo(
+    () => ({
+      dragend() {
+        const marker = markerRef.current;
+        if (marker != null) {
+          onLocationSelect(marker.getLatLng());
+        }
+      },
+    }),
+    [onLocationSelect]
+  );
+
+  return (
+    <Marker
+      draggable={true}
+      eventHandlers={eventHandlers}
+      position={position}
+      ref={markerRef}
+    />
+  );
+};
+
 const MapClickHandler = ({ onLocationSelect }) => {
   useMapEvents({
     click: (e) => {
@@ -35,20 +59,20 @@ const MapCenterUpdater = ({ center }) => {
   return null;
 };
 
-export default function MapComponent({ center, onLocationSelect }) {
+export default function MapComponent({ center, onLocationSelect, height = "300px" }) {
   return (
-    <div className="w-full h-[250px] rounded-2xl overflow-hidden border border-[#1A1F36]/10 mb-4 z-0 relative">
+    <div className="w-full rounded-2xl overflow-hidden border border-[#1A1F36]/10 mb-4 z-0 relative shadow-inner" style={{ height }}>
       <MapContainer
         center={center}
-        zoom={13}
+        zoom={15}
         style={{ height: "100%", width: "100%" }}
-        zoomControl={false}
+        zoomControl={true}
       >
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
-        <Marker position={center} />
+        <DraggableMarker position={center} onLocationSelect={onLocationSelect} />
         <MapClickHandler onLocationSelect={onLocationSelect} />
         <MapCenterUpdater center={center} />
       </MapContainer>

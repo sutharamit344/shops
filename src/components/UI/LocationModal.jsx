@@ -110,7 +110,7 @@ const LocationModal = ({ isOpen, onClose, detectedLocation, onConfirm, onRefresh
               <div className="mt-1.5 w-1.5 h-1.5 rounded-full bg-[#FF6A00] flex-shrink-0" />
               <div className="min-w-0">
                 <p className="text-[15px] font-black text-[#1A1F36] leading-tight truncate">
-                  {addressData.area || addressData.village || "Select on Map"}
+                  {addressData.area || addressData.village || "Select Location"}
                 </p>
                 <p className="text-[12px] font-bold text-[#1A1F36]/40 truncate">
                   {addressData.city}{addressData.pincode ? ` • ${addressData.pincode}` : ""}

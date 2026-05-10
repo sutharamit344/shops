@@ -44,6 +44,16 @@ const ShopHistoryDialog = ({ shop, isOpen, onClose }) => {
       subtitle={`Complete modification history for ${shop?.name || 'shop'}`}
       icon={History}
       maxWidth="max-w-2xl"
+      footer={
+        <div className="flex justify-end">
+          <button
+            onClick={onClose}
+            className="px-6 py-2.5 bg-white border border-black/[0.06] text-[#0F0F0F] text-[11px] font-semibold rounded-xl hover:bg-gray-50 hover:border-[#FF6A00]/30 transition-all"
+          >
+            Close
+          </button>
+        </div>
+      }
     >
       <div className="relative">
         {loading ? (
@@ -104,15 +114,6 @@ const ShopHistoryDialog = ({ shop, isOpen, onClose }) => {
             ))}
           </div>
         )}
-
-        <div className="mt-8 pt-6 border-t border-black/[0.06] flex justify-end">
-          <button
-            onClick={onClose}
-            className="px-6 py-2.5 bg-white border border-black/[0.06] text-[#0F0F0F] text-[11px] font-semibold rounded-xl hover:bg-gray-50 hover:border-[#FF6A00]/30 transition-all"
-          >
-            Close
-          </button>
-        </div>
       </div>
     </Dialog>
   );

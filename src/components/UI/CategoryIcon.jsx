@@ -130,6 +130,55 @@ const ICON_MAP = {
   category: Layers
 };
 
+/**
+ * Emoji Mapper for Visual Scannability
+ */
+const EMOJI_MAP = {
+  grocery: "🍎",
+  kirana: "📦",
+  supermarket: "🛒",
+  restaurant: "🍲",
+  bakery: "🥐",
+  cafe: "☕",
+  coffee: "🥤",
+  clothing: "👕",
+  fashion: "👗",
+  boutique: "👠",
+  mobile: "📱",
+  electronics: "💻",
+  jewellery: "💍",
+  watch: "⌚",
+  medical: "💊",
+  doctor: "🏥",
+  salon: "✂️",
+  beauty: "💄",
+  hardware: "🔨",
+  electrical: "💡",
+  furniture: "🛋️",
+  auto: "🚗",
+  service: "🛠️",
+  game: "🎮",
+  toy: "🧸",
+  gift: "🎁",
+  sports: "🏆",
+  gym: "💪",
+  education: "🎓",
+  travel: "✈️",
+  event: "🎈",
+  photo: "📸",
+  office: "💼",
+  other: "✨"
+};
+
+const getEmojiByName = (name = "") => {
+  const n = name.toLowerCase().trim();
+  if (EMOJI_MAP[n]) return EMOJI_MAP[n];
+  for (const key in EMOJI_MAP) {
+    if (n.includes(key)) return EMOJI_MAP[key];
+  }
+  return "✨"; 
+};
+
 const getIconByName = (name = "") => {
   const n = name.toLowerCase().trim();
   
@@ -150,4 +199,4 @@ const CategoryIcon = ({ name, size = 24, className = "", strokeWidth = 2 }) => {
 };
 
 export default CategoryIcon;
-export { getIconByName };
+export { getIconByName, getEmojiByName };

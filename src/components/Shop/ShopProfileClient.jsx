@@ -13,7 +13,6 @@ import {
   ShieldCheck,
   Image as ImageIcon,
   ThumbsUp,
-  Twitter,
   Star as StarIcon,
   Send,
   User,
@@ -45,6 +44,7 @@ const ShopProfileClient = ({ shop }) => {
     comment: "",
     name: ""
   });
+  const [showShareModal, setShowShareModal] = useState(false);
 
   useEffect(() => {
     if (shop?.id) incrementViews(shop.id);
@@ -101,17 +101,24 @@ const ShopProfileClient = ({ shop }) => {
     : [];
 
   const handleShare = async () => {
-    const url = `${DOMAIN}/shop/${shop.slug}`;
-    const shareText = `Check out *${shop.name}* on ${BRAND}! A ${shop.category} in ${shop.area ? shop.area + ', ' : ''}${shop.city}.`;
     if (navigator.share) {
+      const url = `${DOMAIN}/shop/${shop.slug}`;
+      const shareText = `Check out *${shop.name}* on ${BRAND}! A ${shop.category} in ${shop.area ? shop.area + ', ' : ''}${shop.city}.`;
       try {
         await navigator.share({ title: shop.name, text: shareText, url });
-      } catch (err) { }
+      } catch (err) { 
+        setShowShareModal(true);
+      }
     } else {
-      await navigator.clipboard.writeText(`${shareText}\n${url}`);
-      setShowShareTooltip(true);
-      setTimeout(() => setShowShareTooltip(false), 2000);
+      setShowShareModal(true);
     }
+  };
+
+  const copyToClipboard = async () => {
+    const url = `${DOMAIN}/shop/${shop.slug}`;
+    await navigator.clipboard.writeText(url);
+    setShowShareTooltip(true);
+    setTimeout(() => setShowShareTooltip(false), 2000);
   };
 
   const handleWhatsAppOrder = (item) => {
@@ -728,6 +735,67 @@ const ShopProfileClient = ({ shop }) => {
               )}
             </button>
           </form>
+        </Dialog>
+
+        {/* Share Modal with QR Code */}
+        <Dialog
+          isOpen={showShareModal}
+          onClose={() => setShowShareModal(false)}
+          title="Share Shop Profile"
+          subtitle="Let others discover this business"
+          maxWidth="max-w-xs"
+        >
+          <div className="flex flex-col items-center gap-6 py-4">
+            <div className="p-4 bg-white rounded-3xl border-2 border-[#FF6A00]/10 shadow-xl shadow-[#FF6A00]/5 relative group">
+              <div className="w-48 h-48 relative bg-gray-50 rounded-xl overflow-hidden flex items-center justify-center">
+                <img 
+                  src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(`${DOMAIN}/shop/${shop.slug}`)}&color=1A1F36&bgcolor=FFFFFF`}
+                  alt="Shop QR Code"
+                  className="w-full h-full p-2"
+                />
+              </div>
+              <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 px-4 py-1.5 bg-[#FF6A00] text-white text-[10px] font-black uppercase tracking-widest rounded-full shadow-lg">
+                Scan to Visit
+              </div>
+            </div>
+
+            <div className="w-full space-y-3">
+              <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-2xl border border-black/[0.05]">
+                <div className="flex-1 truncate text-[12px] font-medium text-[#666]">
+                  {`${DOMAIN}/shop/${shop.slug}`}
+                </div>
+                <button 
+                  onClick={copyToClipboard}
+                  className="p-2 bg-white rounded-lg border border-black/[0.08] text-[#1A1F36] hover:text-[#FF6A00] transition-colors relative"
+                >
+                  <Share2 size={16} />
+                  {showShareTooltip && (
+                    <div className="absolute bottom-full right-0 mb-2 px-2 py-1 bg-black text-white text-[9px] rounded whitespace-nowrap">
+                      Copied!
+                    </div>
+                  )}
+                </button>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-2 pt-2">
+                <button 
+                  onClick={handleGeneralWhatsApp}
+                  className="py-3 px-4 bg-[#25D366] text-white text-[12px] font-bold rounded-xl flex items-center justify-center gap-2 hover:opacity-90"
+                >
+                  <MessageSquare size={14} /> WhatsApp
+                </button>
+                <button 
+                  onClick={() => {
+                    const url = `${DOMAIN}/shop/${shop.slug}`;
+                    window.open(`https://facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`, '_blank');
+                  }}
+                  className="py-3 px-4 bg-[#1877F2] text-white text-[12px] font-bold rounded-xl flex items-center justify-center gap-2 hover:opacity-90"
+                >
+                  Facebook
+                </button>
+              </div>
+            </div>
+          </div>
         </Dialog>
       </div>
 

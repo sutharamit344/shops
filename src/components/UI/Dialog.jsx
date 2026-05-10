@@ -16,7 +16,8 @@ export default function Dialog({
   icon: Icon,
   maxWidth = "max-w-md",
   showClose = true,
-  showHeader = true
+  showHeader = true,
+  footer
 }) {
   // Prevent body scroll when dialog is open
   useEffect(() => {
@@ -49,12 +50,12 @@ export default function Dialog({
       onClick={onClose}
     >
       <div
-        className={`bg-white rounded-2xl w-full ${maxWidth} shadow-md animate-in fade-in zoom-in duration-200 relative max-h-[90vh] flex flex-col`}
+        className={`bg-white rounded-2xl w-full ${maxWidth} shadow-md animate-in fade-in zoom-in duration-200 relative max-h-[95vh] sm:max-h-[90vh] flex flex-col overflow-hidden`}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
         {showHeader && (
-          <div className="flex items-center justify-between p-5 border-b border-black/[0.06]">
+          <div className="flex items-center justify-between p-5 border-b border-black/[0.06] flex-shrink-0">
             <div className="flex items-center gap-3">
               {Icon && (
                 <div className="w-9 h-9 rounded-xl bg-[#FF6A00]/10 flex items-center justify-center text-[#FF6A00]">
@@ -86,9 +87,16 @@ export default function Dialog({
         )}
 
         {/* Content */}
-        <div className="p-5 ">
+        <div className="p-5 overflow-y-auto flex-1 custom-scrollbar">
           {children}
         </div>
+
+        {/* Footer */}
+        {footer && (
+          <div className="p-5 border-t border-black/[0.06] flex-shrink-0 bg-white/50 backdrop-blur-sm">
+            {footer}
+          </div>
+        )}
       </div>
     </div>
   );

@@ -18,7 +18,12 @@ const MapComponent = dynamic(() => import("@/components/UI/MapComponent"), {
 });
 
 // Icons
-import { Save, CheckCircle2, AlertCircle, Plus, Loader2, Zap, MapPin, Phone, Info, X, ChevronRight, ChevronLeft, ImageIcon, Star, Palette, ShieldCheck, Clock, Navigation } from "lucide-react";
+import { 
+  Save, CheckCircle2, AlertCircle, Plus, Loader2, Zap, MapPin, 
+  Phone, Info, X, ChevronRight, ChevronLeft, ImageIcon, Star, 
+  Palette, ShieldCheck, Clock, Navigation, Search, Globe, Eye, 
+  ArrowRight, Sparkles, Building2, Map as MapIcon, Link as LinkIcon
+} from "lucide-react";
 
 const ShopForm = ({ initialData, onSubmit, isEdit = false, isLoading = false, error: externalError }) => {
   const [currentStep, setCurrentStep] = useState(1);
@@ -66,6 +71,9 @@ const ShopForm = ({ initialData, onSubmit, isEdit = false, isLoading = false, er
   const [proposedCluster, setProposedCluster] = useState("");
   const [pincodeAreas, setPincodeAreas] = useState([]);
   const [draftLoadedAtMount, setDraftLoadedAtMount] = useState(false);
+  const [showMoreAddress, setShowMoreAddress] = useState(false);
+  const [isGeocoding, setIsGeocoding] = useState(false);
+  const [mapSearchQuery, setMapSearchQuery] = useState("");
 
 
   const steps = [
@@ -143,6 +151,58 @@ const ShopForm = ({ initialData, onSubmit, isEdit = false, isLoading = false, er
       setShowCustomCluster(value === "CUSTOM");
     }
     setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleLocationSelect = async (coords) => {
+    setFormData(prev => ({
+      ...prev,
+      lat: coords.lat,
+      lng: coords.lng
+    }));
+
+    // Reverse Geocoding
+    try {
+      setIsGeocoding(true);
+      const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${coords.lat}&lon=${coords.lng}`);
+      const data = await res.json();
+      
+      if (data && data.address) {
+        const { road, suburb, neighbourhood, city, town, village, state, postcode } = data.address;
+        
+        setFormData(prev => ({
+          ...prev,
+          area: suburb || neighbourhood || road || prev.area,
+          city: city || town || village || prev.city,
+          state: state || prev.state,
+          pincode: postcode || prev.pincode,
+          village: village || ""
+        }));
+      }
+    } catch (err) {
+      console.error("Reverse geocoding failed", err);
+    } finally {
+      setIsGeocoding(false);
+    }
+  };
+
+  const handleMapSearch = async (e) => {
+    if (e) e.preventDefault();
+    if (!mapSearchQuery.trim()) return;
+
+    try {
+      setIsGeocoding(true);
+      const res = await fetch(`https://nominatim.openstreetmap.org/search?format=jsonv2&q=${encodeURIComponent(mapSearchQuery)}&limit=1`);
+      const data = await res.json();
+      
+      if (data && data[0]) {
+        const coords = { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) };
+        handleLocationSelect(coords);
+      }
+    } catch (err) {
+      console.error("Map search failed", err);
+    } finally {
+      setIsGeocoding(false);
+    }
   };
 
   const clearDraft = () => {
@@ -442,197 +502,274 @@ const ShopForm = ({ initialData, onSubmit, isEdit = false, isLoading = false, er
 
         {/* ── STEP 2: LOCATION ───────────────────────────────────── */}
         {currentStep === 2 && (
-          <div className="space-y-8 animate-in fade-in duration-500 slide-in-from-bottom-2">
-            <div className="flex flex-col  gap-4">
-              <div>
-                <h2 className="text-2xl font-extrabold text-[#1A1F36] tracking-tight mb-2">Reach & Location</h2>
-                <p className="text-[15px] text-[#1A1F36]/50 font-medium">Connect your business with local customers in your area.</p>
+          <div className="space-y-12 animate-in fade-in duration-500 slide-in-from-bottom-4">
+            {/* 📍 SECTION: LOCATION */}
+            <div className="space-y-6">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-[#FF6A00]/10 flex items-center justify-center text-[#FF6A00]">
+                  <MapIcon size={20} />
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold text-[#1A1F36]">Shop Location</h2>
+                  <p className="text-[13px] text-[#1A1F36]/50">Pin your shop accurately for customers to find you.</p>
+                </div>
               </div>
-              <div className="bg-[#FAFAF8] rounded-3xl p-6 border border-[#1A1F36]/[0.06] mb-8">
-                <p className="text-[14px] text-[#1A1F36]/60 font-bold mb-4 flex items-center gap-2">
-                  <MapPin size={16} className="text-[#FF6A00]" />
-                  Pin your shop location on the map
-                </p>
+
+              <div className="bg-[#FAFAF8] rounded-[32px] p-2 border border-[#1A1F36]/[0.06] overflow-hidden relative">
+                {/* Map Search Overlay */}
+                <div className="absolute top-6 left-6 right-6 z-[400] flex gap-2">
+                  <div className="flex-1 relative group">
+                    <div className="absolute left-4 top-1/2 -translate-y-1/2 text-[#1A1F36]/30 group-focus-within:text-[#FF6A00] transition-colors">
+                      <Search size={18} />
+                    </div>
+                    <input
+                      type="text"
+                      placeholder="Search for your area, building or street..."
+                      value={mapSearchQuery}
+                      onChange={(e) => setMapSearchQuery(e.target.value)}
+                      onKeyDown={(e) => e.key === 'Enter' && handleMapSearch(e)}
+                      className="w-full h-12 pl-12 pr-4 bg-white/90 backdrop-blur-md border border-white rounded-2xl text-[14px] font-medium shadow-xl focus:outline-none focus:ring-2 focus:ring-[#FF6A00]/20 transition-all"
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleMapSearch}
+                    className="h-12 px-6 bg-[#1A1F36] text-white rounded-2xl font-bold text-[13px] shadow-xl hover:bg-[#FF6A00] transition-all active:scale-95 flex items-center gap-2"
+                  >
+                    Find
+                  </button>
+                </div>
+
                 <MapComponent
+                  height="340px"
                   center={{
                     lat: formData.lat || 23.0225,
                     lng: formData.lng || 72.5714
                   }}
-                  onLocationSelect={(coords) => {
-                    setFormData(prev => ({
-                      ...prev,
-                      lat: coords.lat,
-                      lng: coords.lng
-                    }));
-                  }}
+                  onLocationSelect={handleLocationSelect}
                 />
 
-                <div className="flex flex-wrap items-center gap-4 mt-4">
+                <div className="absolute bottom-6 left-6 right-6 z-[400] flex justify-between items-end pointer-events-none">
                   <button
                     type="button"
                     onClick={async () => {
                       if (!navigator.geolocation) return alert("Geolocation not supported");
-                      setUploadStatus("Fetching current GPS...");
+                      setIsGeocoding(true);
                       navigator.geolocation.getCurrentPosition((pos) => {
-                        const { latitude, longitude } = pos.coords;
-                        setFormData(prev => ({
-                          ...prev,
-                          lat: latitude,
-                          lng: longitude
-                        }));
-                        setUploadStatus("");
-                      }, () => setUploadStatus(""));
+                        handleLocationSelect({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+                      }, () => setIsGeocoding(false));
                     }}
-                    className="flex items-center gap-2 px-4 py-2 bg-[#FF6A00]/10 text-[#FF6A00] rounded-xl text-[13px] font-bold hover:bg-[#FF6A00]/20 transition-all active:scale-95 border border-[#FF6A00]/10"
+                    className="pointer-events-auto flex items-center gap-2 px-5 py-3 bg-white text-[#1A1F36] rounded-2xl text-[13px] font-bold shadow-xl hover:text-[#FF6A00] transition-all active:scale-95 border border-white"
                   >
-                    <Navigation size={14} />
-                    Auto-detect My Location
+                    <Navigation size={16} className="text-[#FF6A00]" />
+                    Use Current Location
                   </button>
 
-                  {formData.lat && (
-                    <div className="flex items-center gap-2 px-4 py-2 bg-[#25D366]/10 text-[#25D366] rounded-xl border border-[#25D366]/20">
-                      <div className="w-2 h-2 rounded-full bg-[#25D366] animate-pulse" />
-                      <span className="text-[13px] font-bold tracking-tight">Location Captured</span>
+                  {isGeocoding && (
+                    <div className="pointer-events-auto bg-white/90 backdrop-blur-md px-4 py-2 rounded-xl shadow-xl flex items-center gap-3 border border-white">
+                      <Loader2 size={16} className="animate-spin text-[#FF6A00]" />
+                      <span className="text-[12px] font-bold text-[#1A1F36]">Smart Locating...</span>
                     </div>
                   )}
                 </div>
               </div>
             </div>
 
+            {/* 🏢 SECTION: ADDRESS DETAILS */}
             <div className="space-y-6">
-              {/* WhatsApp */}
-              <Input
-                label="WhatsApp For Business"
-                name="phone"
-                value={formData.phone}
-                onChange={handleChange}
-                placeholder="9876543210"
-                required
-                icon={Phone}
-                helpText="Customers will reach out to you on this number"
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") e.preventDefault();
-                }}
-              />
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center text-blue-500">
+                  <Building2 size={20} />
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold text-[#1A1F36]">Address Details</h2>
+                  <p className="text-[13px] text-[#1A1F36]/50">Verify and complete your business address.</p>
+                </div>
+              </div>
 
-              {/* Specific Address */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <Input
-                  label="Shop No."
+                  label="Shop Number (Optional)"
                   name="shopNo"
                   value={formData.shopNo}
                   onChange={handleChange}
-                  placeholder="e.g., Shop 4"
-                  required
+                  placeholder="e.g. Shop G-12"
                 />
                 <Input
-                  label="Building / Complex"
+                  label="Building / Complex (Optional)"
                   name="building"
                   value={formData.building}
                   onChange={handleChange}
-                  placeholder="e.g., Sai Plaza"
-                  required
+                  placeholder="e.g. Skyline Corporate Park"
                 />
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <Input
-                  label="Landmark / Street"
-                  name="zone"
-                  value={formData.zone}
-                  onChange={handleChange}
-                  placeholder="e.g., Near Main Market"
-                  required
-                />
-                <Input
-                  label="Primary Locality (Area)"
+                  label="Area / Locality"
                   name="area"
                   value={formData.area}
                   onChange={handleChange}
-                  placeholder="e.g., Gota"
+                  placeholder="e.g. Gota"
                   required
-                />
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <Input
-                  label="Village (if any)"
-                  name="village"
-                  value={formData.village}
-                  onChange={handleChange}
-                  placeholder="e.g., Chenpur"
+                  helpText="Auto-filled from map selection"
                 />
                 <Input
-                  label="PIN Code"
+                  label="Pincode"
                   name="pincode"
                   value={formData.pincode}
                   onChange={handleChange}
-                  placeholder="e.g., 380060"
+                  placeholder="e.g. 380060"
                   required
                 />
               </div>
 
-              <div className="relative">
+              <div className="grid grid-cols-2 gap-6">
                 <Input
-                  label="Cluster / Group Name (Optional)"
-                  name="clusterType"
-                  value={formData.clusterType}
-                  onChange={(e) => {
-                    const val = e.target.value;
-                    setFormData(prev => ({ ...prev, clusterType: val }));
-                  }}
-                  placeholder="e.g., Gota Shopping Hub"
-                  helpText="Type to see suggestions. Groups your business with similar local hubs."
-                  autoComplete="off"
+                  label="City"
+                  name="city"
+                  value={formData.city}
+                  onChange={handleChange}
+                  placeholder="Ahmedabad"
+                  required
                 />
-                {formData.clusterType && dbClusters.filter(c => c.name.toLowerCase().includes(formData.clusterType.toLowerCase()) && c.name !== formData.clusterType).length > 0 && (
-                  <div className="absolute z-50 left-0 right-0 top-[calc(100%-8px)] bg-white border border-[#1A1F36]/[0.08] rounded-xl shadow-xl max-h-48 overflow-y-auto animate-in fade-in slide-in-from-top-1 duration-200">
-                    {dbClusters
-                      .filter(c => c.name.toLowerCase().includes(formData.clusterType.toLowerCase()))
-                      .map((c, i) => (
-                        <button
-                          key={i}
-                          type="button"
-                          className="w-full text-left px-4 py-2.5 text-[13px] font-medium text-[#1A1F36] hover:bg-[#FF6A00]/5 hover:text-[#FF6A00] transition-colors border-b border-[#1A1F36]/[0.04] last:border-0"
-                          onClick={() => setFormData(prev => ({ ...prev, clusterType: c.name }))}
-                        >
-                          {c.name}
-                        </button>
-                      ))}
+                <Input
+                  label="State"
+                  name="state"
+                  value={formData.state}
+                  onChange={handleChange}
+                  placeholder="Gujarat"
+                  required
+                />
+              </div>
+
+              {/* Expandable Section */}
+              <div className="pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowMoreAddress(!showMoreAddress)}
+                  className="flex items-center gap-2 text-[13px] font-bold text-[#FF6A00] hover:underline"
+                >
+                  <Plus size={16} className={`transition-transform duration-300 ${showMoreAddress ? 'rotate-45' : ''}`} />
+                  {showMoreAddress ? 'Hide additional details' : 'Add more address details'}
+                </button>
+
+                {showMoreAddress && (
+                  <div className="mt-6 p-6 bg-gray-50/50 rounded-[24px] border border-black/[0.03] space-y-6 animate-in slide-in-from-top-4 duration-300">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <Input
+                        label="Landmark"
+                        name="zone"
+                        value={formData.zone}
+                        onChange={handleChange}
+                        placeholder="e.g. Opp. Reliance Fresh"
+                      />
+                      <Input
+                        label="Village"
+                        name="village"
+                        value={formData.village}
+                        onChange={handleChange}
+                        placeholder="e.g. Chenpur"
+                      />
+                    </div>
+                    <div className="relative">
+                      <Input
+                        label="Market / Business Area (Optional)"
+                        name="clusterType"
+                        value={formData.clusterType}
+                        onChange={(e) => setFormData(prev => ({ ...prev, clusterType: e.target.value }))}
+                        placeholder="e.g. Gota Shopping Hub"
+                        helpText="Groups your business with similar local hubs."
+                        autoComplete="off"
+                      />
+                      {formData.clusterType && dbClusters.filter(c => c.name.toLowerCase().includes(formData.clusterType.toLowerCase()) && c.name !== formData.clusterType).length > 0 && (
+                        <div className="absolute z-50 left-0 right-0 top-[calc(100%-8px)] bg-white border border-[#1A1F36]/[0.08] rounded-xl shadow-xl max-h-48 overflow-y-auto">
+                          {dbClusters
+                            .filter(c => c.name.toLowerCase().includes(formData.clusterType.toLowerCase()))
+                            .map((c, i) => (
+                              <button
+                                key={i}
+                                type="button"
+                                className="w-full text-left px-4 py-2.5 text-[13px] font-medium text-[#1A1F36] hover:bg-[#FF6A00]/5 hover:text-[#FF6A00] border-b border-[#1A1F36]/[0.04] last:border-0"
+                                onClick={() => setFormData(prev => ({ ...prev, clusterType: c.name }))}
+                              >
+                                {c.name}
+                              </button>
+                            ))}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 )}
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pb-6 border-b border-black/[0.04]">
-                <div className="grid grid-cols-2 gap-4">
-                  <Input
-                    label="City"
-                    name="city"
-                    value={formData.city}
-                    onChange={handleChange}
-                    placeholder="Ahmedabad"
-                    required
-                  />
-                  <Input
-                    label="State"
-                    name="state"
-                    value={formData.state}
-                    onChange={handleChange}
-                    placeholder="Gujarat"
-                    required
-                  />
+              {/* WhatsApp (Main Entry) */}
+              <div className="pt-6 border-t border-black/[0.04]">
+                <Input
+                  label="WhatsApp For Business"
+                  name="phone"
+                  value={formData.phone}
+                  onChange={handleChange}
+                  placeholder="9876543210"
+                  required
+                  icon={Phone}
+                  helpText="Customers will reach out to you on this number"
+                />
+              </div>
+            </div>
+
+            {/* 🌐 SECTION: DISCOVERY & SEO */}
+            <div className="space-y-6">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-purple-50 flex items-center justify-center text-purple-500">
+                  <Globe size={20} />
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold text-[#1A1F36]">Discovery & SEO</h2>
+                  <p className="text-[13px] text-[#1A1F36]/50">How your shop appears to customers online.</p>
                 </div>
               </div>
 
-              <div className="p-8 bg-[#1A1F36] rounded-3xl text-white relative overflow-hidden shadow-2xl">
-                <div className="absolute top-0 right-0 p-8 opacity-10"><ShieldCheck size={120} /></div>
-                <div className="relative z-10 max-w-lg">
-                  <h3 className="text-[11px] font-bold text-[#FF6A00] uppercase tracking-[0.2em] mb-4">Final Review</h3>
-                  <p className="text-[16px] font-bold mb-6">By submitting, you agree that your business follows our local marketplace guidelines.</p>
-                  <div className="flex items-center gap-4 text-[13px] font-bold opacity-60">
-                    <div className="flex items-center gap-2"><CheckCircle2 size={16} className="text-[#25D366]" /> <span>Free Forever</span></div>
-                    <div className="flex items-center gap-2"><CheckCircle2 size={16} className="text-[#25D366]" /> <span>SEO Optimised</span></div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="p-6 bg-white border border-[#1A1F36]/[0.06] rounded-[24px] space-y-4">
+                  <div className="flex items-center gap-2 text-[11px] font-bold text-[#1A1F36]/40 uppercase tracking-wider">
+                    <LinkIcon size={12} />
+                    Live SEO URL Preview
                   </div>
+                  <div className="text-[14px] font-medium text-[#1A1F36] break-all">
+                    shopbajar.com/
+                    <span className="text-[#FF6A00]">{slugify(formData.city || "city")}/</span>
+                    <span className="text-[#FF6A00]">{slugify(formData.area || "area")}/</span>
+                    <span className="text-[#FF6A00] font-bold">{slugify(formData.name || "shop-name")}</span>
+                  </div>
+                </div>
+
+                <div className="p-6 bg-[#1A1F36] rounded-[24px] space-y-4 shadow-xl">
+                  <div className="flex items-center gap-2 text-[11px] font-bold text-white/40 uppercase tracking-wider">
+                    <Eye size={12} />
+                    Marketplace Discovery
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-[12px] text-white/60">Your shop will appear under:</p>
+                    <p className="text-[16px] font-bold text-white flex items-center gap-2">
+                      <Sparkles size={16} className="text-[#FF6A00]" />
+                      {formData.category || "Select Category"}s in {formData.area || "Select Area"}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Agreement Card */}
+            <div className="p-8 bg-gradient-to-br from-[#1A1F36] to-[#2D3450] rounded-[32px] text-white relative overflow-hidden shadow-2xl">
+              <div className="absolute top-0 right-0 p-8 opacity-10"><ShieldCheck size={120} /></div>
+              <div className="relative z-10 max-w-lg">
+                <h3 className="text-[11px] font-bold text-[#FF6A00] uppercase tracking-[0.2em] mb-4">Final Registration</h3>
+                <p className="text-[18px] font-bold mb-6 leading-tight">Your digital storefront is almost ready for launch.</p>
+                <div className="flex flex-wrap items-center gap-6 text-[13px] font-bold opacity-70">
+                  <div className="flex items-center gap-2"><CheckCircle2 size={16} className="text-[#25D366]" /> <span>Free Listing</span></div>
+                  <div className="flex items-center gap-2"><CheckCircle2 size={16} className="text-[#25D366]" /> <span>Live Maps</span></div>
+                  <div className="flex items-center gap-2"><CheckCircle2 size={16} className="text-[#25D366]" /> <span>Direct WhatsApp</span></div>
                 </div>
               </div>
             </div>

@@ -18,7 +18,7 @@ import {
 import Button from "@/components/UI/Button";
 import { BRAND } from "@/lib/config";
 
-const ShopCard = ({ shop, variant = "grid", showActions = false }) => {
+const ShopCard = ({ shop, variant = "grid", showActions = false, index = 0 }) => {
   const router = useRouter();
   const dispatch = useDispatch();
   const [copied, setCopied] = useState(false);
@@ -114,8 +114,9 @@ const ShopCard = ({ shop, variant = "grid", showActions = false }) => {
   const content = (
     <Card
       hover
-      className={`h-full flex relative overflow-hidden transition-all duration-300 group/card ${variant === "grid" ? "flex-col p-0" : "flex-row items-center p-4"
+      className={`h-full flex relative overflow-hidden transition-all duration-300 group/card animate-fade-in-up ${variant === "grid" ? "flex-col p-0" : "flex-row items-center p-4"
         } ${areaMatch || shop.isClusterMatch ? "border-[#FF6A00]/30 shadow-lg shadow-[#FF6A00]/5 bg-[#FF6A00]/[0.01]" : ""}`}
+      style={{ animationDelay: `${index * 0.05}s` }}
     >
       {/* Location Match Badge */}
 
@@ -164,12 +165,14 @@ const ShopCard = ({ shop, variant = "grid", showActions = false }) => {
                 <Star size={14} className="text-[#FF6A00] fill-[#FF6A00]" />
                 <span className="text-[15px] font-black text-[#1A1F36]">{shop.avgRating || shop.rating || "5.0"}</span>
               </div>
-              <OpenNowBadge shop={shop} size="md" />
             </div>
             <h3 className={`text-[19px] md:text-[22px] font-black tracking-tight truncate transition-colors flex items-center gap-2 mb-1.5 ${areaMatch ? "text-[#FF6A00]" : "text-[#1A1F36] group-hover/card:text-[#FF6A00]"}`}>
               {shop.name}
               {shop.isVerified && <ShieldCheck size={20} className="text-blue-500 fill-blue-50" />}
             </h3>
+            <div className="mb-3">
+              <OpenNowBadge shop={shop} size="md" />
+            </div>
 
             {shop.clusterType && (
               <div className="flex items-center gap-2 mb-2 opacity-80">
@@ -247,7 +250,10 @@ const ShopCard = ({ shop, variant = "grid", showActions = false }) => {
               )}
             </div>
 
-            <div className="flex flex-col items-end gap-1.5">
+            <div className="flex flex-col items-end gap-2">
+              <div className="absolute top-4 right-4 z-20">
+                <OpenNowBadge shop={shop} size="sm" />
+              </div>
               <span
                 onClick={(e) => handleCategoryClick(e, shop.category)}
                 className="text-[11px] font-bold uppercase tracking-wider text-[#FF6A00] bg-[#FF6A00]/10 px-2.5 py-1 rounded-full border border-[#FF6A00]/20 hover:bg-[#FF6A00] hover:text-white transition-all cursor-pointer"
@@ -325,12 +331,12 @@ const ShopCard = ({ shop, variant = "grid", showActions = false }) => {
   );
 
   return (
-    <Link
-      href={generateShopUrl(shop)}
-      className="block group h-full"
+    <div
+      onClick={() => router.push(generateShopUrl(shop))}
+      className="block group h-full cursor-pointer"
     >
       {content}
-    </Link>
+    </div>
   );
 };
 
