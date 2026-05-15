@@ -13,15 +13,17 @@ import { BRAND } from "@/lib/config";
 import { getSuggestions, getSmartSuggestions, getDefaultSuggestions } from "@/lib/searchEngine";
 import { fetchCategories, fetchClusters } from "@/redux/thunks/categoryThunks";
 import { fetchApprovedShops } from "@/redux/thunks/shopThunks";
+import { fetchMasterLocations } from "@/redux/thunks/locationThunks";
 
 import { getCachedLocation, updateLocationCache } from "@/lib/db";
 
-const SmartSearch = ({ onFocusStateChange }) => {
+const SmartSearch = ({ onFocusStateChange, pageTitle, pageContext }) => {
   const dispatch = useDispatch();
   const router = useRouter();
   const { query, suggestions, recentSearches } = useSelector((state) => state.search);
   const { items: categories, clusters } = useSelector((state) => state.categories);
   const { items: shops } = useSelector((state) => state.shops);
+  const { cities: masterCities, areas: masterAreas } = useSelector((state) => state.search);
 
   const [isOpen, setIsOpen] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
@@ -36,7 +38,8 @@ const SmartSearch = ({ onFocusStateChange }) => {
     if (categories.length === 0) dispatch(fetchCategories());
     if (shops.length === 0) dispatch(fetchApprovedShops());
     if (clusters.length === 0) dispatch(fetchClusters());
-  }, [dispatch, categories.length, shops.length, clusters.length]);
+    if (masterCities.length === 0) dispatch(fetchMasterLocations());
+  }, [dispatch, categories.length, shops.length, clusters.length, masterCities.length]);
 
   const containerRef = useRef(null);
 
@@ -102,16 +105,47 @@ const SmartSearch = ({ onFocusStateChange }) => {
             count: shops.filter(s => s.area === area && s.city === city).length
           };
         }),
+      ...masterCities.map(c => ({
+        type: "location",
+        text: c.name,
+        city: c.name,
+        area: "",
+        count: shops.filter(s => s.city === c.name).length
+      })),
+      ...masterAreas.map(a => {
+        const cityObj = masterCities.find(c => c.id === a.cityId);
+        const cityName = cityObj ? cityObj.name : "";
+        return {
+          type: "location",
+          text: cityName ? `${a.name}, ${cityName}` : a.name,
+          city: cityName,
+          area: a.name,
+          pincode: a.pincode || "",
+          count: shops.filter(s => s.area === a.name).length
+        };
+      }),
+      ...shops.filter(s => s.pincode).map(s => ({
+        type: "location",
+        text: `${s.pincode} (${s.area || s.city})`,
+        city: s.city,
+        area: s.area,
+        pincode: s.pincode,
+        count: 1
+      }))
     ];
 
+    const all = [...pool];
+  
+    // Remove duplicates based on text (not just path) to prevent same-text doubles
     const seen = new Set();
-    return pool.filter(item => {
-      const key = `${item.type}-${item.text.toLowerCase()}`;
-      if (seen.has(key)) return false;
-      seen.add(key);
-      return true;
-    });
-  }, [categories, shops, clusters]);
+    return all
+      .filter(item => {
+        const key = item.text?.toLowerCase()?.trim();
+        if (!key || seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+  }, [categories, shops, clusters, masterCities, masterAreas]);
 
   const highlightMatch = (text, query) => {
     if (!text) return "";
@@ -133,15 +167,15 @@ const SmartSearch = ({ onFocusStateChange }) => {
     if (!isOpen) return;
 
     const generateSuggestions = () => {
-      const currentCity = typeof window !== 'undefined' ? localStorage.getItem('last_city') : "india";
-      const currentArea = typeof window !== 'undefined' ? localStorage.getItem('last_area') : "";
+      // Prefer pageContext (from current page URL) over localStorage
+      const currentCity = pageContext?.city || (typeof window !== 'undefined' ? localStorage.getItem('last_city') : "") || "Ahmedabad";
+      const currentArea = pageContext?.area || (typeof window !== 'undefined' ? localStorage.getItem('last_area') : "") || "";
       const context = { city: currentCity, area: currentArea };
 
       if (!query.trim()) {
-        return getDefaultSuggestions(categories, context);
+        return getDefaultSuggestions(categories, context, recentSearches);
       }
 
-      // Use the new Smart Suggestion Engine
       return getSmartSuggestions(query, searchPool, context);
     };
 
@@ -150,7 +184,7 @@ const SmartSearch = ({ onFocusStateChange }) => {
     }, query ? 300 : 0);
 
     return () => clearTimeout(timer);
-  }, [query, isOpen, searchPool, dispatch]);
+  }, [query, isOpen, searchPool, pageContext, dispatch]);
 
   const handleSearch = async (selectedItem) => {
     // If the item already has a pre-calculated SEO path, use it immediately
@@ -260,7 +294,7 @@ const SmartSearch = ({ onFocusStateChange }) => {
             setIsFocused(true);
           }}
           onKeyDown={handleKeyDown}
-          placeholder="Search shops, category, or area..."
+          placeholder={pageTitle || "Search shops, category, or area..."}
           className="w-full h-12 md:h-14 px-3 md:px-4 bg-transparent outline-none text-[15px] font-bold text-[#1A1F36] placeholder:text-gray-400 placeholder:font-medium"
           role="combobox"
           aria-expanded={isOpen}

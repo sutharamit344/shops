@@ -31,7 +31,6 @@ const UserDashboard = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [historyShop, setHistoryShop] = useState(null);
   const [activeTab, setActiveTab] = useState("businesses");
-  const [isAdmin, setIsAdmin] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   
@@ -42,12 +41,10 @@ const UserDashboard = () => {
     if (user) {
       const fetchMyShops = async () => {
         setLoading(true);
-        const [data, adminStatus] = await Promise.all([
+        const [data] = await Promise.all([
           getShopsByOwner(user.uid),
-          isUserAdmin()
         ]);
         setShops(data);
-        setIsAdmin(adminStatus);
         setLoading(false);
       };
       fetchMyShops();
@@ -112,7 +109,6 @@ const UserDashboard = () => {
     { id: "businesses", label: "My Businesses", icon: Store, count: shops.length },
     { id: "saved", label: "Saved Shops", icon: Heart, count: favorites.length },
     { id: "profile", label: "My Profile", icon: User },
-    ...(isAdmin ? [{ id: "admin", label: "Admin Panel", icon: Shield, href: "/admin" }] : []),
   ];
 
   return (
@@ -472,24 +468,6 @@ const UserDashboard = () => {
                     </div>
                   </div>
                 </div>
-              </Card>
-            </div>
-          )}
-
-          {activeTab === "admin" && (
-            <div className="animate-in fade-in duration-700 slide-in-from-bottom-4">
-              <header className="mb-12">
-                <h1 className="text-3xl md:text-5xl font-extrabold text-[#1A1F36] tracking-tight mb-4">System Console</h1>
-                <p className="text-[17px] text-[#1A1F36]/40 font-medium">Access global controls and management tools.</p>
-              </header>
-
-              <Card className="py-24 text-center">
-                <div className="w-24 h-24 bg-[#FF6A00]/10 rounded-[32px] flex items-center justify-center mx-auto mb-10 text-[#FF6A00] shadow-inner"><Shield size={48} /></div>
-                <h2 className="text-3xl font-extrabold text-[#1A1F36] mb-4">Global Administration</h2>
-                <p className="text-[17px] text-[#1A1F36]/40 mb-10 max-w-sm mx-auto font-medium">Review pending shop applications, manage categories, and monitor platform activity.</p>
-                <Link href="/admin">
-                  <Button variant="dark" size="xl" icon={Shield} className="px-12 shadow-md shadow-[#1A1F36]/20">Enter Admin Dashboard</Button>
-                </Link>
               </Card>
             </div>
           )}

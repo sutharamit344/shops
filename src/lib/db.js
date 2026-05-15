@@ -1485,3 +1485,50 @@ export async function deleteBlog(id) {
     return { success: false, error: error.message };
   }
 }
+/**
+ * LOCATION MASTERS
+ */
+
+export async function getCountries() {
+  try {
+    const q = query(collection(db, "countries"));
+    const snap = await getDocs(q);
+    return snap.docs.map(standardizeData);
+  } catch (error) {
+    console.error("Error getting countries:", error);
+    return [];
+  }
+}
+
+export async function getStates() {
+  try {
+    const q = query(collection(db, "states"));
+    const snap = await getDocs(q);
+    return snap.docs.map(standardizeData);
+  } catch (error) {
+    console.error("Error getting states:", error);
+    return [];
+  }
+}
+
+export async function getCities() {
+  try {
+    const q = query(collection(db, "cities"));
+    const snap = await getDocs(q);
+    return snap.docs.map(standardizeData);
+  } catch (error) {
+    console.error("Error getting cities:", error);
+    return [];
+  }
+}
+
+export async function getAreas() {
+  try {
+    const q = query(collection(db, "areas"));
+    const snap = await getDocs(q);
+    return snap.docs.map(standardizeData);
+  } catch (error) {
+    console.error("Error getting areas:", error);
+    return [];
+  }
+}

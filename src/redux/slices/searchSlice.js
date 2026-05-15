@@ -1,5 +1,6 @@
 import { createSlice } from "@reduxjs/toolkit";
 import { fetchSearchResults } from "../thunks/searchThunks";
+import { fetchMasterLocations } from "../thunks/locationThunks";
 
 const initialState = {
   query: "",
@@ -16,6 +17,8 @@ const initialState = {
   results: [],
   suggestions: [],
   recentSearches: [],
+  cities: [],
+  areas: [],
   loading: false,
   error: null,
   sortBy: "relevance",
@@ -67,6 +70,10 @@ const searchSlice = createSlice({
       .addCase(fetchSearchResults.rejected, (state, action) => {
         state.loading = false;
         state.error = action.error.message;
+      })
+      .addCase(fetchMasterLocations.fulfilled, (state, action) => {
+        state.cities = action.payload.cities;
+        state.areas = action.payload.areas;
       });
   }
 });

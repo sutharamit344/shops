@@ -92,8 +92,13 @@ export function calculateRelevance(target, query, options = {}) {
   if (score > 0 && preferredLocation) {
     const loc = preferredLocation.toLowerCase();
     if (t.includes(loc)) {
-      score += 30; // Increased from 15
+      score += 30; 
     }
+  }
+
+  // Pincode Exact Match
+  if (options.pincode && q === options.pincode.toString()) {
+    score = 110; // Higher than text match
   }
 
   return score;
@@ -137,7 +142,8 @@ export function getSuggestions(query, pool, limit = 8, options = {}) {
     .map(item => {
       const relevance = calculateRelevance(item.text, query, {
         metrics: item.metrics,
-        preferredLocation: options.preferredLocation || context.city
+        preferredLocation: options.preferredLocation || context.city,
+        pincode: item.pincode
       });
 
       let text = item.text;
@@ -275,38 +281,69 @@ export function getSmartSuggestions(query, pool, context = {}) {
 /**
  * Generate default suggestions when query is empty
  */
-export function getDefaultSuggestions(categories = [], context = {}) {
+export function getDefaultSuggestions(categories = [], context = {}, recentSearches = []) {
   const city = context.city && context.city.toLowerCase() !== "india" ? context.city : "Ahmedabad";
   const area = context.area || "";
   
   const suggestions = [];
 
-  // 1. Trending in Area
-  if (area) {
-    categories.slice(0, 3).forEach(cat => {
+  // 1. Recent Searches (Highest Priority)
+  recentSearches.slice(0, 3).forEach(term => {
+    suggestions.push({
+      type: "history",
+      label: term,
+      text: term,
+      relevance: 200
+    });
+  });
+
+  // 2. All Categories × Current Location (always show rich suggestions)
+  categories.forEach((cat, i) => {
+    if (area) {
+      // Show: "Electronics in Gota, Ahmedabad"
       suggestions.push({
-        type: "trending",
+        type: "category",
         label: `${cat.name} in ${area}, ${city}`,
         text: `${cat.name} in ${area}, ${city}`,
         category: cat.name,
-        area: area,
-        path: buildPath({ type: "area-category", category: cat.name }, context),
-        relevance: 100
+        path: buildPath({ type: "area-category", category: cat.name }, { city, area }),
+        relevance: 100 - i
       });
-    });
-  }
-
-  // 2. Popular in City
-  categories.slice(3, 6).forEach(cat => {
+    }
+    // Always also show: "Electronics in Ahmedabad"
     suggestions.push({
       type: "category",
       label: `${cat.name} in ${city}`,
       text: `${cat.name} in ${city}`,
       category: cat.name,
-      path: buildPath({ type: "category", text: cat.name }, { ...context, city }),
-      relevance: 80
+      path: buildPath({ type: "category", text: cat.name }, { city }),
+      relevance: 90 - i
     });
   });
 
-  return suggestions;
+  // 3. Other cities (only if no area selected)
+  if (!area) {
+    ["Surat", "Rajkot", "Vadodara"].forEach(c => {
+      if (c.toLowerCase() !== city.toLowerCase()) {
+        suggestions.push({
+          type: "location",
+          label: `Shops in ${c}`,
+          text: `Shops in ${c}`,
+          city: c,
+          path: `/${slugify(c)}`,
+          relevance: 50
+        });
+      }
+    });
+  }
+
+  // Deduplicate by text
+  const seen = new Set();
+  return suggestions.filter(s => {
+    const key = s.text?.toLowerCase()?.trim();
+    if (!key || seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
 }
+

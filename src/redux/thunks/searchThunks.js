@@ -1,8 +1,9 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import { slugify } from "../../lib/urlArchitect";
 
+// --- Utility: Haversine distance in km ---
 const getDistance = (lat1, lon1, lat2, lon2) => {
-  const R = 6371; // Radius of the earth in km
+  const R = 6371;
   const dLat = (lat2 - lat1) * (Math.PI / 180);
   const dLon = (lon2 - lon1) * (Math.PI / 180);
   const a =
@@ -11,10 +12,10 @@ const getDistance = (lat1, lon1, lat2, lon2) => {
       Math.cos(lat2 * (Math.PI / 180)) *
       Math.sin(dLon / 2) *
       Math.sin(dLon / 2);
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  return R * c;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 };
 
+// --- Utility: Levenshtein distance ---
 const getLevenshteinDistance = (a, b) => {
   const matrix = [];
   for (let i = 0; i <= b.length; i++) matrix[i] = [i];
@@ -35,26 +36,46 @@ const getLevenshteinDistance = (a, b) => {
   return matrix[b.length][a.length];
 };
 
+// --- Utility: Fuzzy string match (extracted outside filter loop for performance) ---
+const isFuzzyMatch = (s1, s2) => {
+  if (!s1 || !s2) return false;
+  if (s1 === s2 || s1.includes(s2) || s2.includes(s1)) return true;
+  // Only use Levenshtein for longer strings to avoid false positives
+  if (s1.length > 5 && s2.length > 5) return getLevenshteinDistance(s1, s2) <= 1;
+  return false;
+};
+
 export const fetchSearchResults = createAsyncThunk(
   "search/fetchResults",
-  async ({ category, location, type, clusterType, city, area }, { getState }) => {
-    const { userCoords, userLocationName } = getState().search;
+  async ({ category, type, clusterType, city, area, detectedAreaName }, { getState }) => {
+    const { userCoords } = getState().search;
     const { sortBy, tags } = getState().filters;
-    
-    // Fetch from API routes
-    const [shopsRes, clustersRes] = await Promise.all([
-      fetch("/api/shops"),
-      fetch("/api/clusters"),
-    ]);
+    const { items: stateShops } = getState().shops;
+    const { items: stateClusters } = getState().clusters;
 
-    if (!shopsRes.ok || !clustersRes.ok) {
-      throw new Error("Failed to fetch search data from API");
+    let allShops = stateShops;
+    let allClusters = stateClusters;
+
+    // Only fetch if Redux state is empty
+    if (allShops.length === 0 || allClusters.length === 0) {
+      const [shopsRes, clustersRes] = await Promise.all([
+        fetch("/api/shops"),
+        fetch("/api/clusters"),
+      ]);
+
+      if (shopsRes.ok && clustersRes.ok) {
+        const [fetchedShops, fetchedClusters] = await Promise.all([
+          shopsRes.json(),
+          clustersRes.json(),
+        ]);
+        allShops = allShops.length === 0 ? fetchedShops : allShops;
+        allClusters = allClusters.length === 0 ? fetchedClusters : allClusters;
+      }
     }
 
-    const [allShops, allClusters] = await Promise.all([
-      shopsRes.json(),
-      clustersRes.json(),
-    ]);
+    if (!allShops || allShops.length === 0) {
+      return { shops: [], correctedParsed: {} };
+    }
 
     const normalize = (s) => {
       if (!s) return "";
@@ -71,9 +92,17 @@ export const fetchSearchResults = createAsyncThunk(
         .trim();
     };
 
-    // Genius Route Detection: Cross-reference parameters with DB vocabulary
-    const allCityNames = Array.from(new Set(allShops.map(s => s.city))).filter(Boolean);
-    const allAreaNames = Array.from(new Set(allShops.map(s => s.area))).filter(Boolean);
+    // Cross-reference parameters with DB vocabulary
+    const allCityNames = Array.from(new Set([
+      ...allShops.map(s => s.city),
+      ...getState().search.cities.map(c => c.name)
+    ])).filter(Boolean);
+
+    const allAreaNames = Array.from(new Set([
+      ...allShops.map(s => s.area),
+      ...getState().search.areas.map(a => a.name)
+    ])).filter(Boolean);
+
     const allCatNames = getState().categories.items.map(c => c.name);
 
     let finalCity = city || "";
@@ -83,148 +112,150 @@ export const fetchSearchResults = createAsyncThunk(
 
     const param1 = (city || "").toLowerCase().trim();
     const param2 = (area || "").toLowerCase().trim();
-    const param3 = (category || "").toLowerCase().trim();
 
-    // Re-resolve parameters if they seem misplaced
+    // Re-resolve param1 if it doesn't match a known city
     if (param1 && !allCityNames.some(c => slugify(c) === param1)) {
-        // Param1 might be an area or category
-        if (allAreaNames.some(a => slugify(a) === param1)) {
-            finalArea = allAreaNames.find(a => slugify(a) === param1);
-            finalCity = allShops.find(s => s.area === finalArea)?.city || "";
-        } else if (allCatNames.some(c => slugify(c) === param1)) {
-            finalCategory = allCatNames.find(c => slugify(c) === param1);
-            finalCity = ""; 
-        }
-    }
-
-    if (param2 && !finalClusterType) {
-        // 1. Check if it's a cluster
-        const clusterMatch = allClusters.find(c => normalize(c.name) === normalize(param2));
-        if (clusterMatch) {
-            finalClusterType = clusterMatch.name;
-            if (!finalCity) finalCity = clusterMatch.city;
-            if (!finalArea) finalArea = clusterMatch.area;
-        } 
-        // 2. Check if it's actually a category (Case: /[city]/[category])
-        else if (allCatNames.some(c => slugify(c) === param2)) {
-            finalCategory = allCatNames.find(c => slugify(c) === param2);
-            finalArea = ""; // It's not an area, it's a category
-        }
-    }
-
-    const normalizedQueryCat = normalize(finalCategory || "");
-    const normalizedCluster = normalize(finalClusterType || "");
-
-    // Prepare normalized target location
-    const targetCity = (city || "").toLowerCase().trim();
-    let targetArea = (finalArea || "").toLowerCase().trim();
-    const locationStr = (location || "").toLowerCase().trim();
-
-    // If no area in URL, check if we have a detected area name
-    if (!targetArea && userLocationName) {
-      const parts = userLocationName.split(",");
-      if (parts.length > 0) {
-        const detectedArea = parts[0].trim().toLowerCase();
-        // Only use detected area if it's not the same as city
-        if (detectedArea !== targetCity) {
-          targetArea = detectedArea;
-        }
+      if (allAreaNames.some(a => slugify(a) === param1)) {
+        finalArea = allAreaNames.find(a => slugify(a) === param1);
+        finalCity = allShops.find(s => s.area === finalArea)?.city || "";
+      } else if (allCatNames.some(c => slugify(c) === param1)) {
+        finalCategory = allCatNames.find(c => slugify(c) === param1);
+        finalCity = "";
       }
     }
 
-    const performFilter = (targetType, targetCityVal, targetAreaVal, targetCatVal, targetClusterVal, radius = null) => {
+    // Re-resolve param2 as cluster or category if it is not an area
+    if (param2 && !finalClusterType) {
+      const clusterMatch = allClusters.find(c => normalize(c.name) === normalize(param2));
+      if (clusterMatch) {
+        finalClusterType = clusterMatch.name;
+        if (!finalCity) finalCity = clusterMatch.city;
+        if (!finalArea) finalArea = clusterMatch.area;
+      } else if (allCatNames.some(c => slugify(c) === param2)) {
+        finalCategory = allCatNames.find(c => slugify(c) === param2);
+        finalArea = ""; // It's a category slug in the URL, not an area
+      }
+    }
+
+    const nQueryCat = normalize(finalCategory || "");
+    const nQueryCluster = normalize(finalClusterType || "");
+
+    // Resolved target location
+    const tCityFinal = (finalCity || "").toLowerCase().trim();
+    let tAreaFinal = (finalArea || "").toLowerCase().trim();
+
+    // FIX: Use detectedAreaName passed from DiscoveryClient (not userLocationName which is out of scope)
+    if (!tAreaFinal && detectedAreaName) {
+      const detectedArea = detectedAreaName.split(",")[0].trim().toLowerCase();
+      if (detectedArea !== tCityFinal) {
+        tAreaFinal = detectedArea;
+      }
+    }
+
+    // --- Core Filter Function ---
+    const performFilter = (targetCityVal, targetAreaVal, targetCatVal, targetClusterVal, radius = null) => {
       const nCat = normalize(targetCatVal || "");
       const nCluster = normalize(targetClusterVal || "");
       const tCity = (targetCityVal || "").toLowerCase().trim();
       const tArea = (targetAreaVal || "").toLowerCase().trim();
 
-      return allShops.filter((shop) => {
-        const shopCat = normalize(shop.category || "");
-        const shopCluster = normalize(shop.clusterType || "");
-        const sCity = (shop.city || "").toLowerCase().trim();
-        const sArea = (shop.area || "").toLowerCase().trim();
+      return allShops
+        .filter((shop) => {
+          const shopCat = normalize(shop.category || "");
+          const shopCluster = normalize(shop.clusterType || "");
+          const sCity = (shop.city || "").toLowerCase().trim();
+          const sArea = (shop.area || "").toLowerCase().trim();
 
-        // 1. Category/Cluster Match
-        let matchCategory = false;
-        const isFuzzyMatch = (s1, s2) => {
-          if (!s1 || !s2) return false;
-          if (s1 === s2 || s1.includes(s2) || s2.includes(s1)) return true;
-          if (s1.length > 3 && s2.length > 3) return getLevenshteinDistance(s1, s2) <= 2;
-          return false;
-        };
+          // 1. Category Match — strict: only check shop's own category field
+          let matchCategory = false;
+          if (nCluster && nCat) {
+            matchCategory = isFuzzyMatch(shopCluster, nCluster) || isFuzzyMatch(shopCat, nCat);
+          } else if (nCluster) {
+            matchCategory = isFuzzyMatch(shopCluster, nCluster);
+          } else if (nCat) {
+            // STRICT: Do NOT check cluster name. A Fashion shop in an Electronics Hub is still Fashion.
+            matchCategory = isFuzzyMatch(shopCat, nCat);
+          } else {
+            matchCategory = true;
+          }
 
-        if (nCluster && nCat) {
-          matchCategory = isFuzzyMatch(shopCluster, nCluster) || isFuzzyMatch(shopCat, nCat);
-        } else if (nCluster) {
-          matchCategory = isFuzzyMatch(shopCluster, nCluster) || isFuzzyMatch(shopCat, nCluster);
-        } else if (nCat) {
-          matchCategory = isFuzzyMatch(shopCat, nCat) || isFuzzyMatch(shopCluster, nCat);
-        } else {
-          matchCategory = true;
-        }
+          // 2. Tag Filters
+          let matchTags = true;
+          if (tags?.whatsapp && !shop.whatsapp) matchTags = false;
+          if (tags?.verified && !shop.isVerified) matchTags = false;
+          if (tags?.featured && !shop.isFeatured) matchTags = false;
 
-        // 2. Location Match
-        let matchLocation = true;
-        const isClusterMatch = nCluster && isFuzzyMatch(shopCluster, nCluster);
+          // 3. Location Match
+          let matchLocation = true;
+          const isClusterMatch = nCluster && isFuzzyMatch(shopCluster, nCluster);
 
-        if (isClusterMatch) {
-          matchLocation = true;
-        } else if (radius && userCoords?.lat && shop.lat) {
-          const dist = getDistance(userCoords.lat, userCoords.lng, shop.lat, shop.lng);
-          matchLocation = dist <= radius;
-        } else if (targetAreaVal) {
-          matchLocation = (sArea === tArea || sArea.includes(tArea) || tArea.includes(sArea)) && 
-                          (sCity === tCity || sCity.includes(tCity));
-        } else if (targetCityVal) {
-          matchLocation = sCity === tCity || sCity.includes(tCity) || tCity.includes(sCity) || 
-                          sArea === tCity || sArea.includes(tCity) || tCity.includes(sArea);
-        }
+          if (isClusterMatch) {
+            matchLocation = true; // Cluster match overrides location gating
+          } else if (radius && userCoords?.lat && shop.lat) {
+            const dist = getDistance(userCoords.lat, userCoords.lng, shop.lat, shop.lng);
+            matchLocation = dist <= radius;
+          } else if (tArea) {
+            // Match area AND city strictly
+            matchLocation =
+              (sArea === tArea || sArea.includes(tArea) || tArea.includes(sArea)) &&
+              (sCity === tCity || sCity.includes(tCity));
+          } else if (tCity) {
+            // FIX: Only match city against city — removed sArea === tCity comparison
+            matchLocation = sCity === tCity || sCity.includes(tCity) || tCity.includes(sCity);
+          }
 
-        const isMatch = matchCategory && matchLocation;
-        if (isMatch) {
-          shop.isClusterMatch = isClusterMatch;
-          shop.isLocationMatch = targetAreaVal && (sArea === tArea || sArea.includes(tArea));
-          shop.isCityMatch = targetCityVal && (sCity === tCity || sCity.includes(tCity));
-        }
-        return isMatch;
-      });
+          return matchCategory && matchLocation && matchTags;
+        })
+        // FIX: Clone shop objects instead of mutating Redux state directly
+        .map(shop => {
+          const sArea = (shop.area || "").toLowerCase().trim();
+          const sCity = (shop.city || "").toLowerCase().trim();
+          const isClusterMatch = nCluster && isFuzzyMatch(normalize(shop.clusterType || ""), nCluster);
+          return {
+            ...shop,
+            isClusterMatch,
+            isLocationMatch: tArea ? (sArea === tArea || sArea.includes(tArea)) : false,
+            isCityMatch: tCity ? (sCity === tCity || sCity.includes(tCity)) : false,
+          };
+        });
     };
 
-    let filtered = performFilter(type, finalCity, finalArea, finalCategory, finalClusterType);
+    let filtered = performFilter(tCityFinal, tAreaFinal, nQueryCat, nQueryCluster);
 
-    // Genius Fallback Strategy
+    // Fallback Strategy — always keep category strict
     if (filtered.length === 0) {
-      console.log("No exact results found. Initiating genius fallbacks...");
-      
-      // Fallback 1: Broaden Area -> City
-      if (finalArea) {
-        filtered = performFilter(type, finalCity, "", finalCategory, finalClusterType);
-        if (filtered.length > 0) filtered.fallbackType = "broadened_to_city";
+      // Fallback 1: Broaden Area -> entire City (keep category)
+      if (tAreaFinal) {
+        filtered = performFilter(tCityFinal, "", nQueryCat, nQueryCluster);
       }
 
-      // Fallback 2: Broaden City -> Nearby (within 50km)
+      // Fallback 2: Broaden to nearby radius (keep category)
       if (filtered.length === 0 && userCoords?.lat) {
-        filtered = performFilter(type, "", "", finalCategory, finalClusterType, 50);
-        if (filtered.length > 0) filtered.fallbackType = "nearby";
-      }
-
-      // Fallback 3: Related Categories/Clusters in same area
-      if (filtered.length === 0) {
-        filtered = performFilter(type, finalCity, finalArea, "", "");
-        if (filtered.length > 0) filtered.fallbackType = "related";
+        filtered = performFilter("", "", nQueryCat, nQueryCluster, 50);
       }
     }
 
+    // Sort: Exact Area > Distance > Rating
     filtered.sort((a, b) => {
-      // Sort priority: Exact location > Rating > Distance
+      // 1. Prioritize exact area matches first
+      if (tAreaFinal) {
+        const aExact = (a.area || "").toLowerCase() === tAreaFinal;
+        const bExact = (b.area || "").toLowerCase() === tAreaFinal;
+        if (aExact && !bExact) return -1;
+        if (!aExact && bExact) return 1;
+      }
+
+      // 2. Explicit rating sort
       if (sortBy === "rating") return (b.avgRating || 0) - (a.avgRating || 0);
-      
+
+      // 3. Distance sort (if GPS coords available)
       if (userCoords?.lat && userCoords?.lng) {
         const distA = a.lat && a.lng ? getDistance(userCoords.lat, userCoords.lng, a.lat, a.lng) : Infinity;
         const distB = b.lat && b.lng ? getDistance(userCoords.lat, userCoords.lng, b.lat, b.lng) : Infinity;
         if (Math.abs(distA - distB) > 0.1) return distA - distB;
       }
 
+      // 4. Default: Rating
       return (b.avgRating || 0) - (a.avgRating || 0);
     });
 
@@ -234,8 +265,8 @@ export const fetchSearchResults = createAsyncThunk(
         city: finalCity,
         area: finalArea,
         category: finalCategory,
-        clusterType: finalClusterType
-      }
+        clusterType: finalClusterType,
+      },
     };
   }
 );

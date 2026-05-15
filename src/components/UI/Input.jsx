@@ -1,6 +1,6 @@
 import React from "react";
 
-const Input = ({ label, name, placeholder, value, onChange, type = "text", required = false, helpText, icon: Icon, error, className = "", ...props }) => {
+const Input = ({ label, name, placeholder, value, onChange, type = "text", required = false, helpText, icon: Icon, prefix, error, className = "", ...props }) => {
   return (
     <div className={`flex flex-col gap-1.5 w-full ${className}`}>
       {label && (
@@ -21,12 +21,17 @@ const Input = ({ label, name, placeholder, value, onChange, type = "text", requi
               ? "border-red-400 focus:ring-2 focus:ring-red-100" 
               : "border-black/10 focus:border-[#FF6A00]/60 focus:ring-2 focus:ring-[#FF6A00]/15"
             } 
-            ${Icon ? "pl-11" : ""}`}
+            ${(Icon || prefix) ? "pl-12" : ""}`}
           {...props}
         />
-        {Icon && (
+        {Icon && !prefix && (
           <div className={`absolute left-4 top-1/2 -translate-y-1/2 transition-colors ${error ? "text-red-400" : "text-[#1A1F36]/20 group-focus-within:text-[#FF6A00]"}`}>
             <Icon size={18} />
+          </div>
+        )}
+        {prefix && (
+          <div className="absolute left-4 top-1/2 -translate-y-1/2 text-[13px] font-bold text-[#1A1F36]/30 group-focus-within:text-[#FF6A00] transition-colors border-r border-gray-100 pr-2 h-5 flex items-center">
+            {prefix}
           </div>
         )}
       </div>

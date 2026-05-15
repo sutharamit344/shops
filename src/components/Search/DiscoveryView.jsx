@@ -100,10 +100,12 @@ const DiscoveryView = ({ title, subtitle, onSubtitleClick, onRefresh, isDetectin
           All Categories
         </button>
         {categories
-          .filter((cat) => {
-            const count = categoryCounts[cat.name.toLowerCase().trim()] || 0;
-            return count > 0;
-          })
+          .filter((cat, index, self) => 
+            // 1. Ensure count > 0
+            (categoryCounts[cat.name.toLowerCase().trim()] || 0) > 0 &&
+            // 2. Ensure name is unique in the displayed list
+            self.findIndex(c => c.name.toLowerCase().trim() === cat.name.toLowerCase().trim()) === index
+          )
           .map((cat) => {
             const isSelected = activeCategory && (
               slugify(activeCategory) === slugify(cat.name) ||

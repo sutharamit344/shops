@@ -24,7 +24,6 @@ const Navbar = () => {
   const pathname = usePathname();
   const { user } = useSelector((state) => state.auth);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isAdmin, setIsAdmin] = useState(false);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [currentCity, setCurrentCity] = useState("ahmedabad");
@@ -47,17 +46,6 @@ const Navbar = () => {
     }
   }, []);
 
-  useEffect(() => {
-    const checkAdmin = async () => {
-      if (user) {
-        const adminStatus = await isUserAdmin();
-        setIsAdmin(adminStatus);
-      } else {
-        setIsAdmin(false);
-      }
-    };
-    checkAdmin();
-  }, [user]);
 
   const isHome = pathname === "/";
 
@@ -119,7 +107,6 @@ const Navbar = () => {
         <div className="ml-auto flex items-center gap-3 md:gap-8 flex-shrink-0">
           <div className="hidden md:flex items-center gap-8">
             <Link href={currentArea ? `/${currentCity}/${currentArea}` : `/${currentCity}`} className={`text-[15px] font-black uppercase tracking-widest ${linkColor} hover:text-[#FF6A00] transition-colors`}>Marketplace</Link>
-            {isAdmin && <Link href="/admin" className={`text-[15px] font-black uppercase tracking-widest ${linkColor} hover:text-[#FF6A00] transition-colors`}>Admin</Link>}
           </div>
 
           {user ? (
@@ -185,15 +172,6 @@ const Navbar = () => {
                 List Your Business
               </Link>
 
-              {isAdmin && (
-                <Link
-                  href="/admin"
-                  onClick={() => setIsMenuOpen(false)}
-                  className={`py-4 px-2 text-[20px] font-bold tracking-tight ${textColor} border-b ${isDarkTheme ? "border-white/5" : "border-black/5"}`}
-                >
-                  Admin Panel
-                </Link>
-              )}
             </div>
 
             <div className="mt-auto pb-8 flex flex-col gap-4">

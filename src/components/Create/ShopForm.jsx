@@ -3,26 +3,25 @@
 import React, { useState, useEffect } from "react";
 import { slugify } from "@/lib/slugify";
 import { uploadImage } from "@/lib/storage";
-import { proposeCategory, getCategories, getClusters, proposeCluster } from "@/lib/db";
+import { proposeCategory, getCategories, getClusters, proposeCluster, getCountries, getStates, getCities, getAreas } from "@/lib/db";
 import ImageUpload from "@/components/UI/ImageUpload";
 import Input from "@/components/UI/Input";
 import Select from "@/components/UI/Select";
+import HybridSelect from "@/components/UI/HybridSelect";
 import Textarea from "@/components/UI/Textarea";
 import Button from "@/components/UI/Button";
 import Card from "@/components/UI/Card";
 import dynamic from 'next/dynamic';
 
-const MapComponent = dynamic(() => import("@/components/UI/MapComponent"), { 
+const MapComponent = dynamic(() => import("@/components/UI/MapComponent"), {
   ssr: false,
   loading: () => <div className="w-full h-[250px] bg-gray-100 animate-pulse rounded-2xl flex items-center justify-center text-gray-400 font-medium">Loading Map...</div>
 });
 
 // Icons
-import { 
-  Save, CheckCircle2, AlertCircle, Plus, Loader2, Zap, MapPin, 
-  Phone, Info, X, ChevronRight, ChevronLeft, ImageIcon, Star, 
-  Palette, ShieldCheck, Clock, Navigation, Search, Globe, Eye, 
-  ArrowRight, Sparkles, Building2, Map as MapIcon, Link as LinkIcon
+import {
+  Save, CheckCircle2, AlertCircle, Plus, Loader2, Navigation, 
+  ChevronRight, ChevronLeft, ShieldCheck, Sparkles, Eye, LinkIcon
 } from "lucide-react";
 
 const ShopForm = ({ initialData, onSubmit, isEdit = false, isLoading = false, error: externalError }) => {
@@ -36,9 +35,11 @@ const ShopForm = ({ initialData, onSubmit, isEdit = false, isLoading = false, er
     category: "",
     city: "",
     state: "",
+    country: "India",
     area: "",
     zone: "",
     phone: "",
+    ownerEmail: "",
     description: "",
     mapEmbed: "",
     primaryColor: "#FF6A00",
@@ -68,13 +69,16 @@ const ShopForm = ({ initialData, onSubmit, isEdit = false, isLoading = false, er
   const [proposedCategory, setProposedCategory] = useState("");
   const [showCustomCluster, setShowCustomCluster] = useState(false);
   const [dbClusters, setDbClusters] = useState([]);
+  const [dbCountries, setDbCountries] = useState([]);
+  const [dbStates, setDbStates] = useState([]);
+  const [dbCities, setDbCities] = useState([]);
+  const [dbAreas, setDbAreas] = useState([]);
+
   const [proposedCluster, setProposedCluster] = useState("");
-  const [pincodeAreas, setPincodeAreas] = useState([]);
   const [draftLoadedAtMount, setDraftLoadedAtMount] = useState(false);
   const [showMoreAddress, setShowMoreAddress] = useState(false);
   const [isGeocoding, setIsGeocoding] = useState(false);
   const [mapSearchQuery, setMapSearchQuery] = useState("");
-
 
   const steps = [
     { title: "Basics", desc: "Identity" },
@@ -90,7 +94,6 @@ const ShopForm = ({ initialData, onSubmit, isEdit = false, isLoading = false, er
           const draft = JSON.parse(saved);
           setFormData(prev => ({ ...prev, ...draft }));
           setDraftLoadedAtMount(true);
-          // Handle complex states derived from draft
           if (draft.category === "OTHER_PROPOSE") setShowNewCategoryInput(true);
           if (draft.clusterType === "CUSTOM") setShowCustomCluster(true);
         } catch (e) {
@@ -107,18 +110,24 @@ const ShopForm = ({ initialData, onSubmit, isEdit = false, isLoading = false, er
     }
   }, [formData, isEdit]);
 
-
-
   useEffect(() => {
     const init = async () => {
-      const [cats, clusters] = await Promise.all([
+      const [cats, clusters, countries, states, cities, areas] = await Promise.all([
         getCategories(),
-        getClusters()
+        getClusters(),
+        getCountries(),
+        getStates(),
+        getCities(),
+        getAreas()
       ]);
 
       const catNames = cats.map(c => c.name);
       setDbCategories(catNames);
       setDbClusters(clusters);
+      setDbCountries(countries);
+      setDbStates(states);
+      setDbCities(cities);
+      setDbAreas(areas);
 
       if (initialData) {
         setFormData(prev => ({ ...prev, ...initialData }));
@@ -131,7 +140,6 @@ const ShopForm = ({ initialData, onSubmit, isEdit = false, isLoading = false, er
           setShowNewCategoryInput(true);
         }
 
-        // Check if cluster is in DB
         const allClusterNames = clusters.map(c => c.name);
         if (initialData.clusterType && !allClusterNames.includes(initialData.clusterType)) {
           setShowCustomCluster(true);
@@ -142,8 +150,94 @@ const ShopForm = ({ initialData, onSubmit, isEdit = false, isLoading = false, er
     init();
   }, [initialData]);
 
+  // Hierarchical Options
+  const countryOptions = dbCountries.map(c => ({ value: c.name, label: c.name }));
+
+  const selectedCountryId = dbCountries.find(c => c.name === formData.country)?.id;
+  const filteredStates = dbStates.filter(s => !selectedCountryId || s.countryId === selectedCountryId);
+  const stateOptions = filteredStates.map(s => ({ value: s.name, label: s.name }));
+
+  const selectedStateId = dbStates.find(s => s.name === formData.state)?.id;
+  const filteredCities = dbCities.filter(c => !selectedStateId || c.stateId === selectedStateId);
+  const cityOptions = filteredCities.map(c => ({ value: c.name, label: c.name }));
+
+  const selectedCityId = dbCities.find(c => c.name === formData.city)?.id;
+  const filteredAreas = dbAreas.filter(a => !selectedCityId || a.cityId === selectedCityId);
+  const areaOptions = filteredAreas.map(a => ({ value: a.name, label: a.name }));
+
+  const handleCountryChange = (e) => {
+    const { value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      country: value,
+      state: "",
+      city: "",
+      area: ""
+    }));
+  };
+
+  const handleStateChange = (e) => {
+    const { value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      state: value,
+      city: "",
+      area: ""
+    }));
+  };
+
+  const handleCityChange = (e) => {
+    const { value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      city: value,
+      area: ""
+    }));
+  };
+
+  const getCountryCode = (countryName) => {
+    const codes = {
+      "India": "+91",
+      "United Arab Emirates": "+971",
+      "Saudi Arabia": "+966",
+      "USA": "+1"
+    };
+    return codes[countryName] || "+91";
+  };
+
+  const handleAreaChange = (e) => {
+    const { value } = e.target;
+    const selectedArea = dbAreas.find(a => a.name === value);
+
+    if (selectedArea) {
+      const parentCity = dbCities.find(c => c.id === selectedArea.cityId);
+      const parentState = parentCity ? dbStates.find(s => s.id === parentCity.stateId) : null;
+      const parentCountry = parentState ? dbCountries.find(c => c.id === parentState.countryId) : null;
+
+      setFormData(prev => ({
+        ...prev,
+        area: value,
+        city: parentCity ? parentCity.name : prev.city,
+        state: parentState ? parentState.name : prev.state,
+        country: parentCountry ? parentCountry.name : prev.country,
+        pincode: selectedArea.pincode || prev.pincode,
+        // If the area has coordinates, update them too
+        lat: selectedArea.lat ? parseFloat(selectedArea.lat) : prev.lat,
+        lng: selectedArea.lng ? parseFloat(selectedArea.lng) : prev.lng
+      }));
+    } else {
+      setFormData(prev => ({ ...prev, area: value }));
+    }
+  };
+
   const handleChange = (e) => {
     let { name, value } = e.target;
+
+    // Auto-format phone number
+    if (name === "phone") {
+      value = value.replace(/\D/g, "").slice(-10);
+    }
+
     if (name === "category") {
       setShowNewCategoryInput(value === "OTHER_PROPOSE");
     }
@@ -151,6 +245,20 @@ const ShopForm = ({ initialData, onSubmit, isEdit = false, isLoading = false, er
       setShowCustomCluster(value === "CUSTOM");
     }
     setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const calculateDistance = (lat1, lon1, lat2, lon2) => {
+    if (!lat1 || !lon1 || !lat2 || !lon2) return Infinity;
+    const R = 6371e3; // metres
+    const φ1 = (lat1 * Math.PI) / 180;
+    const φ2 = (lat2 * Math.PI) / 180;
+    const Δφ = ((lat2 - lat1) * Math.PI) / 180;
+    const Δλ = ((lon2 - lon1) * Math.PI) / 180;
+    const a =
+      Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
+      Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
   };
 
   const handleLocationSelect = async (coords) => {
@@ -165,17 +273,89 @@ const ShopForm = ({ initialData, onSubmit, isEdit = false, isLoading = false, er
       setIsGeocoding(true);
       const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${coords.lat}&lon=${coords.lng}`);
       const data = await res.json();
-      
+
       if (data && data.address) {
-        const { road, suburb, neighbourhood, city, town, village, state, postcode } = data.address;
-        
+        const { road, suburb, neighbourhood, city, town, village, state, country, postcode } = data.address;
+
+        const geocodedArea = suburb || neighbourhood || road;
+        const geocodedCity = city || town || village;
+        const geocodedState = state;
+        const geocodedCountry = country;
+
+        // Try to find exact matches in our master data to ensure the dropdowns sync correctly
+        let matchedCountry = dbCountries.find(c => c.name.toLowerCase() === geocodedCountry?.toLowerCase())?.name || geocodedCountry;
+        let matchedState = dbStates.find(s => s.name.toLowerCase() === geocodedState?.toLowerCase())?.name || geocodedState;
+        let matchedCity = dbCities.find(c => c.name.toLowerCase() === geocodedCity?.toLowerCase())?.name || geocodedCity;
+        let matchedArea = geocodedArea;
+
+        // FIND NEAREST AREA BASED ON COORDINATES
+        let minDistance = Infinity;
+
+        dbAreas.forEach(area => {
+          if (area.lat && area.lng) {
+            const dist = calculateDistance(coords.lat, coords.lng, parseFloat(area.lat), parseFloat(area.lng));
+            if (dist < minDistance && dist < 5000) { // Within 5km radius
+              minDistance = dist;
+              matchedArea = area.name;
+
+              // AUTO-SYNC PARENTS: If we find a nearest area in our DB, use its parent chain
+              const parentCity = dbCities.find(c => c.id === area.cityId);
+              if (parentCity) {
+                matchedCity = parentCity.name;
+                const parentState = dbStates.find(s => s.id === parentCity.stateId);
+                if (parentState) {
+                  matchedState = parentState.name;
+                  const parentCountry = dbCountries.find(c => c.id === parentState.countryId);
+                  if (parentCountry) {
+                    matchedCountry = parentCountry.name;
+                  }
+                }
+              }
+            }
+          }
+        });
+
+        // Fallback to name matching for parents if no coordinate match found
+        if (minDistance === Infinity) {
+          const areaByName = dbAreas.find(a => a.name.toLowerCase() === geocodedArea?.toLowerCase());
+          if (areaByName) {
+            matchedArea = areaByName.name;
+            const parentCity = dbCities.find(c => c.id === areaByName.cityId);
+            if (parentCity) {
+              matchedCity = parentCity.name;
+              const parentState = dbStates.find(s => s.id === parentCity.stateId);
+              if (parentState) matchedState = parentState.name;
+            }
+          }
+        }
+
+        // FIND NEAREST CLUSTER
+        let minClusterDist = Infinity;
+        let matchedCluster = "";
+
+        dbClusters.forEach(cluster => {
+          if (cluster.lat && cluster.lng) {
+            const dist = calculateDistance(coords.lat, coords.lng, parseFloat(cluster.lat), parseFloat(cluster.lng));
+            if (dist < minClusterDist && dist < 3000) { // Within 3km radius
+              minClusterDist = dist;
+              matchedCluster = cluster.name;
+            }
+          }
+        });
+
+        if (matchedCluster) setShowCustomCluster(false);
+
         setFormData(prev => ({
           ...prev,
-          area: suburb || neighbourhood || road || prev.area,
-          city: city || town || village || prev.city,
-          state: state || prev.state,
+          area: matchedArea || prev.area,
+          city: matchedCity || prev.city,
+          state: matchedState || prev.state,
+          country: matchedCountry || prev.country,
+          clusterType: matchedCluster || prev.clusterType,
           pincode: postcode || prev.pincode,
-          village: village || ""
+          village: village || "",
+          lat: coords.lat,
+          lng: coords.lng
         }));
       }
     } catch (err) {
@@ -193,7 +373,7 @@ const ShopForm = ({ initialData, onSubmit, isEdit = false, isLoading = false, er
       setIsGeocoding(true);
       const res = await fetch(`https://nominatim.openstreetmap.org/search?format=jsonv2&q=${encodeURIComponent(mapSearchQuery)}&limit=1`);
       const data = await res.json();
-      
+
       if (data && data[0]) {
         const coords = { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) };
         handleLocationSelect(coords);
@@ -215,9 +395,25 @@ const ShopForm = ({ initialData, onSubmit, isEdit = false, isLoading = false, er
       setLocalError("Shop name and category are required.");
       return;
     }
-    if (currentStep === 2 && (!formData.city || !formData.phone)) {
-      setLocalError("City and WhatsApp number are required.");
-      return;
+    if (currentStep === 2) {
+      if (!formData.city || !formData.phone || !formData.ownerEmail) {
+        setLocalError("City, WhatsApp number, and Owner Email are required.");
+        return;
+      }
+
+      // WhatsApp Validation (10 digits)
+      const phoneRegex = /^[0-9]{10}$/;
+      if (!phoneRegex.test(formData.phone.replace(/\s+/g, ""))) {
+        setLocalError("Please enter a valid 10-digit WhatsApp number.");
+        return;
+      }
+
+      // Email Validation
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(formData.ownerEmail)) {
+        setLocalError("Please enter a valid email address.");
+        return;
+      }
     }
     setLocalError(null);
     setCurrentStep(prev => Math.min(prev + 1, totalSteps));
@@ -339,7 +535,7 @@ const ShopForm = ({ initialData, onSubmit, isEdit = false, isLoading = false, er
         <div className="max-w-xl mx-auto mb-8 bg-amber-50 border border-amber-200 rounded-2xl p-4 flex items-center justify-between gap-4 animate-in fade-in slide-in-from-top-2 duration-500">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-lg bg-amber-100 flex items-center justify-center text-amber-600">
-              <Zap size={16} />
+              <Sparkles size={16} />
             </div>
             <p className="text-[13px] font-medium text-amber-900">We found a saved draft. You can continue or start over.</p>
           </div>
@@ -453,8 +649,7 @@ const ShopForm = ({ initialData, onSubmit, isEdit = false, isLoading = false, er
               />
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-4">
-                  <Select
+                  <HybridSelect
                     label="Market Category"
                     name="category"
                     value={formData.category}
@@ -465,20 +660,14 @@ const ShopForm = ({ initialData, onSubmit, isEdit = false, isLoading = false, er
                       ...dbCategories.map(c => ({ value: c, label: c })),
                       { value: "OTHER_PROPOSE", label: "➕ Propose new category..." }
                     ]}
+                    showInput={showNewCategoryInput}
+                    onToggleInput={setShowNewCategoryInput}
+                    inputName="proposedCategory"
+                    inputValue={proposedCategory}
+                    onInputChange={(e) => setProposedCategory(e.target.value)}
+                    inputPlaceholder="e.g., Organic Lifestyle"
+                    inputHelpText="We will review and add this to our directory"
                   />
-                  {showNewCategoryInput && (
-                    <div className="animate-in slide-in-from-top-2 duration-300">
-                      <Input
-                        label="New Category Suggestion"
-                        value={proposedCategory}
-                        onChange={(e) => setProposedCategory(e.target.value)}
-                        placeholder="e.g., Organic Lifestyle"
-                        required
-                        helpText="We will review and add this to our directory"
-                      />
-                    </div>
-                  )}
-                </div>
 
                 <Select
                   label="Service Model"
@@ -605,15 +794,56 @@ const ShopForm = ({ initialData, onSubmit, isEdit = false, isLoading = false, er
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <Input
+                <Select
+                  label="Country"
+                  name="country"
+                  value={formData.country}
+                  onChange={handleCountryChange}
+                  required
+                  options={[
+                    { value: "", label: "Select Country" },
+                    ...countryOptions
+                  ]}
+                />
+                <Select
+                  label="State"
+                  name="state"
+                  value={formData.state}
+                  onChange={handleStateChange}
+                  required
+                  options={[
+                    { value: "", label: "Select State" },
+                    ...stateOptions
+                  ]}
+                />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <Select
+                  label="City"
+                  name="city"
+                  value={formData.city}
+                  onChange={handleCityChange}
+                  required
+                  options={[
+                    { value: "", label: "Select City" },
+                    ...cityOptions
+                  ]}
+                />
+                <Select
                   label="Area / Locality"
                   name="area"
                   value={formData.area}
-                  onChange={handleChange}
-                  placeholder="e.g. Gota"
+                  onChange={handleAreaChange}
                   required
-                  helpText="Auto-filled from map selection"
+                  options={[
+                    { value: "", label: "Select Area" },
+                    ...areaOptions
+                  ]}
                 />
+              </div>
+
+              <div className="grid grid-cols-2 gap-6">
                 <Input
                   label="Pincode"
                   name="pincode"
@@ -622,24 +852,12 @@ const ShopForm = ({ initialData, onSubmit, isEdit = false, isLoading = false, er
                   placeholder="e.g. 380060"
                   required
                 />
-              </div>
-
-              <div className="grid grid-cols-2 gap-6">
                 <Input
-                  label="City"
-                  name="city"
-                  value={formData.city}
+                  label="Village"
+                  name="village"
+                  value={formData.village}
                   onChange={handleChange}
-                  placeholder="Ahmedabad"
-                  required
-                />
-                <Input
-                  label="State"
-                  name="state"
-                  value={formData.state}
-                  onChange={handleChange}
-                  placeholder="Gujarat"
-                  required
+                  placeholder="e.g. Chenpur"
                 />
               </div>
 
@@ -655,7 +873,7 @@ const ShopForm = ({ initialData, onSubmit, isEdit = false, isLoading = false, er
                 </button>
 
                 {showMoreAddress && (
-                  <div className="mt-6 p-6 bg-gray-50/50 rounded-[24px] border border-black/[0.03] space-y-6 animate-in slide-in-from-top-4 duration-300">
+                  <div className="mt-6 space-y-6 animate-in slide-in-from-top-4 duration-300">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <Input
                         label="Landmark"
@@ -664,47 +882,32 @@ const ShopForm = ({ initialData, onSubmit, isEdit = false, isLoading = false, er
                         onChange={handleChange}
                         placeholder="e.g. Opp. Reliance Fresh"
                       />
-                      <Input
-                        label="Village"
-                        name="village"
-                        value={formData.village}
-                        onChange={handleChange}
-                        placeholder="e.g. Chenpur"
-                      />
-                    </div>
-                    <div className="relative">
-                      <Input
+                      <HybridSelect
                         label="Market / Business Area (Optional)"
                         name="clusterType"
                         value={formData.clusterType}
-                        onChange={(e) => setFormData(prev => ({ ...prev, clusterType: e.target.value }))}
-                        placeholder="e.g. Gota Shopping Hub"
+                        onChange={handleChange}
+                        options={[
+                          { value: "", label: "Select Business Area" },
+                          ...dbClusters.map(c => ({ value: c.name, label: c.name })),
+                          { value: "CUSTOM", label: "Other / Propose New Market Area" }
+                        ]}
                         helpText="Groups your business with similar local hubs."
-                        autoComplete="off"
+                        showInput={showCustomCluster}
+                        onToggleInput={setShowCustomCluster}
+                        inputName="proposedCluster"
+                        inputValue={proposedCluster}
+                        onInputChange={(e) => setProposedCluster(e.target.value)}
+                        inputPlaceholder="e.g. Navrangpura Commercial Hub"
+                        inputHelpText="Our team will review and add this market to the discovery engine."
                       />
-                      {formData.clusterType && dbClusters.filter(c => c.name.toLowerCase().includes(formData.clusterType.toLowerCase()) && c.name !== formData.clusterType).length > 0 && (
-                        <div className="absolute z-50 left-0 right-0 top-[calc(100%-8px)] bg-white border border-[#1A1F36]/[0.08] rounded-xl shadow-xl max-h-48 overflow-y-auto">
-                          {dbClusters
-                            .filter(c => c.name.toLowerCase().includes(formData.clusterType.toLowerCase()))
-                            .map((c, i) => (
-                              <button
-                                key={i}
-                                type="button"
-                                className="w-full text-left px-4 py-2.5 text-[13px] font-medium text-[#1A1F36] hover:bg-[#FF6A00]/5 hover:text-[#FF6A00] border-b border-[#1A1F36]/[0.04] last:border-0"
-                                onClick={() => setFormData(prev => ({ ...prev, clusterType: c.name }))}
-                              >
-                                {c.name}
-                              </button>
-                            ))}
-                        </div>
-                      )}
                     </div>
                   </div>
                 )}
               </div>
 
-              {/* WhatsApp (Main Entry) */}
-              <div className="pt-6 border-t border-black/[0.04]">
+              {/* Contact Details */}
+              <div className="pt-6 border-t border-black/[0.04] grid grid-cols-1 md:grid-cols-2 gap-6">
                 <Input
                   label="WhatsApp For Business"
                   name="phone"
@@ -712,8 +915,19 @@ const ShopForm = ({ initialData, onSubmit, isEdit = false, isLoading = false, er
                   onChange={handleChange}
                   placeholder="9876543210"
                   required
-                  icon={Phone}
+                  prefix={getCountryCode(formData.country)}
                   helpText="Customers will reach out to you on this number"
+                />
+                <Input
+                  label="Owner Email Address"
+                  name="ownerEmail"
+                  type="email"
+                  value={formData.ownerEmail}
+                  onChange={handleChange}
+                  placeholder="owner@example.com"
+                  required
+                  icon={Mail}
+                  helpText="Used for business verification and updates"
                 />
               </div>
             </div>

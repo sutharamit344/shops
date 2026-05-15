@@ -1,12 +1,12 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { useSelector, useDispatch } from "react-redux";
 import { fetchApprovedShops } from "@/redux/thunks/shopThunks";
 import { fetchCategories } from "@/redux/thunks/categoryThunks";
 import {
-  setCity, setCategory, setArea,
+  setCategory,
   setAllFilters
 } from "@/redux/slices/filterSlice";
 import { setParsed, setUserCoords, setQuery } from "@/redux/slices/searchSlice";
@@ -67,37 +67,60 @@ const DiscoveryClient = ({ slug, parsed: initialParsed }) => {
   const [pendingCoords, setPendingCoords] = useState(null);
   const isCurrentLocationMode = typeof window !== 'undefined' && localStorage.getItem('location_mode') === 'current';
 
-  const currentActiveLocation = React.useMemo(() => {
-    // 1. Prioritize detected Current Location if active
+  // USER'S HOME/CURRENT LOCATION — shown in the location pill
+  // Always reflects where the user IS (saved or GPS), never the browsed/searched area
+  const userHomeLocation = React.useMemo(() => {
+    // 1. If GPS "Current Location" mode is active, use that
     if (isCurrentLocationMode && userLocationName) {
       return { city: "", area: "", full: userLocationName };
     }
 
-    // 2. Derive from URL/Filters (Prefer corrected searchParsed from Redux)
+    // 2. Use saved location from cache (set by user explicitly)
+    if (typeof window !== 'undefined') {
+      const savedCity = localStorage.getItem('last_city');
+      const savedArea = localStorage.getItem('last_area');
+      if (savedCity) {
+        const city = properCase(savedCity);
+        const area = properCase(savedArea || "");
+        return {
+          city,
+          area,
+          full: area ? `${area}, ${city}` : city
+        };
+      }
+    }
+
+    // 3. Fallback to city from URL (only if nothing saved)
+    const fallbackCity = properCase(initialParsed?.city || localCity || "");
+    return { city: fallbackCity, area: "", full: fallbackCity || "Select Location" };
+  }, [isCurrentLocationMode, userLocationName, initialParsed, localCity]);
+
+  // SEARCH CONTEXT LOCATION — used for page title and filtering context
+  // Reflects the URL (what the user is browsing)
+  const currentActiveLocation = React.useMemo(() => {
     let city = searchParsed?.city || initialParsed?.city || localCity || "";
     let area = searchParsed?.area || localArea || "";
-    
-    // FILTER: If area is actually a category or cluster, ignore it for location display
+
+    // Filter out area segment if it's actually a category or cluster slug
     if (area && (clusters?.length > 0 || categories?.length > 0)) {
-      const isCluster = clusters.some(c => 
-        slugify(c.name) === slugify(area) || 
+      const isCluster = clusters.some(c =>
+        slugify(c.name) === slugify(area) ||
         c.name.toLowerCase().includes(area.toLowerCase())
       );
-      const isCategory = categories.some(c => 
-        slugify(c.name) === slugify(area) || 
+      const isCategory = categories.some(c =>
+        slugify(c.name) === slugify(area) ||
         c.name.toLowerCase().includes(area.toLowerCase())
       );
       if (isCluster || isCategory) area = "";
     }
-
-
 
     return {
       city: properCase(city),
       area: properCase(area),
       full: area ? `${properCase(area)}, ${properCase(city)}` : properCase(city) || "Select Location"
     };
-  }, [initialParsed, localCity, localArea, userLocationName, clusters, searchParsed, categories]);
+  }, [initialParsed, localCity, localArea, clusters, searchParsed, categories]);
+
 
   const { sortBy = 'relevance', tags = {} } = useSelector((state) => state.filters || {});
   const activeFilterCount = (sortBy !== 'relevance' ? 1 : 0) + Object.values(tags).filter(Boolean).length;
@@ -146,7 +169,7 @@ const DiscoveryClient = ({ slug, parsed: initialParsed }) => {
 
     let parts = [];
     if (category) {
-      parts.push(properCase(category));
+      parts.push(`${properCase(category)} Shops`);
     } else {
       parts.push("Shops");
     }
@@ -164,23 +187,17 @@ const DiscoveryClient = ({ slug, parsed: initialParsed }) => {
   };
   const titleText = getDynamicTitle();
 
+  const hasSyncedRef = useRef(false);
+  const [hasSynced, setHasSynced] = useState(false);
+
   useEffect(() => {
-    if (!initialParsed) return;
+    if (!initialParsed || hasSyncedRef.current) return;
     
     let finalCategory = initialParsed.category || "";
     let finalArea = initialParsed.area || "";
     let clusterType = "";
 
-    // 1. Restore Area from Cache if URL is City-Only
-    if (!finalArea && typeof window !== "undefined") {
-      const savedCity = localStorage.getItem('last_city');
-      const savedArea = localStorage.getItem('last_area');
-      if (savedCity && initialParsed.city && savedCity.toLowerCase() === initialParsed.city.toLowerCase()) {
-        finalArea = savedArea || "";
-      }
-    }
-
-    // 2. Distinguish between Area and Category
+    // 1. Distinguish between Area and Category
     if (!finalCategory && finalArea) {
       const isActuallyCategory = categories.some(c =>
         slugify(c.name) === slugify(finalArea) ||
@@ -192,7 +209,7 @@ const DiscoveryClient = ({ slug, parsed: initialParsed }) => {
       }
     }
 
-    // 3. Distinguish between Area and Cluster
+    // 2. Distinguish between Area and Cluster
     if (finalArea && clusters.length > 0) {
       const clusterMatch = clusters.find(c => 
         slugify(c.name) === slugify(finalArea) ||
@@ -205,25 +222,45 @@ const DiscoveryClient = ({ slug, parsed: initialParsed }) => {
     }
 
     dispatch(setParsed({ ...initialParsed, category: finalCategory, area: finalArea, clusterType }));
-    dispatch(setQuery(finalCategory));
+    // Set the full title as the search input value (e.g. "Electronics Shops in Thaltej, Ahmedabad")
+    // We compute it here directly since titleText is derived after this effect runs
+    const titleParts = [];
+    if (finalCategory) {
+      titleParts.push(`${properCase(finalCategory)} Shops`);
+    } else {
+      titleParts.push("Shops");
+    }
+    const urlArea = finalArea || initialParsed?.area || "";
+    const urlCity = initialParsed?.city || localCity || "";
+    if (urlArea && urlCity) {
+      titleParts.push(`in ${properCase(urlArea)}, ${properCase(urlCity)}`);
+    } else if (urlCity) {
+      titleParts.push(`in ${properCase(urlCity)}`);
+    }
+    const inputTitle = titleParts.join(" ");
+    dispatch(setQuery(inputTitle !== "Shops" ? inputTitle : ""));
     dispatch(setCategory(finalCategory));
-    dispatch(setCity(initialParsed.city || ""));
-    dispatch(setArea(finalArea));
-  }, [initialParsed, dispatch, categories, clusters]);
+    
+    hasSyncedRef.current = true;
+    setHasSynced(true);
+  }, [initialParsed, categories, clusters, dispatch]);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const lastLat = localStorage.getItem('last_lat');
       const lastLng = localStorage.getItem('last_lng');
+      const lastCity = localStorage.getItem('last_city');
+      const lastArea = localStorage.getItem('last_area');
 
       if (lastLat && lastLng && !userCoords) {
+        const locationName = lastArea ? `${properCase(lastArea)}, ${properCase(lastCity)}` : properCase(lastCity);
         dispatch(setUserCoords({
           coords: { lat: parseFloat(lastLat), lng: parseFloat(lastLng) },
-          name: currentActiveLocation.area || currentActiveLocation.city
+          name: locationName
         }));
       }
     }
-  }, [userCoords, currentActiveLocation]);
+  }, [userCoords, dispatch]);
 
   useEffect(() => {
     document.title = `${titleText} | ShopBajar`;
@@ -236,15 +273,16 @@ const DiscoveryClient = ({ slug, parsed: initialParsed }) => {
     dispatch(fetchClusters());
   }, [dispatch]);
 
-  // FETCH RESULTS WHEN PARAMS CHANGE
+  // FETCH RESULTS WHEN PARAMS CHANGE — only after initial sync is complete
   useEffect(() => {
-    if (initialParsed) {
-      dispatch(fetchSearchResults({ 
-        ...initialParsed, 
-        area: localArea || initialParsed.area 
-      }));
-    }
-  }, [initialParsed, dispatch, userCoords, localArea]);
+    if (!hasSynced) return;
+    dispatch(fetchSearchResults({ 
+      ...initialParsed, 
+      area: localArea || initialParsed.area,
+      // Pass GPS-detected area name into thunk so it can use it for filtering
+      detectedAreaName: userLocationName || "",
+    }));
+  }, [hasSynced, initialParsed, userCoords?.lat, userCoords?.lng, localArea, userLocationName, dispatch]);
 
   const applyLocation = (city, area, pincode, village, lat, lng, isCurrent = false) => {
     const cleanCity = city.replace(/ District| Division/g, "");
@@ -261,9 +299,11 @@ const DiscoveryClient = ({ slug, parsed: initialParsed }) => {
     dispatch(setUserCoords({ coords: { lat, lng }, name: locationName }));
     setDetectedData({ city: cleanCity, area: cleanArea, lat, lng, pincode: pincode || "" });
 
-    // Redirect to the new hierarchical URL for the selected location
+    // Only navigate if the resulting URL differs from the current path
     const url = generateDiscoveryUrl(initialParsed.category || localCategory, cleanCity, "location", cleanArea);
-    router.push(url);
+    if (url !== pathname) {
+      router.push(url);
+    }
   };
 
   const detectLocation = () => {
@@ -318,7 +358,7 @@ const DiscoveryClient = ({ slug, parsed: initialParsed }) => {
         <div className="sticky top-[69px] z-40 py-2 transition-all lg:hidden bg-[#FAFAF8]/95 backdrop-blur-md border-b border-black/[0.04] -mx-4 px-4 mb-4">
           <div className="max-w-7xl mx-auto flex items-center gap-3">
             <div className="flex-1">
-              <SmartSearch />
+              <SmartSearch pageTitle={titleText} pageContext={currentActiveLocation} />
             </div>
             <Button
               variant={activeFilterCount > 0 ? "primary" : "ghost"}
@@ -352,8 +392,8 @@ const DiscoveryClient = ({ slug, parsed: initialParsed }) => {
                     setDetectedData({
                       lat: parseFloat(lastLat) || userCoords?.lat || null,
                       lng: parseFloat(lastLng) || userCoords?.lng || null,
-                      city: currentActiveLocation.city,
-                      area: currentActiveLocation.area,
+                      city: userHomeLocation.city,
+                      area: userHomeLocation.area,
                       pincode: (isCurrentLocationMode && userLocationName?.split(', ').pop()) || ""
                     });
                     setIsModalOpen(true);
@@ -362,7 +402,7 @@ const DiscoveryClient = ({ slug, parsed: initialParsed }) => {
                 >
                   <MapPin size={16} className="text-[#FF6A00]/60 group-hover:text-[#FF6A00] transition-all duration-300  group-hover:animate-bounce" />
                   <span className="relative truncate">
-                    {currentActiveLocation.full}
+                    {userHomeLocation.full}
                   </span>
                   <ChevronDown size={14} className="ml-0.5 text-gray-400 group-hover:text-[#FF6A00] transition-colors" />
                 </button>
@@ -389,7 +429,7 @@ const DiscoveryClient = ({ slug, parsed: initialParsed }) => {
           {/* Discovery Results */}
           <DiscoveryView
             title={titleText}
-            subtitle={currentActiveLocation.full}
+            subtitle={userHomeLocation.full}
             viewMode={viewMode}
             setViewMode={setViewMode}
             onSubtitleClick={() => setIsModalOpen(true)}
