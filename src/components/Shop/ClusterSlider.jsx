@@ -58,12 +58,15 @@ const ClusterSlider = ({ clusters = [], shops = [], onClusterClick, parsed }) =>
       if (currentCluster && clusterName.toLowerCase() === currentCluster) return;
       if (currentCategory) {
         const doc = clusterDocMap[clusterName];
-        const cat = (doc?.category || shop.category || "").toLowerCase().replace(/&/g, "and");
+        const docCat = (doc?.category || "").toLowerCase().replace(/&/g, "and");
+        const shopCat = (shop.category || "").toLowerCase().replace(/&/g, "and");
         const normalizedSearch = currentCategory.replace(/&/g, "and");
         const nm = clusterName.toLowerCase();
 
-        const isMatch = cat.includes(normalizedSearch) || 
-                       normalizedSearch.includes(cat) || 
+        const isMatch = docCat.includes(normalizedSearch) || 
+                       normalizedSearch.includes(docCat) ||
+                       shopCat.includes(normalizedSearch) ||
+                       normalizedSearch.includes(shopCat) || 
                        nm.includes(normalizedSearch);
         
         if (!isMatch) return;
@@ -72,10 +75,14 @@ const ClusterSlider = ({ clusters = [], shops = [], onClusterClick, parsed }) =>
       const key = `${clusterName}__${shopArea}__${shopCity}`;
       if (!groups[key]) {
         const doc = clusterDocMap[clusterName] || {};
+        const displayCat = currentCategory 
+          ? currentCategory.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')
+          : (doc.category || shop.category || "");
+
         groups[key] = {
           id: doc.id || key,
           name: clusterName,
-          category: doc.category || shop.category || "",
+          category: displayCat,
           area: shop.area || "",
           city: shop.city || "",
           lat: doc.lat || shop.lat || null,
@@ -204,7 +211,7 @@ const ClusterSlider = ({ clusters = [], shops = [], onClusterClick, parsed }) =>
       location = city || "Nearby Areas";
     }
 
-    if (parsed?.type === "nearby") return "Specialized Hubs Near You";
+    if (parsed?.type === "nearby") return "Specialized Hubs Near Me";
 
     // 1. If explicit cluster searched
     if (parsed?.clusterType) {
@@ -225,38 +232,38 @@ const ClusterSlider = ({ clusters = [], shops = [], onClusterClick, parsed }) =>
       return `Specialized Hubs in ${location}`;
     }
 
-    return "Specialized Hubs Near You";
+    return "Specialized Hubs Near Me";
   };
 
   return (
-    <div className="relative mb-6 group border-b border-[#1A1F36]/[0.08]">
-      <div className="flex items-center justify-between mb-4 px-1">
+    <div className="relative mb-4 group border-b border-[#0A0A0F]/[0.08] pb-4">
+      <div className="flex items-center justify-between mb-3 px-1">
         <div>
-          <h2 className="text-[16px] md:text-lg font-bold text-[#1A1F36] flex items-center gap-2">
-            <Award size={18} className="text-[#FF6A00]" />
+          <h2 className="text-[15px] md:text-[16px] font-bold text-[#0A0A0F] flex items-center gap-1.5">
+            <Award size={16} className="text-[#FF6A00]" />
             {getTitle()}
           </h2>
-          <p className="text-[11px] md:text-[12px] text-[#1A1F36]/40">Explore specialized markets and hubs</p>
+          <p className="text-[11px] text-[#0A0A0F]/40">Explore specialized markets and hubs</p>
         </div>
 
         <div className="flex items-center gap-3">
-          <span className="hidden sm:inline text-[11px] font-bold text-[#1A1F36]/30 uppercase tracking-widest">
+          <span className="hidden sm:inline text-[11px] font-bold text-[#0A0A0F]/30 uppercase tracking-widest">
             {visibleClusters.length} / {clusterData.length}
           </span>
           <div className="flex gap-1.5">
             <button
               onClick={handlePrev}
               disabled={scrollPosition <= 5}
-              className="w-8 h-8 md:w-9 md:h-9 rounded-full bg-white border border-black/[0.06] flex items-center justify-center text-[#1A1F36]/40 hover:text-[#FF6A00] hover:border-[#FF6A00]/20 disabled:opacity-30 transition-all"
+              className="w-7 h-7 md:w-8 md:h-8 rounded-full bg-white border border-black/[0.06] flex items-center justify-center text-[#0A0A0F]/40 hover:text-[#FF6A00] hover:border-[#FF6A00]/20 disabled:opacity-30 transition-all"
             >
-              <ChevronLeft size={16} />
+              <ChevronLeft size={15} />
             </button>
             <button
               onClick={handleNext}
               disabled={scrollPosition >= maxScroll - 5 && visibleLimit >= clusterData.length}
-              className="w-8 h-8 md:w-9 md:h-9 rounded-full bg-white border border-black/[0.06] flex items-center justify-center text-[#1A1F36]/40 hover:text-[#FF6A00] hover:border-[#FF6A00]/20 disabled:opacity-30 transition-all"
+              className="w-7 h-7 md:w-8 md:h-8 rounded-full bg-white border border-black/[0.06] flex items-center justify-center text-[#0A0A0F]/40 hover:text-[#FF6A00] hover:border-[#FF6A00]/20 disabled:opacity-30 transition-all"
             >
-              <ChevronRight size={16} />
+              <ChevronRight size={15} />
             </button>
           </div>
         </div>
@@ -264,7 +271,7 @@ const ClusterSlider = ({ clusters = [], shops = [], onClusterClick, parsed }) =>
 
       <div
         ref={scrollRef}
-        className="flex gap-3 md:gap-4 overflow-x-auto pb-4 scrollbar-hide scroll-smooth no-scrollbar"
+        className="flex gap-2.5 md:gap-3 overflow-x-auto pb-2 scrollbar-hide scroll-smooth no-scrollbar"
         style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
       >
         {visibleClusters.map((cluster, idx) => {
@@ -293,47 +300,45 @@ const ClusterSlider = ({ clusters = [], shops = [], onClusterClick, parsed }) =>
           return (
             <div
               key={`${cluster.name}-${cluster.area}-${cluster.city}-${idx}`}
-              onClick={() => onClusterClick && onClusterClick(cluster.name, cluster.area || cluster.city)}
-              className="flex-shrink-0 w-60 md:w-68 bg-white p-3.5 md:p-4 rounded-[20px] border border-black/[0.06] hover:border-[#FF6A00]/20 transition-all cursor-pointer group/card flex flex-col justify-between h-full"
+              onClick={() => onClusterClick && onClusterClick(cluster.name, cluster.city, cluster.area)}
+              className="flex-shrink-0 w-56 md:w-60 bg-white p-2.5 rounded-lg border border-black/[0.06] hover:border-[#FF6A00]/30 hover:shadow-sm transition-all cursor-pointer group/card flex flex-col gap-2"
             >
-              <div>
-                <div className="flex items-start justify-between mb-2.5">
-                  <div className="w-8 h-8 md:w-9 md:h-9 rounded-xl bg-[#FF6A00]/10 flex items-center justify-center text-[#FF6A00]">
-                    <CategoryIcon name={cluster.category} size={18} />
+              <div className="flex items-start justify-between gap-2">
+                <div className="flex items-center gap-2 min-w-0">
+                  <div className="w-7 h-7 rounded-lg bg-[#FF6A00]/10 flex items-center justify-center text-[#FF6A00] flex-shrink-0">
+                    <CategoryIcon name={cluster.category} size={14} />
                   </div>
-                  <span className="text-[10px] font-bold bg-[#1A1F36] text-white px-2.5 py-1 rounded-full">
-                    {cluster.count} Shops
-                  </span>
+                  <div className="min-w-0">
+                    <h3 className="text-[13px] font-bold text-[#0A0A0F] group-hover/card:text-[#FF6A00] transition-colors truncate leading-tight">
+                      {cluster.name}
+                    </h3>
+                    <p className="text-[10px] font-medium text-[#0A0A0F]/40 uppercase tracking-wider truncate leading-none mt-0.5">
+                      {cluster.category}
+                    </p>
+                  </div>
                 </div>
+                <span className="text-[10px] font-semibold bg-black/[0.06] text-[#0A0A0F] group-hover/card:bg-[#0A0A0F] group-hover/card:text-white transition-all px-1.5 py-0.5 rounded-md flex-shrink-0">
+                  {cluster.count} Shops
+                </span>
+              </div>
 
-                <h3 className="text-[13px] md:text-[14px] font-bold text-[#1A1F36] group-hover/card:text-[#FF6A00] transition-colors line-clamp-1 mb-0.5">
-                  {cluster.name}
-                </h3>
-                <p className="text-[10px] font-semibold text-[#1A1F36]/40 uppercase tracking-wider">
-                  {cluster.category}
-                </p>
-
-                {(cluster.area || cluster.city) && (
-                  <div className="mt-2 flex items-center gap-1 text-[10px] text-[#1A1F36]/50">
-                    <MapPin size={9} className="text-[#FF6A00]" />
+              {(cluster.area || cluster.city) && (
+                <div className="pt-2 border-t border-black/[0.04] flex items-center justify-between text-[10px] text-[#0A0A0F]/50">
+                  <div className="flex items-center gap-1 truncate mr-1">
+                    <MapPin size={10} className="text-[#FF6A00] flex-shrink-0" />
                     <span className="truncate">
-                      <span className={isAreaMatch ? "text-[#FF6A00] font-black" : ""}>{cluster.area}</span>
+                      <span className={isAreaMatch ? "text-[#FF6A00] font-bold" : ""}>{cluster.area}</span>
                       {cluster.area && cluster.city && ", "}
-                      <span className={isCityMatch ? "text-[#FF6A00] font-black" : ""}>{cluster.city}</span>
+                      <span className={isCityMatch ? "text-[#FF6A00] font-bold" : ""}>{cluster.city}</span>
                     </span>
-                    {distanceText && (
-                      <span className="font-bold text-[#FF6A00] bg-[#FF6A00]/10 px-1.5 py-0.5 rounded ml-1 whitespace-nowrap">
-                        {distanceText}
-                      </span>
-                    )}
                   </div>
-                )}
-              </div>
-
-              <div className="mt-3 flex items-center text-[10px] font-bold text-[#FF6A00] opacity-0 group-hover/card:opacity-100 transition-all">
-                <span>View Collection</span>
-                <ChevronRight size={12} className="ml-0.5" />
-              </div>
+                  {distanceText && (
+                    <span className="font-bold text-[#FF6A00] bg-[#FF6A00]/10 px-1.5 py-0.5 rounded flex-shrink-0">
+                      {distanceText}
+                    </span>
+                  )}
+                </div>
+              )}
             </div>
           )
         })}
@@ -341,10 +346,10 @@ const ClusterSlider = ({ clusters = [], shops = [], onClusterClick, parsed }) =>
         {visibleLimit < clusterData.length && (
           <div
             onClick={handleNext}
-            className="flex-shrink-0 w-36 flex flex-col items-center justify-center gap-2 text-[#FF6A00] font-bold cursor-pointer hover:bg-[#FF6A00]/5 rounded-[20px] border-2 border-dashed border-[#FF6A00]/20 transition-all"
+            className="flex-shrink-0 w-32 flex flex-col items-center justify-center gap-1.5 text-[#FF6A00] font-bold cursor-pointer hover:bg-[#FF6A00]/5 rounded-lg border border-dashed border-[#FF6A00]/20 transition-all p-2"
           >
-            <div className="w-9 h-9 rounded-full bg-[#FF6A00]/10 flex items-center justify-center">
-              <ChevronRight size={20} />
+            <div className="w-7 h-7 rounded-full bg-[#FF6A00]/10 flex items-center justify-center">
+              <ChevronRight size={16} />
             </div>
             <span className="text-[11px]">Load More</span>
           </div>

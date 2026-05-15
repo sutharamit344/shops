@@ -9,14 +9,18 @@ import {
   User, 
   ShieldCheck, 
   Zap, 
-  HelpCircle,
+  CircleHelp,
   MessageSquare,
   ChevronDown,
-  ArrowRight
+  ArrowRight,
+  Layout,
+  Sparkles,
+  Rocket
 } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import Button from "@/components/UI/Button";
+import Card from "@/components/UI/Card";
 import { BRAND, CONTACT } from "@/lib/config";
 
 const HelpCenter = () => {
@@ -26,177 +30,183 @@ const HelpCenter = () => {
   const categories = [
     {
       icon: Zap,
-      title: "Getting Started",
-      description: "Learn the basics of using ShopBajar to find local shops.",
-      color: "bg-blue-500/10 text-blue-500",
+      title: "Quick Start",
+      description: "Fundamental protocols for business discovery and navigation.",
+      color: "text-blue-500",
     },
     {
       icon: Store,
-      title: "For Merchants",
-      description: "How to list your shop, manage products, and grow your business.",
-      color: "bg-[#FF6A00]/10 text-[#FF6A00]",
+      title: "Merchant Docs",
+      description: "Merchant provisioning, listing management, and business growth.",
+      color: "text-[#FF6A00]",
     },
     {
       icon: ShieldCheck,
-      title: "Trust & Safety",
-      description: "Everything you need to know about our verification and privacy.",
-      color: "bg-green-500/10 text-green-500",
+      title: "Security Protocols",
+      description: "Data governance, identity verification, and encryption layers.",
+      color: "text-emerald-500",
     },
     {
       icon: User,
-      title: "Your Account",
-      description: "Managing your profile, dashboard, and login security.",
-      color: "bg-purple-500/10 text-purple-500",
+      title: "Identity Desk",
+      description: "Authentication matrices and dashboard configuration.",
+      color: "text-purple-500",
     },
   ];
 
   const faqs = [
     {
-      question: "Is ShopBajar free to use for customers?",
-      answer: "Yes, ShopBajar is completely free for customers. You can browse shops, view products, and contact sellers without any charges.",
+      question: "Is the discovery network free for users?",
+      answer: "Yes, the {BRAND} network is open and free for all participants. You can browse regional hubs, index storefronts, and initiate direct communication without protocol fees.",
     },
     {
-      question: "How do I list my shop on ShopBajar?",
-      answer: "To list your shop, click on the 'List Your Shop' button in the footer or navigation. Fill in your business details, upload images, and submit for verification.",
+      question: "How do I provision a new local business?",
+      answer: "To provision a business, select 'Initialize Business' from the primary navigation. Input your business parameters, verify your regional coordinates, and deploy to the directory.",
     },
     {
-      question: "How long does verification take?",
-      answer: "We typically verify shops within 24-48 hours. Once verified, your shop will be visible to all users in your area.",
+      question: "What is the verification latency?",
+      answer: "Business verification typically completes within a 24-48 hour window. Once synchronized, your storefront becomes globally discoverable across the regional grid.",
     },
     {
-      question: "Can I sell directly on ShopBajar?",
-      answer: "Currently, ShopBajar is a discovery platform. Customers can find your shop and products, and then contact you directly via WhatsApp to complete the purchase.",
+      question: "Does the platform facilitate direct transactions?",
+      answer: "Currently, {BRAND} operates as a high-density discovery layer. Transactions are finalized via a direct peer-to-peer handshake through encrypted WhatsApp channels.",
     },
   ];
 
   return (
-    <div className="min-h-screen bg-[#FAFAF8]">
+    <div className="min-h-screen bg-[#F7F7F5] selection:bg-[#FF6A00]/10 selection:text-[#FF6A00]">
       <Navbar />
+      <div className="absolute inset-0 dot-grid opacity-[0.05] pointer-events-none" />
       
       {/* Hero Section */}
-      <section className="bg-[#1A1F36] pt-40 pb-24 px-6 relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-96 h-96 bg-[#FF6A00]/10 rounded-full -translate-y-1/2 translate-x-1/4 blur-3xl"></div>
-        <div className="absolute bottom-0 left-0 w-64 h-64 bg-blue-500/5 rounded-full translate-y-1/2 -translate-x-1/4 blur-3xl"></div>
-        
-        <div className="max-w-4xl mx-auto text-center relative z-10">
-          <h1 className="text-4xl md:text-6xl font-black text-white mb-8 tracking-tight">
-            How can we <span className="text-[#FF6A00]">help you?</span>
+      <section className="pt-32 pb-12 px-4 relative z-10 max-w-7xl mx-auto">
+        <div className="animate-in fade-in duration-700">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-black/[0.02] border border-black/[0.05] mb-6">
+            <CircleHelp size={12} className="text-[#FF6A00]" />
+            <span className="text-[10px] font-bold text-[#0A0A0F]/60 uppercase tracking-[0.2em]">Support Infrastructure</span>
+          </div>
+          <h1 className="text-[36px] md:text-[56px] font-bold text-[#0A0A0F] mb-8 tracking-tight leading-none">
+            Knowledge <span className="text-[#FF6A00]">Repository.</span>
           </h1>
           
-          <div className="relative max-w-2xl mx-auto group">
-            <div className="absolute inset-0 bg-[#FF6A00]/20 blur-2xl opacity-0 group-focus-within:opacity-100 transition-opacity"></div>
-            <div className="relative flex items-center bg-white/10 backdrop-blur-xl border border-white/10 rounded-[32px] p-2 pr-4 shadow-2xl focus-within:bg-white focus-within:border-white transition-all">
-              <div className="w-12 h-12 flex items-center justify-center text-white/40 group-focus-within:text-[#1A1F36]">
-                <Search size={20} />
-              </div>
-              <input
-                type="text"
-                placeholder="Search for articles, guides..."
-                className="flex-1 bg-transparent border-none outline-none text-white focus:text-[#1A1F36] font-medium text-lg placeholder:text-white/30 focus:placeholder:text-[#1A1F36]/30 py-3"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-              <Button size="sm" className="hidden md:flex">Search</Button>
-            </div>
+          <div className="relative max-w-xl group">
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#0A0A0F]/20 group-focus-within:text-[#FF6A00] transition-colors" size={16} />
+            <input
+              type="text"
+              placeholder="Search documentation, guides, and businesses..."
+              className="w-full h-12 bg-white border border-black/[0.08] rounded-lg pl-11 pr-4 text-[14px] font-medium outline-none focus:border-[#FF6A00]/40 transition-all shadow-2xl shadow-black/[0.02]"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
           </div>
           
-          <div className="mt-8 flex flex-wrap justify-center gap-3 text-white/40 text-sm font-bold uppercase tracking-widest">
-            <span>Popular:</span>
-            <button className="text-white hover:text-[#FF6A00] transition-colors underline decoration-white/20 underline-offset-4">Verification</button>
-            <button className="text-white hover:text-[#FF6A00] transition-colors underline decoration-white/20 underline-offset-4">List Shop</button>
-            <button className="text-white hover:text-[#FF6A00] transition-colors underline decoration-white/20 underline-offset-4">WhatsApp Help</button>
+          <div className="mt-8 flex flex-wrap gap-4 text-[10px] font-bold uppercase tracking-widest text-[#0A0A0F]/30">
+            <span>Trending:</span>
+            <button className="text-[#0A0A0F]/60 hover:text-[#FF6A00] transition-colors">Verification</button>
+            <span className="text-black/5">|</span>
+            <button className="text-[#0A0A0F]/60 hover:text-[#FF6A00] transition-colors">Deployment</button>
+            <span className="text-black/5">|</span>
+            <button className="text-[#0A0A0F]/60 hover:text-[#FF6A00] transition-colors">WhatsApp API</button>
           </div>
         </div>
       </section>
 
       {/* Categories Grid */}
-      <section className="max-w-7xl mx-auto px-6 -mt-12 relative z-20">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <section className="max-w-7xl mx-auto px-4 pb-20 relative z-20">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {categories.map((cat, i) => (
-            <div 
+            <Card 
               key={i}
-              className="bg-white p-8 rounded-[32px] border border-black/[0.05] shadow-xl shadow-black/[0.02] hover:shadow-2xl hover:shadow-[#FF6A00]/10 hover:-translate-y-2 transition-all cursor-pointer group"
+              className="p-6 border-black/[0.03] hover:border-[#FF6A00]/30 transition-all cursor-pointer group"
             >
-              <div className={`w-14 h-14 rounded-2xl ${cat.color} flex items-center justify-center mb-6 group-hover:scale-110 transition-transform`}>
-                <cat.icon size={28} />
+              <div className={`w-10 h-10 rounded-lg bg-black/[0.02] border border-black/[0.05] flex items-center justify-center mb-6 group-hover:scale-105 transition-transform ${cat.color}`}>
+                <cat.icon size={18} />
               </div>
-              <h3 className="text-xl font-black text-[#1A1F36] mb-3">{cat.title}</h3>
-              <p className="text-gray-500 font-medium text-[15px] leading-relaxed mb-6">
+              <h3 className="text-[16px] font-bold text-[#0A0A0F] mb-2 tracking-tight">{cat.title}</h3>
+              <p className="text-[#0A0A0F]/45 font-medium text-[13px] leading-relaxed mb-6">
                 {cat.description}
               </p>
-              <div className="flex items-center gap-2 text-[#FF6A00] font-black text-xs uppercase tracking-widest">
-                <span>Explore</span>
-                <ArrowRight size={14} />
+              <div className="flex items-center gap-2 text-[#FF6A00] font-bold text-[10px] uppercase tracking-widest opacity-40 group-hover:opacity-100 transition-opacity">
+                <span>Access Docs</span>
+                <ArrowRight size={12} />
               </div>
-            </div>
+            </Card>
           ))}
         </div>
       </section>
 
       {/* FAQ Section */}
-      <section className="max-w-4xl mx-auto px-6 py-32">
+      <section className="max-w-3xl mx-auto px-4 py-20 relative z-10">
         <div className="text-center mb-16">
-          <h2 className="text-3xl md:text-4xl font-black text-[#1A1F36] mb-4">Frequently Asked Questions</h2>
-          <p className="text-gray-500 font-medium">Quick answers to common questions about our platform.</p>
+           <div className="inline-flex items-center gap-2 mb-4">
+              <Layout size={14} className="text-[#0A0A0F]/20" />
+              <span className="text-[10px] font-bold text-[#0A0A0F]/30 uppercase tracking-[0.2em]">Frequent Index</span>
+           </div>
+           <h2 className="text-[32px] font-bold text-[#0A0A0F] tracking-tight leading-none">Operational FAQs.</h2>
         </div>
 
-        <div className="space-y-4">
+        <div className="space-y-3">
           {faqs.map((faq, i) => (
-            <div 
+            <Card 
               key={i} 
-              className={`bg-white rounded-[24px] border transition-all ${activeFaq === i ? 'border-[#FF6A00] shadow-lg' : 'border-black/[0.05]'}`}
+              className={`p-0 border-black/[0.03] transition-all overflow-hidden ${activeFaq === i ? 'border-[#FF6A00]/30 shadow-xl' : ''}`}
             >
               <button 
                 onClick={() => setActiveFaq(activeFaq === i ? null : i)}
-                className="w-full flex items-center justify-between p-6 md:p-8 text-left"
+                className="w-full flex items-center justify-between p-6 text-left group"
               >
-                <span className="text-lg font-bold text-[#1A1F36]">{faq.question}</span>
+                <span className={`text-[15px] font-bold transition-colors ${activeFaq === i ? 'text-[#FF6A00]' : 'text-[#0A0A0F]'}`}>{faq.question.replace('{BRAND}', BRAND)}</span>
                 <ChevronDown 
-                  size={20} 
-                  className={`text-gray-400 transition-transform ${activeFaq === i ? 'rotate-180 text-[#FF6A00]' : ''}`} 
+                  size={16} 
+                  className={`text-[#0A0A0F]/20 transition-transform duration-500 ${activeFaq === i ? 'rotate-180 text-[#FF6A00]' : 'group-hover:text-[#0A0A0F]/40'}`} 
                 />
               </button>
               {activeFaq === i && (
-                <div className="px-8 pb-8 text-gray-500 font-medium leading-relaxed animate-in slide-in-from-top-2 duration-300">
-                  {faq.answer}
+                <div className="px-6 pb-6 text-[#0A0A0F]/45 font-medium text-[14px] leading-relaxed animate-in slide-in-from-top-2 duration-500">
+                  {faq.answer.replace('{BRAND}', BRAND)}
                 </div>
               )}
-            </div>
+            </Card>
           ))}
         </div>
       </section>
 
-      {/* Contact Section */}
-      <section className="max-w-7xl mx-auto px-6 pb-32">
-        <div className="bg-[#1A1F36] rounded-[48px] p-8 md:p-16 flex flex-col md:flex-row items-center justify-between gap-12 relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-[#FF6A00]/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
+      {/* Support Section */}
+      <section className="max-w-7xl mx-auto px-4 pb-32 relative z-10">
+        <Card variant="dark" padding={false} className="border-none shadow-2xl p-8 md:p-16 flex flex-col md:flex-row items-center justify-between gap-12 relative overflow-hidden">
+          <div className="absolute inset-0 dot-grid opacity-[0.05] pointer-events-none" />
           
           <div className="relative z-10 max-w-xl text-center md:text-left">
-            <h2 className="text-3xl md:text-4xl font-black text-white mb-6">Still have questions?</h2>
-            <p className="text-white/60 text-lg font-medium mb-8">
-              Our support team is here to help you 24/7. Connect with us via WhatsApp or email and we'll get back to you immediately.
+            <div className="inline-flex items-center gap-2 px-2.5 py-1 bg-white/5 text-[#FF6A00] rounded-md border border-white/10 mb-6">
+              <Sparkles size={12} />
+              <span className="text-[10px] font-bold uppercase tracking-widest">Real-time Support</span>
+            </div>
+            <h2 className="text-[32px] md:text-[44px] font-bold text-white mb-6 tracking-tight leading-none">Still have questions?</h2>
+            <p className="text-white/40 text-[16px] font-medium mb-10 leading-relaxed">
+              Our engineering team is available for real-time consultation. 
+              Synchronize with us via priority WhatsApp or standard email transmission.
             </p>
             <div className="flex flex-wrap items-center justify-center md:justify-start gap-4">
               <a href={`https://wa.me/${CONTACT.whatsapp}`} target="_blank" rel="noopener noreferrer">
-                <Button variant="primary" size="lg" className="bg-[#25D366] border-[#25D366] hover:bg-[#25D366]/90">
-                  Contact via WhatsApp
+                <Button size="lg" className="bg-[#25D366] border-[#25D366] hover:bg-[#25D366]/90 shadow-xl shadow-[#25D366]/10 px-8 h-11">
+                  WhatsApp Support
                 </Button>
               </a>
               <a href={`mailto:${CONTACT.email}`}>
-                <Button variant="outline" size="lg" className="text-white border-white/20 hover:bg-white/10">
-                  Send an Email
+                <Button variant="outline" size="lg" className="text-white border-white/10 hover:bg-white/5 px-8 h-11">
+                  Email Desk
                 </Button>
               </a>
             </div>
           </div>
           
-          <div className="relative z-10 w-full max-w-sm aspect-square bg-white/5 rounded-[40px] border border-white/10 flex items-center justify-center p-12">
-            <div className="relative">
-              <div className="absolute inset-0 bg-[#FF6A00] blur-[100px] opacity-20 animate-pulse"></div>
-              <HelpCircle size={160} className="text-[#FF6A00] relative z-10" />
+          <div className="relative z-10 w-full max-w-[280px] aspect-square bg-white/5 rounded-2xl border border-white/10 flex items-center justify-center p-12">
+            <CircleHelp size={120} className="text-[#FF6A00]/20" />
+            <div className="absolute inset-0 flex items-center justify-center">
+               <Rocket size={40} className="text-[#FF6A00] animate-pulse" />
             </div>
           </div>
-        </div>
+        </Card>
       </section>
 
       <Footer />

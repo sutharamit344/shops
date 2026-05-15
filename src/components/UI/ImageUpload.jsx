@@ -27,7 +27,6 @@ const ImageUpload = ({
     const files = Array.from(e.target.files);
     if (files.length === 0) return;
 
-    // If multiple selection is allowed
     if (multiple && onSelect) {
       onSelect(files);
       e.target.value = "";
@@ -35,25 +34,21 @@ const ImageUpload = ({
     }
 
     const file = files[0];
-    // Local Preview for immediate feedback
     const reader = new FileReader();
     reader.onloadend = () => setPreview(reader.result);
     reader.readAsDataURL(file);
 
-    // If onSelect is provided, we defer the upload (Batch Mode)
     if (onSelect) {
       onSelect(file);
       return;
     }
 
-    // Default: Upload immediately (Legacy/Standalone Mode)
     try {
       setUploading(true);
       const fileName = `${Date.now()}_${file.name.replace(/[^a-z0-9.]/gi, '_').toLowerCase()}`;
       const path = `uploads/${folder}/${fileName}`;
       const url = await uploadImage(file, path);
       onUpload(url);
-      // Reset preview so the widget returns to the "+" placeholder after upload
       setPreview(null);
     } catch (error) {
       console.error(error);
@@ -74,48 +69,48 @@ const ImageUpload = ({
     if (onUpload) onUpload("");
   };
 
-  const heightClass = className.includes('h-') || className.includes('w-') ? "" : (compact ? "h-20 w-20" : "h-32 w-32");
-  const containerClass = compact ? "rounded-xl" : "rounded-2xl";
+  const heightClass = className.includes('h-') || className.includes('w-') ? "" : (compact ? "h-16 w-16" : "h-24 w-24");
+  const containerClass = "rounded-lg";
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-1.5">
       {label && (
-        <label className="text-[10px] font-semibold text-[#666] uppercase tracking-wider">
+        <label className="text-[10px] font-bold text-[#0A0A0F]/30 uppercase tracking-[0.1em] px-1">
           {label}
         </label>
       )}
 
-      <div className="relative group flex items-center justify-center text-center">
+      <div className="relative group flex items-center justify-center">
         {preview ? (
-          <div className={`relative ${heightClass} ${containerClass} ${className} overflow-hidden border border-black/[0.06] bg-white shadow-sm`}>
+          <div className={`relative ${heightClass} ${containerClass} ${className} overflow-hidden border border-black/[0.08] bg-white shadow-sm`}>
             <img
               src={preview}
               alt="Preview"
-              className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
             />
             <button
               type="button"
               onClick={clearImage}
-              className="absolute top-1 right-1 w-6 h-6 bg-black/60 rounded-lg flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-500"
+              className="absolute top-1 right-1 w-6 h-6 bg-[#0A0A0F]/60 backdrop-blur-md rounded-md flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-all hover:bg-red-500 shadow-xl"
             >
               <X size={12} />
             </button>
             {uploading && (
-              <div className="absolute inset-0 bg-black/50 flex items-center justify-center backdrop-blur-sm">
-                <Loader2 size={20} className="text-white animate-spin" />
+              <div className="absolute inset-0 bg-white/60 flex items-center justify-center backdrop-blur-sm">
+                <Loader2 size={16} className="text-[#FF6A00] animate-spin" />
               </div>
             )}
           </div>
         ) : (
-          <label className={`flex flex-col items-center justify-center ${heightClass} ${containerClass} ${className} border-2 border-dashed border-black/[0.08] bg-gray-50/30 hover:bg-gray-50 hover:border-[#FF6A00]/30 transition-all cursor-pointer group`}>
+          <label className={`flex flex-col items-center justify-center ${heightClass} ${containerClass} ${className} border border-dashed border-black/[0.08] bg-black/[0.01] hover:bg-black/[0.02] hover:border-[#FF6A00]/40 transition-all cursor-pointer group shadow-sm`}>
             <div className="flex flex-col items-center justify-center px-3 text-center">
               {uploading ? (
-                <Loader2 size={compact ? 16 : 20} className="text-[#FF6A00] animate-spin" />
+                <Loader2 size={16} className="text-[#FF6A00] animate-spin" />
               ) : (
                 <>
-                  <Plus size={compact ? 16 : 20} className="text-[#999] group-hover:text-[#FF6A00] transition-colors mb-1" />
+                  <Plus size={16} className="text-[#0A0A0F]/20 group-hover:text-[#FF6A00] transition-colors" />
                   {!compact && (
-                    <p className="text-[9px] text-[#999] font-medium">Add</p>
+                    <p className="text-[10px] text-[#0A0A0F]/20 font-bold uppercase tracking-widest mt-1">Upload</p>
                   )}
                 </>
               )}

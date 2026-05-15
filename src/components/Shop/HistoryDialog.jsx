@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { Clock, History, RefreshCw, Calendar, CheckCircle2, Edit, Eye, AlertCircle } from "lucide-react";
+import { Clock, History, RefreshCw, Calendar, CircleCheckBig, Edit, Eye, CircleAlert } from "lucide-react";
 import { getEntityLogs } from "@/lib/db";
 import Button from "@/components/UI/Button";
 import Dialog from "@/components/UI/Dialog";
@@ -25,13 +25,13 @@ const ShopHistoryDialog = ({ shop, isOpen, onClose }) => {
   const getActionIcon = (action) => {
     const actionLower = action?.toLowerCase() || '';
     if (actionLower.includes('create') || actionLower.includes('add')) {
-      return <CheckCircle2 size={12} />;
+      return <CircleCheckBig size={12} />;
     }
     if (actionLower.includes('edit') || actionLower.includes('update')) {
       return <Edit size={12} />;
     }
     if (actionLower.includes('reject') || actionLower.includes('delete')) {
-      return <AlertCircle size={12} />;
+      return <CircleAlert size={12} />;
     }
     return <Clock size={12} />;
   };
@@ -48,7 +48,7 @@ const ShopHistoryDialog = ({ shop, isOpen, onClose }) => {
         <div className="flex justify-end">
           <button
             onClick={onClose}
-            className="px-6 py-2.5 bg-white border border-black/[0.06] text-[#0F0F0F] text-[11px] font-semibold rounded-xl hover:bg-gray-50 hover:border-[#FF6A00]/30 transition-all"
+            className="px-6 py-2.5 bg-white border border-black/[0.06] text-[#0F0F0F] text-[11px] font-semibold rounded-lg hover:bg-gray-50 hover:border-[#FF6A00]/30 transition-all"
           >
             Close
           </button>
@@ -81,7 +81,7 @@ const ShopHistoryDialog = ({ shop, isOpen, onClose }) => {
             {logs.map((log, idx) => (
               <div key={log.id || idx} className="relative flex gap-4 group">
                 {/* Timeline Dot */}
-                <div className="relative z-10 w-8 h-8 bg-white rounded-xl border border-black/[0.06] flex items-center justify-center text-[#FF6A00] group-hover:border-[#FF6A00]/30 group-hover:bg-[#FF6A00]/5 transition-all shrink-0">
+                <div className="relative z-10 w-8 h-8 bg-white rounded-lg border border-black/[0.06] flex items-center justify-center text-[#FF6A00] group-hover:border-[#FF6A00]/30 group-hover:bg-[#FF6A00]/5 transition-all shrink-0">
                   {getActionIcon(log.action || log.details)}
                 </div>
 

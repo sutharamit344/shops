@@ -5,7 +5,7 @@ import { X } from "lucide-react";
 
 /**
  * Modern Dialog Component
- * A clean, accessible modal dialog for your application.
+ * Re-designed for premium cloud platform aesthetics: compact spacing, clean typography.
  */
 export default function Dialog({
   isOpen,
@@ -46,28 +46,28 @@ export default function Dialog({
 
   return (
     <div
-      className="fixed inset-0 z-[500] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+      className="fixed inset-0 z-[500] flex items-center justify-center p-4 bg-[#0A0A0F]/40 backdrop-blur-[4px] animate-in fade-in duration-200"
       onClick={onClose}
     >
       <div
-        className={`bg-white rounded-2xl w-full ${maxWidth} shadow-md animate-in fade-in zoom-in duration-200 relative max-h-[95vh] sm:max-h-[90vh] flex flex-col overflow-hidden`}
+        className={`bg-white rounded-lg w-full ${maxWidth} shadow-2xl border border-black/[0.05] animate-in zoom-in-95 duration-200 relative max-h-[95vh] sm:max-h-[90vh] flex flex-col overflow-hidden`}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
         {showHeader && (
-          <div className="flex items-center justify-between p-5 border-b border-black/[0.06] flex-shrink-0">
+          <div className="flex items-center justify-between p-4 border-b border-black/[0.05] flex-shrink-0">
             <div className="flex items-center gap-3">
               {Icon && (
-                <div className="w-9 h-9 rounded-xl bg-[#FF6A00]/10 flex items-center justify-center text-[#FF6A00]">
-                  <Icon size={18} />
+                <div className="w-8 h-8 rounded-lg bg-[#FF6A00]/10 flex items-center justify-center text-[#FF6A00]">
+                  <Icon size={16} />
                 </div>
               )}
               <div>
-                <h3 className="text-[16px] font-bold text-[#0F0F0F] tracking-tight">
+                <h3 className="text-[15px] font-semibold text-[#0A0A0F] tracking-tight leading-none">
                   {title}
                 </h3>
                 {subtitle && (
-                  <p className="text-[11px] text-[#999] mt-0.5">
+                  <p className="text-[12px] text-[#0A0A0F]/40 mt-1 leading-none font-medium">
                     {subtitle}
                   </p>
                 )}
@@ -77,23 +77,23 @@ export default function Dialog({
             {showClose && (
               <button
                 onClick={onClose}
-                className="w-8 h-8 rounded-lg flex items-center justify-center text-[#999] hover:bg-gray-100 hover:text-[#0F0F0F] transition-all"
+                className="w-7 h-7 rounded-md flex items-center justify-center text-[#0A0A0F]/30 hover:bg-black/[0.04] hover:text-[#0A0A0F] transition-all"
                 aria-label="Close"
               >
-                <X size={18} />
+                <X size={15} />
               </button>
             )}
           </div>
         )}
 
         {/* Content */}
-        <div className="p-5 overflow-y-auto flex-1 custom-scrollbar">
+        <div className="p-4 overflow-y-auto flex-1 custom-scrollbar">
           {children}
         </div>
 
         {/* Footer */}
         {footer && (
-          <div className="p-5 border-t border-black/[0.06] flex-shrink-0 bg-white/50 backdrop-blur-sm">
+          <div className="p-4 border-t border-black/[0.05] flex-shrink-0 bg-[#F7F7F5]/50 backdrop-blur-sm">
             {footer}
           </div>
         )}

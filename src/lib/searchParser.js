@@ -86,10 +86,9 @@ export function parseSmartQuery(query, knownClusters = []) {
   // Helper to clean redundant shop keywords
   const finalizeCategory = (cat) => {
     let tokens = cat.trim().split(/\s+/);
-    if (tokens.length >= 2) {
+    if (tokens.length >= 1) {
       const last = tokens[tokens.length - 1].toLowerCase();
-      const secondLast = tokens[tokens.length - 2].toLowerCase();
-      if ((last === "shop" || last === "shops") && (secondLast === "shop" || secondLast === "shops")) {
+      if (last === "shop" || last === "shops") {
         tokens.pop();
       }
     }

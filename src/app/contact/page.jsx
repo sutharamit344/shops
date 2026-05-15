@@ -10,13 +10,17 @@ import {
   ChevronRight,
   Globe,
   Clock,
-  CheckCircle2
+  CircleCheckBig,
+  ShieldCheck,
+  Sparkles,
+  Layout
 } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import Button from "@/components/UI/Button";
 import Input from "@/components/UI/Input";
 import Textarea from "@/components/UI/Textarea";
+import Card from "@/components/UI/Card";
 import { BRAND, CONTACT } from "@/lib/config";
 
 import { db } from "@/lib/firebase";
@@ -57,145 +61,149 @@ const ContactPage = () => {
   const contactInfo = [
     {
       icon: Mail,
-      title: "Email Support",
+      title: "Network Support",
       value: CONTACT.email,
-      description: "Our team will respond within 24 hours.",
+      description: "Direct engineering support node.",
       link: `mailto:${CONTACT.email}`
     },
     {
       icon: MessageSquare,
-      title: "WhatsApp",
+      title: "Merchant Desk",
       value: CONTACT.phone,
-      description: "Direct chat for urgent queries.",
+      description: "Direct priority line for business.",
       link: `https://wa.me/${CONTACT.whatsapp}`
     }
   ];
 
   return (
-    <div className="min-h-screen bg-[#FAFAF8]">
+    <div className="min-h-screen bg-[#F7F7F5] selection:bg-[#FF6A00]/10 selection:text-[#FF6A00]">
       <Navbar />
+      <div className="absolute inset-0 dot-grid opacity-[0.05] pointer-events-none" />
       
       {/* Hero Section */}
-      <section className="bg-[#1A1F36] pt-40 pb-24 px-6 relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-96 h-96 bg-[#FF6A00]/10 rounded-full -translate-y-1/2 translate-x-1/4 blur-3xl"></div>
-        <div className="max-w-4xl mx-auto text-center relative z-10">
-          <p className="text-[#FF6A00] font-black text-xs uppercase tracking-[0.3em] mb-6">Get In Touch</p>
-          <h1 className="text-4xl md:text-6xl font-black text-white mb-8 tracking-tight">
-            We'd Love to <span className="text-[#FF6A00]">Hear From You.</span>
+      <section className="pt-32 pb-12 px-4 relative z-10 max-w-7xl mx-auto">
+        <div className="animate-in fade-in duration-700">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-[#FF6A00]/5 border border-[#FF6A00]/10 mb-6">
+            <ShieldCheck size={12} className="text-[#FF6A00]" />
+            <span className="text-[10px] font-bold text-[#FF6A00] uppercase tracking-[0.2em]">Communication Node</span>
+          </div>
+          <h1 className="text-[36px] md:text-[56px] font-bold text-[#0A0A0F] mb-6 tracking-tight leading-none">
+            Get in <span className="text-[#FF6A00]">Touch.</span>
           </h1>
-          <p className="text-white/60 text-lg font-medium leading-relaxed max-w-2xl mx-auto">
-            Whether you have a question about shop listing, features, or anything else, our team is ready to answer all your questions.
+          <p className="text-[15px] md:text-[17px] text-[#0A0A0F]/45 font-medium leading-relaxed max-w-xl">
+            Whether you're deploying a new shop node or require technical assistance, 
+            our engineering team is ready to assist.
           </p>
         </div>
       </section>
 
       {/* Main Content */}
-      <section className="max-w-7xl mx-auto px-6 py-20">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 lg:gap-20">
+      <section className="max-w-7xl mx-auto px-4 pb-32 relative z-10">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           
           {/* Contact Info Sidebar */}
-          <div className="space-y-12">
-            <div className="space-y-8">
-              {contactInfo.map((item, i) => (
-                <div key={i} className="flex gap-6 group">
-                  <div className="w-14 h-14 rounded-2xl bg-white border border-black/[0.05] flex items-center justify-center text-[#FF6A00] shadow-sm group-hover:bg-[#FF6A00] group-hover:text-white transition-all duration-300 flex-shrink-0">
-                    <item.icon size={24} />
+          <div className="lg:col-span-4 space-y-4">
+            {contactInfo.map((item, i) => (
+              <Card key={i} className="p-5 hover:border-[#FF6A00]/30 transition-all group">
+                <div className="flex items-center gap-4">
+                  <div className="w-10 h-10 rounded-lg bg-black/[0.02] border border-black/[0.05] flex items-center justify-center text-[#0A0A0F]/20 group-hover:text-[#FF6A00] transition-colors">
+                    <item.icon size={18} />
                   </div>
-                  <div>
-                    <h3 className="text-lg font-black text-[#1A1F36] mb-1">{item.title}</h3>
-                    {item.link ? (
-                      <a href={item.link} className="text-[#FF6A00] font-bold text-[15px] hover:underline decoration-2 underline-offset-4">
-                        {item.value}
-                      </a>
-                    ) : (
-                      <p className="text-[#1A1F36] font-bold text-[15px]">{item.value}</p>
-                    )}
-                    <p className="text-gray-400 text-sm mt-1 font-medium">{item.description}</p>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[10px] font-bold text-[#0A0A0F]/30 uppercase tracking-widest mb-0.5">{item.title}</p>
+                    <a href={item.link} className="text-[14px] font-bold text-[#0A0A0F] hover:text-[#FF6A00] truncate block">
+                      {item.value}
+                    </a>
                   </div>
                 </div>
-              ))}
-            </div>
+              </Card>
+            ))}
 
+            <Card variant="dark" padding={false} className="p-6 border-none shadow-xl">
+               <div className="flex items-center gap-2 mb-4">
+                  <Sparkles size={14} className="text-[#FF6A00]" />
+                  <span className="text-[10px] font-bold text-white/40 uppercase tracking-widest">Priority Node</span>
+               </div>
+               <p className="text-[13px] text-white/60 font-medium leading-relaxed mb-6">
+                 Merchants with active nodes receive priority technical support 
+                 within the deployment dashboard.
+               </p>
+               <Button variant="outline" className="w-full border-white/10 text-white hover:bg-white/5 h-10">Documentation</Button>
+            </Card>
           </div>
 
           {/* Contact Form */}
-          <div className="lg:col-span-2">
-            <div className="bg-white rounded-[48px] border border-black/[0.05] p-8 md:p-16 shadow-2xl shadow-black/[0.03] relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-64 h-64 bg-[#FAFAF8] rounded-full blur-3xl -z-10 translate-x-1/2 -translate-y-1/2 opacity-50" />
-              
-              {submitted ? (
-                <div className="text-center py-20 animate-in zoom-in-95 duration-500">
-                  <div className="w-24 h-24 rounded-full bg-green-50 flex items-center justify-center text-green-500 mx-auto mb-8">
-                    <CheckCircle2 size={48} />
+          <Card className="lg:col-span-8 p-0 border-none shadow-2xl overflow-hidden">
+             <div className="bg-white p-8 md:p-12">
+                {submitted ? (
+                  <div className="text-center py-20 animate-in zoom-in-95 duration-500">
+                    <div className="w-16 h-16 rounded-2xl bg-emerald-500/10 flex items-center justify-center text-emerald-500 mx-auto mb-8">
+                      <CircleCheckBig size={32} />
+                    </div>
+                    <h2 className="text-[28px] font-bold text-[#0A0A0F] mb-3 tracking-tight">Transmission Received</h2>
+                    <p className="text-[#0A0A0F]/45 font-medium text-[15px] mb-10 max-w-sm mx-auto leading-relaxed">
+                      Your inquiry has been successfully indexed. Our team will contact your node shortly.
+                    </p>
+                    <Button variant="outline" onClick={() => setSubmitted(false)}>Send New Inquiry</Button>
                   </div>
-                  <h2 className="text-3xl font-black text-[#1A1F36] mb-4">Message Sent!</h2>
-                  <p className="text-gray-500 font-medium text-lg mb-8 max-w-sm mx-auto">
-                    Thank you for reaching out. Our team will get back to you shortly.
-                  </p>
-                  <Button variant="outline" onClick={() => setSubmitted(false)}>Send Another Message</Button>
-                </div>
-              ) : (
-                <form onSubmit={handleSubmit} className="space-y-8">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="space-y-3">
-                       <label className="text-[11px] font-black text-[#1A1F36] uppercase tracking-[0.2em] ml-1">Full Name</label>
+                ) : (
+                  <form onSubmit={handleSubmit} className="space-y-10">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                        <Input 
+                         label="Merchant Name"
                          name="name"
                          value={formData.name}
                          onChange={handleChange}
-                         placeholder="John Doe" 
+                         placeholder="e.g. Alex Rivera" 
                          required 
                        />
-                    </div>
-                    <div className="space-y-3">
-                       <label className="text-[11px] font-black text-[#1A1F36] uppercase tracking-[0.2em] ml-1">Email Address</label>
                        <Input 
+                         label="Contact Identity"
                          name="email"
                          type="email" 
                          value={formData.email}
                          onChange={handleChange}
-                         placeholder="john@example.com" 
+                         placeholder="name@company.com" 
                          required 
                        />
                     </div>
-                  </div>
-                  <div className="space-y-3">
-                    <label className="text-[11px] font-black text-[#1A1F36] uppercase tracking-[0.2em] ml-1">Subject</label>
                     <Input 
+                      label="Inquiry Subject"
                       name="subject"
                       value={formData.subject}
                       onChange={handleChange}
-                      placeholder="Inquiry about Shop Listing" 
+                      placeholder="e.g. API Integration, Node Deployment" 
                       required 
                     />
-                  </div>
-                  <div className="space-y-3">
-                    <label className="text-[11px] font-black text-[#1A1F36] uppercase tracking-[0.2em] ml-1">Your Message</label>
                     <Textarea 
+                      label="Message Payload"
                       name="message"
                       value={formData.message}
                       onChange={handleChange}
-                      placeholder="How can we help you?" 
+                      placeholder="Describe your technical requirements..." 
                       rows={6} 
                       required 
                     />
-                  </div>
-                  <div className="pt-4">
-                    <Button 
-                      size="xl" 
-                      className="w-full md:w-auto" 
-                      icon={Send} 
-                      iconPosition="right" 
-                      type="submit"
-                      disabled={loading}
-                    >
-                      {loading ? "Sending..." : "Send Message"}
-                    </Button>
-                  </div>
-                </form>
-              )}
-            </div>
-          </div>
+                    <div className="pt-4 flex items-center justify-between gap-4">
+                      <div className="flex items-center gap-2 text-[#0A0A0F]/20">
+                         <Layout size={14} />
+                         <span className="text-[11px] font-bold uppercase tracking-widest">SaaS Suite</span>
+                      </div>
+                      <Button 
+                        size="lg" 
+                        icon={Send} 
+                        iconPosition="right" 
+                        type="submit"
+                        disabled={loading}
+                        className="px-10 h-12 shadow-xl"
+                      >
+                        {loading ? "Transmitting..." : "Send Message"}
+                      </Button>
+                    </div>
+                  </form>
+                )}
+             </div>
+          </Card>
 
         </div>
       </section>

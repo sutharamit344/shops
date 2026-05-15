@@ -158,6 +158,7 @@ const DatabaseManager = () => {
           clusterType: cluster,
           city: "Ahmedabad",
           state: "Gujarat",
+          country: "India",
           area: area.name,
           pincode: area.pincode,
           village: "",
@@ -165,8 +166,13 @@ const DatabaseManager = () => {
           building: building,
           shopNo: `G-${Math.floor(Math.random() * 50) + 1}`,
           phone: `9${Math.floor(Math.random() * 900000000) + 100000000}`,
-          description: `Experience professional ${cat.name.toLowerCase()} services in the heart of ${area.name}. We pride ourselves on quality and customer satisfaction.`,
+          whatsapp: `9${Math.floor(Math.random() * 900000000) + 100000000}`,
+          ownerEmail: `contact_${i}@${slugify(shopName)}.com`,
+          description: `Experience professional ${cat.name.toLowerCase()} services in the heart of ${area.name}. We pride ourselves on quality and customer satisfaction. Welcome to your one-stop solution for all ${cat.name} needs in Ahmedabad.`,
           rating: (Math.random() * (5.0 - 4.0) + 4.0).toFixed(1),
+          avgRating: parseFloat((Math.random() * (5.0 - 3.5) + 3.5).toFixed(1)),
+          totalRatings: Math.floor(Math.random() * 200) + 10,
+          views: Math.floor(Math.random() * 5000) + 100,
           status: "approved",
           createdAt: serverTimestamp(),
           approvedAt: serverTimestamp(),
@@ -176,9 +182,13 @@ const DatabaseManager = () => {
           coverImage: cat.img,
           ownerId: "pro_seeder",
           isCertified: Math.random() > 0.3,
+          isVerified: true,
           businessHours: "10:00 AM - 8:00 PM",
           primaryColor: "#FF6A00",
-          secondaryColor: "#1A1F36"
+          secondaryColor: "#0A0A0F",
+          businessType: ["product", "service", "mixed"][Math.floor(Math.random() * 3)],
+          socialLinks: [],
+          mapEmbed: ""
         };
 
         await addDoc(collection(db, "shops"), shopData);
@@ -305,12 +315,12 @@ const DatabaseManager = () => {
     <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-[#1A1F36] tracking-tight mb-2">Database Management</h1>
+          <h1 className="text-3xl font-bold text-[#0A0A0F] tracking-tight mb-2">Database Management</h1>
           <p className="text-[14px] text-[#666]">Monitor collection health and populate testing data.</p>
         </div>
         <button 
           onClick={fetchStats}
-          className="w-12 h-12 bg-white border border-[#1A1F36]/[0.07] rounded-xl flex items-center justify-center hover:border-[#FF6A00]/30 transition-all text-[#1A1F36]/60 shadow-sm"
+          className="w-12 h-12 bg-white border border-[#0A0A0F]/[0.07] rounded-lg flex items-center justify-center hover:border-[#FF6A00]/30 transition-all text-[#0A0A0F]/60 shadow-sm"
         >
           <RefreshCw size={20} className={loading ? "animate-spin text-[#FF6A00]" : ""} />
         </button>
@@ -320,14 +330,14 @@ const DatabaseManager = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {[
           { id: "shops", label: "Total Shops", count: stats.shops, icon: Package, color: "#FF6A00" },
-          { id: "locations", label: "Cached Locations", count: stats.locations, icon: MapPin, color: "#1A1F36" },
+          { id: "locations", label: "Cached Locations", count: stats.locations, icon: MapPin, color: "#0A0A0F" },
           { id: "categories", label: "Categories", count: stats.categories, icon: Tag, color: "#25D366" },
           { id: "clusters", label: "Clusters", count: stats.clusters, icon: ShieldCheck, color: "#6366f1" }
         ].map((item, i) => (
-          <div key={i} className="bg-white p-6 rounded-3xl border border-[#1A1F36]/[0.06] shadow-sm flex items-center justify-between group">
+          <div key={i} className="bg-white p-6 rounded-3xl border border-[#0A0A0F]/[0.06] shadow-sm flex items-center justify-between group">
             <div className="space-y-1">
               <p className="text-[10px] font-bold text-[#999] uppercase tracking-widest">{item.label}</p>
-              <h2 className="text-2xl font-black text-[#1A1F36]">{loading ? "..." : item.count}</h2>
+              <h2 className="text-2xl font-black text-[#0A0A0F]">{loading ? "..." : item.count}</h2>
             </div>
             <div className="flex flex-col items-center gap-2">
               <div 
@@ -351,17 +361,17 @@ const DatabaseManager = () => {
       {/* Migration Tools */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Geocode Shops */}
-        <div className="bg-white rounded-3xl border border-[#1A1F36]/[0.06] p-7 shadow-sm space-y-5">
+        <div className="bg-white rounded-3xl border border-[#0A0A0F]/[0.06] p-7 shadow-sm space-y-5">
           <div className="flex items-center gap-4">
             <div className="w-11 h-11 rounded-2xl bg-blue-50 text-blue-500 flex items-center justify-center flex-shrink-0">
               <Navigation size={20} />
             </div>
             <div>
-              <h3 className="text-[16px] font-bold text-[#1A1F36]">Geocode Missing Shops</h3>
+              <h3 className="text-[16px] font-bold text-[#0A0A0F]">Geocode Missing Shops</h3>
               <p className="text-[12px] text-[#999]">Add lat/lng to all approved shops without coordinates using Nominatim.</p>
             </div>
           </div>
-          <div className="h-28 bg-gray-50 rounded-2xl p-3 overflow-y-auto font-mono text-[10px] text-[#1A1F36]/60 space-y-0.5">
+          <div className="h-28 bg-gray-50 rounded-2xl p-3 overflow-y-auto font-mono text-[10px] text-[#0A0A0F]/60 space-y-0.5">
             {migrationLog.length > 0 ? migrationLog.map((log, i) => (
               <div key={i} className={log.startsWith("✅") ? "text-green-600 font-bold" : log.startsWith("✗") ? "text-red-500" : ""}>{log}</div>
             )) : <div className="text-[#999] italic">Logs will appear here...</div>}
@@ -369,7 +379,7 @@ const DatabaseManager = () => {
           <button
             onClick={handleGeocodeMigration}
             disabled={migrationStatus === "running"}
-            className="w-full h-11 bg-blue-600 text-white rounded-xl font-bold text-[13px] flex items-center justify-center gap-2 hover:bg-blue-700 transition-all disabled:opacity-50"
+            className="w-full h-11 bg-blue-600 text-white rounded-lg font-bold text-[13px] flex items-center justify-center gap-2 hover:bg-blue-700 transition-all disabled:opacity-50"
           >
             {migrationStatus === "running" ? <><Loader2 size={16} className="animate-spin" /> Geocoding... (1 req/sec)</> :
              migrationStatus === "done" ? <><Check size={16} /> Done!</> : "Run Geocoding Job"}
@@ -377,17 +387,17 @@ const DatabaseManager = () => {
         </div>
 
         {/* Migrate Cluster Locations */}
-        <div className="bg-white rounded-3xl border border-[#1A1F36]/[0.06] p-7 shadow-sm space-y-5">
+        <div className="bg-white rounded-3xl border border-[#0A0A0F]/[0.06] p-7 shadow-sm space-y-5">
           <div className="flex items-center gap-4">
             <div className="w-11 h-11 rounded-2xl bg-purple-50 text-purple-500 flex items-center justify-center flex-shrink-0">
               <GitBranch size={20} />
             </div>
             <div>
-              <h3 className="text-[16px] font-bold text-[#1A1F36]">Migrate Cluster Locations</h3>
+              <h3 className="text-[16px] font-bold text-[#0A0A0F]">Migrate Cluster Locations</h3>
               <p className="text-[12px] text-[#999]">Backfill area, city, and lat/lng onto cluster documents from their assigned shops.</p>
             </div>
           </div>
-          <div className="h-28 bg-gray-50 rounded-2xl p-3 overflow-y-auto font-mono text-[10px] text-[#1A1F36]/60 space-y-0.5">
+          <div className="h-28 bg-gray-50 rounded-2xl p-3 overflow-y-auto font-mono text-[10px] text-[#0A0A0F]/60 space-y-0.5">
             {clusterMigLog.length > 0 ? clusterMigLog.map((log, i) => (
               <div key={i} className={log.startsWith("✅") ? "text-green-600 font-bold" : log.startsWith("✗") ? "text-red-500" : ""}>{log}</div>
             )) : <div className="text-[#999] italic">Logs will appear here...</div>}
@@ -395,7 +405,7 @@ const DatabaseManager = () => {
           <button
             onClick={handleClusterMigration}
             disabled={clusterMigStatus === "running"}
-            className="w-full h-11 bg-purple-600 text-white rounded-xl font-bold text-[13px] flex items-center justify-center gap-2 hover:bg-purple-700 transition-all disabled:opacity-50"
+            className="w-full h-11 bg-purple-600 text-white rounded-lg font-bold text-[13px] flex items-center justify-center gap-2 hover:bg-purple-700 transition-all disabled:opacity-50"
           >
             {clusterMigStatus === "running" ? <><Loader2 size={16} className="animate-spin" /> Migrating...</> :
              clusterMigStatus === "done" ? <><Check size={16} /> Done!</> : "Run Cluster Migration"}
@@ -403,26 +413,26 @@ const DatabaseManager = () => {
         </div>
 
         {/* Seed Logs */}
-        <div className="bg-white rounded-3xl border border-[#1A1F36]/[0.06] p-7 shadow-sm space-y-5">
+        <div className="bg-white rounded-3xl border border-[#0A0A0F]/[0.06] p-7 shadow-sm space-y-5">
           <div className="flex items-center gap-4">
             <div className="w-11 h-11 rounded-2xl bg-emerald-50 text-emerald-500 flex items-center justify-center flex-shrink-0">
               <History size={20} />
             </div>
             <div>
-              <h3 className="text-[16px] font-bold text-[#1A1F36]">Seed Activity Logs</h3>
+              <h3 className="text-[16px] font-bold text-[#0A0A0F]">Seed Activity Logs</h3>
               <p className="text-[12px] text-[#999]">Generate 20 realistic audit logs to test the global activity feed.</p>
             </div>
           </div>
           <div className="h-28 flex items-center justify-center bg-gray-50 rounded-2xl border border-dashed border-gray-200">
              <div className="text-center">
                 <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Status</p>
-                <p className="text-[12px] font-black text-[#1A1F36]">{status === "seeding_logs" ? "Generating..." : "Ready to Seed"}</p>
+                <p className="text-[12px] font-black text-[#0A0A0F]">{status === "seeding_logs" ? "Generating..." : "Ready to Seed"}</p>
              </div>
           </div>
           <button
             onClick={seedLogs}
             disabled={status !== "idle" && status !== "finished"}
-            className="w-full h-11 bg-emerald-600 text-white rounded-xl font-bold text-[13px] flex items-center justify-center gap-2 hover:bg-emerald-700 transition-all disabled:opacity-50"
+            className="w-full h-11 bg-emerald-600 text-white rounded-lg font-bold text-[13px] flex items-center justify-center gap-2 hover:bg-emerald-700 transition-all disabled:opacity-50"
           >
             {status === "seeding_logs" ? <><Loader2 size={16} className="animate-spin" /> Seeding...</> : "Seed 20 Audit Logs"}
           </button>
@@ -432,13 +442,13 @@ const DatabaseManager = () => {
       {/* Seed + Progress */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Seed Actions */}
-        <div className="bg-white p-10 rounded-[40px] border border-[#1A1F36]/[0.06] shadow-sm space-y-8">
+        <div className="bg-white p-10 rounded-[40px] border border-[#0A0A0F]/[0.06] shadow-sm space-y-8">
           <div className="flex items-center gap-4">
             <div className="w-12 h-12 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center">
               <Zap size={24} />
             </div>
             <div>
-              <h3 className="text-xl font-bold text-[#1A1F36]">Quick Seeding</h3>
+              <h3 className="text-xl font-bold text-[#0A0A0F]">Quick Seeding</h3>
               <p className="text-[13px] text-[#666]">Insert fresh realistic data (Adds to existing).</p>
             </div>
           </div>
@@ -454,9 +464,9 @@ const DatabaseManager = () => {
                    key={amount}
                    disabled={status !== "idle" && status !== "finished"}
                    onClick={() => seedData(amount)}
-                   className="h-20 rounded-2xl border-2 border-dashed border-[#1A1F36]/[0.1] hover:border-[#FF6A00] hover:bg-[#FF6A00]/5 transition-all flex flex-col items-center justify-center gap-1 group disabled:opacity-50"
+                   className="h-20 rounded-2xl border-2 border-dashed border-[#0A0A0F]/[0.1] hover:border-[#FF6A00] hover:bg-[#FF6A00]/5 transition-all flex flex-col items-center justify-center gap-1 group disabled:opacity-50"
                  >
-                   <span className="text-xl font-black text-[#1A1F36] group-hover:text-[#FF6A00]">{amount}</span>
+                   <span className="text-xl font-black text-[#0A0A0F] group-hover:text-[#FF6A00]">{amount}</span>
                    <span className="text-[9px] font-bold text-[#999] uppercase tracking-widest">Shops</span>
                  </button>
                ))}
@@ -477,7 +487,7 @@ const DatabaseManager = () => {
                    <FileText size={16} />
                 </div>
                 <div className="text-left">
-                   <span className="block text-sm font-bold text-[#1A1F36]">Seed Premium Blogs</span>
+                   <span className="block text-sm font-bold text-[#0A0A0F]">Seed Premium Blogs</span>
                    <span className="block text-[10px] text-gray-400 font-medium">4 Ready-to-publish articles</span>
                 </div>
              </button>
@@ -494,7 +504,7 @@ const DatabaseManager = () => {
             <button
               onClick={handleWipeAll}
               disabled={status !== "idle" && status !== "finished"}
-              className="w-full h-12 bg-red-600 text-white rounded-xl font-bold text-[13px] hover:bg-red-700 transition-all shadow-lg shadow-red-600/20 flex items-center justify-center gap-2"
+              className="w-full h-12 bg-red-600 text-white rounded-lg font-bold text-[13px] hover:bg-red-700 transition-all shadow-lg shadow-red-600/20 flex items-center justify-center gap-2"
             >
               <Trash2 size={16} />
               Wipe All Records
@@ -503,7 +513,7 @@ const DatabaseManager = () => {
         </div>
 
         {/* Progress Display */}
-        <div className="bg-[#1A1F36] p-10 rounded-[40px] shadow-xl flex flex-col justify-center items-center text-center text-white relative overflow-hidden">
+        <div className="bg-[#0A0A0F] p-10 rounded-[40px] shadow-xl flex flex-col justify-center items-center text-center text-white relative overflow-hidden">
           <div className="absolute top-0 right-0 p-10 opacity-5">
             <Database size={200} />
           </div>
@@ -554,3 +564,4 @@ const DatabaseManager = () => {
 };
 
 export default DatabaseManager;
+

@@ -1,4 +1,4 @@
-import { Plus_Jakarta_Sans } from "next/font/google";
+import { Inter } from "next/font/google";
 import "./globals.css";
 import ReduxProvider from "@/redux/ReduxProvider";
 import AuthInit from "@/components/AuthInit";
@@ -10,17 +10,17 @@ import Toast from "@/components/UI/Toast";
 import { BRAND, DOMAIN } from "@/lib/config";
 import AppWrapper from "@/components/AppWrapper";
 
-const jakarta = Plus_Jakarta_Sans({
+const inter = Inter({
   subsets: ["latin"],
   variable: "--font-sans",
 });
 
 export const metadata = {
   title: {
-    default: `${BRAND} – Discover Local Shops`,
+    default: `${BRAND} – Take Your Local Business Online`,
     template: `%s | ${BRAND}`,
   },
-  description: "Find shops, services, and businesses near you",
+  description: "ShopBajar is a modern digital platform empowering local shops, retailers, and wholesalers to build their online store, manage catalogs, and grow their business with direct WhatsApp integration.",
   metadataBase: new URL(DOMAIN),
   alternates: {
     canonical: "/",
@@ -46,7 +46,7 @@ export const metadata = {
 };
 
 export const viewport = {
-  themeColor: "#0F172A",
+  themeColor: "#0A0A0F",
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,
@@ -54,8 +54,8 @@ export const viewport = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en" className={`${jakarta.variable} h-full`}>
-      <body className="font-sans antialiased min-h-screen bg-cream text-navy">
+    <html lang="en" className={`${inter.variable} h-full`}>
+      <body className="font-sans antialiased min-h-screen bg-[#F7F7F5] text-[#0A0A0F]">
         <ReduxProvider>
           <AuthInit />
           <LocationInit />

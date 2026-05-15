@@ -46,7 +46,7 @@ const AdminNavbar = ({ activeTab, onTabChange }) => {
           {/* Admin Identity */}
           <div className="flex items-center gap-10">
             <Link href="/" className="flex items-center gap-2.5 group">
-              <div className="w-9 h-9 bg-[#FF6A00] rounded-xl flex items-center justify-center shadow-lg shadow-[#FF6A00]/20 group-hover:scale-105 transition-transform">
+              <div className="w-9 h-9 bg-[#FF6A00] rounded-lg flex items-center justify-center shadow-lg shadow-[#FF6A00]/20 group-hover:scale-105 transition-transform">
                 <ShieldCheck size={18} className="text-white" />
               </div>
               <div className="flex flex-col">
@@ -61,7 +61,7 @@ const AdminNavbar = ({ activeTab, onTabChange }) => {
                  <button
                    key={item.id}
                    onClick={() => onTabChange(item.id)}
-                   className={`px-5 py-2.5 rounded-xl text-[11px] font-bold uppercase tracking-wider transition-all flex items-center gap-2.5 ${
+                   className={`px-5 py-2.5 rounded-lg text-[11px] font-bold uppercase tracking-wider transition-all flex items-center gap-2.5 ${
                      activeTab === item.id 
                       ? "bg-[#0F0F0F] text-white shadow-lg" 
                       : "text-[#666] hover:text-[#0F0F0F] hover:bg-gray-50"
@@ -82,7 +82,7 @@ const AdminNavbar = ({ activeTab, onTabChange }) => {
 
             <button 
               onClick={logout}
-              className="flex items-center gap-2 px-5 py-2.5 bg-red-50 text-red-600 rounded-xl border border-red-100 hover:bg-red-600 hover:text-white transition-all text-[11px] font-bold uppercase tracking-wider"
+              className="flex items-center gap-2 px-5 py-2.5 bg-red-50 text-red-600 rounded-lg border border-red-100 hover:bg-red-600 hover:text-white transition-all text-[11px] font-bold uppercase tracking-wider"
             >
               <LogOut size={14} /> Exit
             </button>
@@ -90,7 +90,7 @@ const AdminNavbar = ({ activeTab, onTabChange }) => {
             {/* Mobile Toggle */}
             <button 
               onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="lg:hidden w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center text-[#0F0F0F] transition-all"
+              className="lg:hidden w-10 h-10 rounded-lg bg-gray-50 flex items-center justify-center text-[#0F0F0F] transition-all"
             >
               {isMenuOpen ? <X size={20} /> : <Menu size={20} />}
             </button>
@@ -106,7 +106,7 @@ const AdminNavbar = ({ activeTab, onTabChange }) => {
                 <button
                   key={item.id}
                   onClick={() => { onTabChange(item.id); setIsMenuOpen(false); }}
-                  className={`w-full flex items-center gap-4 px-5 py-4 rounded-xl text-[12px] font-bold uppercase tracking-wider transition-all ${
+                  className={`w-full flex items-center gap-4 px-5 py-4 rounded-lg text-[12px] font-bold uppercase tracking-wider transition-all ${
                     activeTab === item.id 
                       ? "bg-[#0F0F0F] text-white shadow-xl" 
                       : "text-[#666] hover:text-[#0F0F0F] hover:bg-gray-50"
@@ -117,7 +117,7 @@ const AdminNavbar = ({ activeTab, onTabChange }) => {
                 </button>
               ))}
               <div className="h-[1px] bg-black/[0.06] my-4"></div>
-              <Link href="/" className="w-full flex items-center gap-4 px-5 py-4 rounded-xl text-[12px] font-bold text-[#666] uppercase tracking-wider">
+              <Link href="/" className="w-full flex items-center gap-4 px-5 py-4 rounded-lg text-[12px] font-bold text-[#666] uppercase tracking-wider">
                 <ExternalLink size={18} /> Public View
               </Link>
            </div>

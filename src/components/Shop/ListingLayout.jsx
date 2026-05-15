@@ -18,17 +18,17 @@ const ListingLayout = ({ shops = [], title, subtitle, city, type }) => {
           <p className="text-[11px] font-bold text-[#FF6A00] uppercase tracking-[0.15em] mb-2">Marketplace Directory</p>
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
             <div>
-              <h1 className="text-3xl md:text-5xl font-extrabold text-[#1A1F36] tracking-tight leading-tight mb-2">
+              <h1 className="text-3xl md:text-5xl font-extrabold text-[#0A0A0F] tracking-tight leading-tight mb-2">
                 {title}
               </h1>
-              <p className="text-[16px] text-[#1A1F36]/50 font-medium max-w-2xl leading-relaxed">
+              <p className="text-[16px] text-[#0A0A0F]/50 font-medium max-w-2xl leading-relaxed">
                 {subtitle || `Discover the best local ${type || 'businesses'} and services curated specifically for your needs.`}
               </p>
             </div>
             {city && (
-              <div className="flex items-center gap-2 px-4 py-2 bg-white rounded-full border border-[#1A1F36]/[0.06] shadow-sm">
+              <div className="flex items-center gap-2 px-4 py-2 bg-white rounded-full border border-[#0A0A0F]/[0.06] shadow-sm">
                 <MapPin size={14} className="text-[#FF6A00]" />
-                <span className="text-[12px] font-bold text-[#1A1F36] uppercase tracking-wider">
+                <span className="text-[12px] font-bold text-[#0A0A0F] uppercase tracking-wider">
                   Verified in {city}
                 </span>
               </div>
@@ -37,13 +37,13 @@ const ListingLayout = ({ shops = [], title, subtitle, city, type }) => {
         </header>
 
         {shops.length === 0 ? (
-          <div className="text-center py-24 bg-white rounded-[32px] border border-[#1A1F36]/[0.06] shadow-sm flex flex-col items-center gap-6">
-            <div className="w-20 h-20 bg-[#FAFAF8] rounded-[24px] flex items-center justify-center text-[#1A1F36]/10">
+          <div className="text-center py-24 bg-white rounded-[32px] border border-[#0A0A0F]/[0.06] shadow-sm flex flex-col items-center gap-6">
+            <div className="w-20 h-20 bg-[#FAFAF8] rounded-[24px] flex items-center justify-center text-[#0A0A0F]/10">
                <Search size={36} />
             </div>
             <div>
-              <h3 className="text-xl font-bold text-[#1A1F36] mb-1">No businesses found</h3>
-              <p className="text-[14px] text-[#1A1F36]/40 font-medium">We couldn't find any approved shops matching this {type || 'category'} yet.</p>
+              <h3 className="text-xl font-bold text-[#0A0A0F] mb-1">No businesses found</h3>
+              <p className="text-[14px] text-[#0A0A0F]/40 font-medium">We couldn't find any approved shops matching this {type || 'category'} yet.</p>
             </div>
             <Link href="/explore">
               <Button variant="primary" icon={ChevronRight} iconPosition="right">Explore All Shops</Button>
@@ -64,3 +64,4 @@ const ListingLayout = ({ shops = [], title, subtitle, city, type }) => {
 };
 
 export default ListingLayout;
+

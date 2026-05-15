@@ -97,7 +97,7 @@ const BlogSingleClient = ({ blog }) => {
         {/* Article Header Section */}
         <header className="max-w-4xl mx-auto px-5 md:px-6 mb-8 md:mb-16">
           <div className="flex items-center gap-4 mb-6 md:mb-10">
-            <Link href="/blog" className="flex items-center gap-2 text-[10px] md:text-[11px] font-black text-[#1A1F36]/40 uppercase tracking-widest hover:text-[#FF6A00] transition-colors group">
+            <Link href="/blog" className="flex items-center gap-2 text-[10px] md:text-[11px] font-black text-[#0A0A0F]/40 uppercase tracking-widest hover:text-[#FF6A00] transition-colors group">
               <ArrowLeft size={14} className="group-hover:-translate-x-1 transition-transform" />
               Journal
             </Link>
@@ -105,17 +105,17 @@ const BlogSingleClient = ({ blog }) => {
             <span className="text-[10px] md:text-[11px] font-black text-[#FF6A00] uppercase tracking-widest">{blog.category || "Insight"}</span>
           </div>
 
-          <h1 className="text-3xl md:text-6xl lg:text-7xl font-black text-[#1A1F36] mb-6 md:mb-10 leading-[1.1] tracking-tight">
+          <h1 className="text-3xl md:text-6xl lg:text-7xl font-black text-[#0A0A0F] mb-6 md:mb-10 leading-[1.1] tracking-tight">
             {blog.title}
           </h1>
 
           <div className="flex flex-wrap items-center justify-between gap-6 pb-6 md:pb-10 border-b border-black/5">
             <div className="flex items-center gap-3 md:gap-4">
-              <div className="w-10 h-10 md:w-14 md:h-14 rounded-full bg-[#FAFAF8] border border-black/5 flex items-center justify-center text-[#1A1F36]/20 relative overflow-hidden">
+              <div className="w-10 h-10 md:w-14 md:h-14 rounded-full bg-[#FAFAF8] border border-black/5 flex items-center justify-center text-[#0A0A0F]/20 relative overflow-hidden">
                 <Image src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${blog.author}`} alt={blog.author} fill className="object-cover opacity-80" />
               </div>
               <div>
-                <p className="text-[11px] md:text-[13px] font-black text-[#1A1F36] uppercase tracking-wider mb-0.5">{blog.author || "ShopBajar Editorial"}</p>
+                <p className="text-[11px] md:text-[13px] font-black text-[#0A0A0F] uppercase tracking-wider mb-0.5">{blog.author || "ShopBajar Editorial"}</p>
                 <div className="flex items-center gap-2 text-[9px] md:text-[10px] text-gray-400 font-bold uppercase tracking-widest">
                   <span>{formattedDate}</span>
                   <span className="w-0.5 h-0.5 rounded-full bg-black/10"></span>
@@ -125,13 +125,13 @@ const BlogSingleClient = ({ blog }) => {
             </div>
 
             <div className="flex items-center gap-2 md:gap-3">
-               <button onClick={copyToClipboard} className="w-9 h-9 md:w-10 md:h-10 rounded-full bg-[#FAFAF8] border border-black/5 flex items-center justify-center text-[#1A1F36]/60 hover:bg-[#1A1F36] hover:text-white transition-all">
+               <button onClick={copyToClipboard} className="w-9 h-9 md:w-10 md:h-10 rounded-full bg-[#FAFAF8] border border-black/5 flex items-center justify-center text-[#0A0A0F]/60 hover:bg-[#0A0A0F] hover:text-white transition-all">
                  {copied ? <CheckCircle2 size={16} className="text-emerald-500" /> : <Copy size={16} />}
                </button>
-               <button className="w-9 h-9 md:w-10 md:h-10 rounded-full bg-[#FAFAF8] border border-black/5 flex items-center justify-center text-[#1A1F36]/60 hover:bg-[#1877F2] hover:text-white transition-all">
+               <button className="w-9 h-9 md:w-10 md:h-10 rounded-full bg-[#FAFAF8] border border-black/5 flex items-center justify-center text-[#0A0A0F]/60 hover:bg-[#1877F2] hover:text-white transition-all">
                  <FacebookIcon size={16} />
                </button>
-               <button className="w-9 h-9 md:w-10 md:h-10 rounded-full bg-[#FAFAF8] border border-black/5 flex items-center justify-center text-[#1A1F36]/60 hover:bg-[#1DA1F2] hover:text-white transition-all">
+               <button className="w-9 h-9 md:w-10 md:h-10 rounded-full bg-[#FAFAF8] border border-black/5 flex items-center justify-center text-[#0A0A0F]/60 hover:bg-[#1DA1F2] hover:text-white transition-all">
                  <TwitterIcon size={16} />
                </button>
             </div>
@@ -158,16 +158,16 @@ const BlogSingleClient = ({ blog }) => {
           <aside className="hidden lg:block w-20 flex-shrink-0">
             <div className="sticky top-32 flex flex-col items-center gap-4">
               <span className="text-[10px] font-black text-gray-300 uppercase tracking-widest [writing-mode:vertical-lr] rotate-180 mb-4">Share Story</span>
-              <button onClick={copyToClipboard} title="Copy Link" className="w-12 h-12 rounded-2xl bg-[#FAFAF8] border border-black/5 flex items-center justify-center text-[#1A1F36]/60 hover:bg-emerald-500 hover:text-white hover:border-emerald-500 transition-all shadow-sm">
+              <button onClick={copyToClipboard} title="Copy Link" className="w-12 h-12 rounded-2xl bg-[#FAFAF8] border border-black/5 flex items-center justify-center text-[#0A0A0F]/60 hover:bg-emerald-500 hover:text-white hover:border-emerald-500 transition-all shadow-sm">
                 {copied ? <CheckCircle2 size={20} /> : <Copy size={20} />}
               </button>
-              <button title="Share on Facebook" className="w-12 h-12 rounded-2xl bg-[#FAFAF8] border border-black/5 flex items-center justify-center text-[#1A1F36]/60 hover:bg-[#1877F2] hover:text-white hover:border-[#1877F2] transition-all shadow-sm">
+              <button title="Share on Facebook" className="w-12 h-12 rounded-2xl bg-[#FAFAF8] border border-black/5 flex items-center justify-center text-[#0A0A0F]/60 hover:bg-[#1877F2] hover:text-white hover:border-[#1877F2] transition-all shadow-sm">
                 <FacebookIcon size={20} />
               </button>
-              <button title="Share on Twitter" className="w-12 h-12 rounded-2xl bg-[#FAFAF8] border border-black/5 flex items-center justify-center text-[#1A1F36]/60 hover:bg-[#1DA1F2] hover:text-white hover:border-[#1DA1F2] transition-all shadow-sm">
+              <button title="Share on Twitter" className="w-12 h-12 rounded-2xl bg-[#FAFAF8] border border-black/5 flex items-center justify-center text-[#0A0A0F]/60 hover:bg-[#1DA1F2] hover:text-white hover:border-[#1DA1F2] transition-all shadow-sm">
                 <TwitterIcon size={20} />
               </button>
-              <button title="Share on LinkedIn" className="w-12 h-12 rounded-2xl bg-[#FAFAF8] border border-black/5 flex items-center justify-center text-[#1A1F36]/60 hover:bg-[#0A66C2] hover:text-white hover:border-[#0A66C2] transition-all shadow-sm">
+              <button title="Share on LinkedIn" className="w-12 h-12 rounded-2xl bg-[#FAFAF8] border border-black/5 flex items-center justify-center text-[#0A0A0F]/60 hover:bg-[#0A66C2] hover:text-white hover:border-[#0A66C2] transition-all shadow-sm">
                 <LinkedinIcon size={20} />
               </button>
             </div>
@@ -182,7 +182,7 @@ const BlogSingleClient = ({ blog }) => {
             />
 
             {/* Newsletter Subscription Inside Content */}
-            <div className="my-20 p-10 md:p-14 bg-[#1A1F36] rounded-[32px] md:rounded-[48px] text-white relative overflow-hidden group">
+            <div className="my-20 p-10 md:p-14 bg-[#0A0A0F] rounded-[32px] md:rounded-[48px] text-white relative overflow-hidden group">
                <div className="relative z-10 max-w-lg">
                   <h3 className="text-2xl md:text-3xl font-black mb-4 leading-tight">Get insights like this delivered weekly.</h3>
                   <p className="text-white/60 font-medium mb-10 leading-relaxed text-sm">Join 12,000+ business owners receiving the ShopBajar Journal directly in their inbox.</p>
@@ -190,9 +190,9 @@ const BlogSingleClient = ({ blog }) => {
                      <input 
                        type="email" 
                        placeholder="your@email.com" 
-                       className="flex-1 h-12 bg-white/10 border border-white/20 rounded-xl px-6 font-bold focus:outline-none focus:bg-white/20 transition-all placeholder:text-white/30"
+                       className="flex-1 h-12 bg-white/10 border border-white/20 rounded-lg px-6 font-bold focus:outline-none focus:bg-white/20 transition-all placeholder:text-white/30"
                      />
-                     <button className="h-12 bg-[#FF6A00] hover:bg-[#FF8533] text-white font-black px-8 rounded-xl transition-all shadow-xl shadow-[#FF6A00]/20 whitespace-nowrap">
+                     <button className="h-12 bg-[#FF6A00] hover:bg-[#FF8533] text-white font-black px-8 rounded-lg transition-all shadow-xl shadow-[#FF6A00]/20 whitespace-nowrap">
                         Join Journal
                      </button>
                   </form>
@@ -201,11 +201,11 @@ const BlogSingleClient = ({ blog }) => {
 
             {/* Author Footer Card */}
             <div className="flex flex-col sm:flex-row items-center gap-8 py-12 border-y border-black/5 mb-20 text-center sm:text-left">
-               <div className="w-20 h-20 rounded-[24px] bg-[#FAFAF8] border border-black/5 flex items-center justify-center text-[#1A1F36]/20 relative overflow-hidden flex-shrink-0 shadow-lg">
+               <div className="w-20 h-20 rounded-[24px] bg-[#FAFAF8] border border-black/5 flex items-center justify-center text-[#0A0A0F]/20 relative overflow-hidden flex-shrink-0 shadow-lg">
                   <Image src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${blog.author}`} alt={blog.author} fill className="object-cover opacity-80" />
                </div>
                <div>
-                  <h4 className="text-lg font-black text-[#1A1F36] mb-2 uppercase tracking-tight">Written by {blog.author || "Editorial Team"}</h4>
+                  <h4 className="text-lg font-black text-[#0A0A0F] mb-2 uppercase tracking-tight">Written by {blog.author || "Editorial Team"}</h4>
                   <p className="text-gray-500 font-medium leading-relaxed mb-4 text-sm">Dedicated to empowering local shops with digital intelligence and growth strategies.</p>
                </div>
             </div>
@@ -220,9 +220,9 @@ const BlogSingleClient = ({ blog }) => {
             <div className="flex flex-col md:flex-row md:items-end justify-between mb-16 gap-6 text-center md:text-left">
                <div>
                  <p className="text-[10px] font-black text-[#FF6A00] uppercase tracking-[0.2em] mb-4">You might also like</p>
-                 <h2 className="text-3xl lg:text-5xl font-black text-[#1A1F36] tracking-tight">Continue Reading</h2>
+                 <h2 className="text-3xl lg:text-5xl font-black text-[#0A0A0F] tracking-tight">Continue Reading</h2>
                </div>
-               <Link href="/blog" className="group flex items-center gap-3 text-[10px] font-black text-[#1A1F36] uppercase tracking-widest hover:text-[#FF6A00] transition-colors">
+               <Link href="/blog" className="group flex items-center gap-3 text-[10px] font-black text-[#0A0A0F] uppercase tracking-widest hover:text-[#FF6A00] transition-colors">
                  All Journal Articles
                  <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
                </Link>
@@ -239,12 +239,12 @@ const BlogSingleClient = ({ blog }) => {
                       className="object-cover group-hover:scale-110 transition-transform duration-1000"
                     />
                     <div className="absolute top-4 left-4">
-                       <span className="px-3 py-1 bg-white/90 backdrop-blur-md rounded-full text-[8px] font-black text-[#1A1F36] uppercase tracking-widest shadow-sm">
+                       <span className="px-3 py-1 bg-white/90 backdrop-blur-md rounded-full text-[8px] font-black text-[#0A0A0F] uppercase tracking-widest shadow-sm">
                           {item.category}
                        </span>
                     </div>
                   </div>
-                  <h4 className="text-lg lg:text-xl font-black text-[#1A1F36] group-hover:text-[#FF6A00] transition-colors leading-[1.3] mb-3 line-clamp-2 tracking-tight">
+                  <h4 className="text-lg lg:text-xl font-black text-[#0A0A0F] group-hover:text-[#FF6A00] transition-colors leading-[1.3] mb-3 line-clamp-2 tracking-tight">
                     {item.title}
                   </h4>
                   <div className="flex items-center gap-3 text-[9px] font-bold text-gray-400 uppercase tracking-widest">

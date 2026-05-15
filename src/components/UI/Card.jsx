@@ -1,20 +1,21 @@
 import React from 'react';
 
-const Card = ({ children, className = '', hover = true, variant = 'default', ...props }) => {
-  const baseStyles = 'rounded-2xl border transition-all duration-300';
+const Card = ({ children, className = '', hover = true, variant = 'default', padding = true, ...props }) => {
+  const baseStyles = 'rounded-lg border transition-all duration-300 overflow-hidden';
   
   const variants = {
-    default: 'bg-white border-[#1A1F36]/[0.07]',
-    navy: 'bg-[#1A1F36] border-white/10 text-white',
-    cream: 'bg-[#FFF8F3] border-[#1A1F36]/[0.07]',
-    surface: 'bg-[#FAFAF8] border-[#1A1F36]/[0.07]',
+    default: 'bg-white border-black/[0.06] shadow-[0_1px_3px_rgba(0,0,0,0.04)]',
+    dark: 'bg-[#0A0A0F] border-white/[0.08] text-white',
+    muted: 'bg-black/[0.02] border-black/[0.05]',
+    glass: 'bg-white/70 backdrop-blur-xl border-white/30 shadow-sm',
   };
 
-  const hoverStyles = hover ? 'hover:border-[#FF6A00]/30 hover:-translate-y-0.5' : '';
+  const hoverStyles = hover ? 'hover:border-black/[0.12] hover:shadow-[0_4px_20px_rgba(0,0,0,0.04)]' : '';
+  const paddingStyle = padding ? 'p-4 md:p-6' : '';
 
   return (
     <div 
-      className={`${baseStyles} ${variants[variant]} ${hoverStyles} ${className}`} 
+      className={`${baseStyles} ${variants[variant] || variants.default} ${hoverStyles} ${paddingStyle} ${className}`} 
       {...props}
     >
       {children}

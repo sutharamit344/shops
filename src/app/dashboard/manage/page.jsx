@@ -17,8 +17,8 @@ import {
   Share2,
   TrendingUp,
   Clock,
-  CheckCircle2,
-  AlertCircle,
+  CircleCheckBig,
+  CircleAlert,
   QrCode,
   ExternalLink,
   MapPin,
@@ -388,10 +388,10 @@ function ShopDashboardContent() {
 
   if (authLoading || loading) {
     return (
-      <div className="min-h-screen bg-[#FAFAF8] flex items-center justify-center">
+      <div className="min-h-screen bg-[#F7F7F5] flex items-center justify-center">
         <div className="text-center">
-          <div className="w-10 h-10 border-2 border-[#FF6A00] border-t-transparent animate-spin rounded-full mx-auto mb-4"></div>
-          <p className="text-[11px] font-semibold text-[#999]">Loading...</p>
+          <div className="w-8 h-8 border-2 border-[#FF6A00] border-t-transparent animate-spin rounded-full mx-auto mb-4"></div>
+          <p className="text-[10px] font-bold text-[#0A0A0F]/20 uppercase tracking-[0.2em]">Loading Business...</p>
         </div>
       </div>
     );
@@ -399,16 +399,16 @@ function ShopDashboardContent() {
 
   if (!shop) {
     return (
-      <div className="min-h-screen bg-[#FAFAF8] flex flex-col items-center justify-center text-center">
-        <div className="w-20 h-20 bg-gray-50 rounded-2xl flex items-center justify-center mb-6">
-          <AlertCircle size={40} className="text-[#ccc]" />
+      <div className="min-h-screen bg-[#F7F7F5] flex flex-col items-center justify-center text-center">
+        <div className="w-16 h-16 bg-black/[0.02] border border-black/[0.05] rounded-2xl flex items-center justify-center mb-6">
+          <CircleAlert size={32} className="text-[#0A0A0F]/15" />
         </div>
-        <h1 className="text-2xl font-bold text-[#0F0F0F] mb-2">Business Not Found</h1>
-        <p className="text-[14px] text-[#666] mb-8 max-w-sm">
-          We couldn't locate this business in your portfolio.
+        <h1 className="text-[24px] font-bold text-[#0A0A0F] mb-2 tracking-tight">Business Not Found</h1>
+        <p className="text-[13px] text-[#0A0A0F]/40 font-medium mb-8 max-w-sm">
+          This business profile could not be located in your merchant portfolio.
         </p>
-        <Link href="/dashboard" className="px-6 py-2.5 bg-[#0F0F0F] text-white text-[13px] font-semibold rounded-xl">
-          Return to Dashboard
+        <Link href="/dashboard" className="px-6 py-2.5 bg-[#0A0A0F] text-white text-[13px] font-bold rounded-lg">
+          Return to Console
         </Link>
       </div>
     );
@@ -417,7 +417,7 @@ function ShopDashboardContent() {
   const catalogCount = shop.menu?.reduce((acc, cat) => acc + (cat.items?.length || 0), 0) || 0;
 
   return (
-    <div className="min-h-screen bg-[#FAFAF8]">
+    <div className="min-h-screen bg-[#F7F7F5] selection:bg-[#FF6A00]/10 selection:text-[#FF6A00]">
       <Navbar />
 
       <main className="max-w-7xl mx-auto md:px-8 pt-28 pb-16">
@@ -426,30 +426,30 @@ function ShopDashboardContent() {
           <div className="flex items-center gap-3">
             <Link
               href="/dashboard"
-              className="w-9 h-9 rounded-xl bg-white border border-black/[0.06] flex items-center justify-center text-[#666] hover:text-[#0F0F0F] hover:bg-gray-50 transition-all"
+              className="w-9 h-9 rounded-lg bg-white border border-black/[0.05] flex items-center justify-center text-[#0A0A0F]/40 hover:text-[#0A0A0F] hover:border-black/[0.1] transition-all"
             >
               <ArrowLeft size={16} />
             </Link>
             <div>
               <div className="flex items-center gap-2 mb-1">
-                <h1 className="text-xl font-bold text-[#0F0F0F]">{shop.name}</h1>
-                <span className={`px-2 py-0.5 rounded-lg text-[8px] font-semibold ${shop.status === 'approved'
-                  ? 'bg-green-50 text-green-600'
-                  : 'bg-[#FF6A00]/10 text-[#FF6A00]'
-                  }`}>
-                  {shop.status}
+                <h1 className="text-[20px] font-bold text-[#0A0A0F] tracking-tight">{shop.name}</h1>
+                <span className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider ${
+                  shop.status === 'approved' ? 'bg-emerald-500/10 text-emerald-600' :
+                  shop.status === 'rejected' ? 'bg-red-500/10 text-red-600' : 'bg-amber-500/10 text-amber-600'
+                }`}>
+                  {shop.status === 'approved' ? 'Operational' : shop.status === 'rejected' ? 'Rejected' : 'Provisioning'}
                 </span>
               </div>
-              <div className="flex items-center gap-2 text-[11px] text-[#666]">
+              <div className="flex items-center gap-2 text-[12px] text-[#0A0A0F]/40 font-medium">
                 <span className="flex items-center gap-1"><Building2 size={11} /> {shop.category}</span>
-                <span className="w-1 h-1 rounded-full bg-[#ccc]" />
+                <span className="w-1 h-1 rounded-full bg-black/10" />
                 <span className="flex items-center gap-1"><MapPin size={11} /> {shop.city}</span>
               </div>
             </div>
           </div>
 
           {/* Tab Navigation */}
-          <div className="flex gap-1 bg-white p-1 rounded-xl border border-black/[0.06]">
+          <div className="flex gap-1 bg-white p-1 rounded-lg border border-black/[0.05] shadow-sm overflow-x-auto">
             {[
               { id: "overview", label: "Overview", icon: LayoutDashboard },
               { id: "catalog", label: "Catalog", icon: ListFilter },
@@ -461,10 +461,11 @@ function ShopDashboardContent() {
               <button
                 key={tab.id}
                 onClick={() => setActiveView(tab.id)}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold transition-all ${activeView === tab.id
-                  ? "bg-[#0F0F0F] text-white"
-                  : "text-[#666] hover:bg-gray-50"
-                  }`}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-bold transition-all whitespace-nowrap ${
+                  activeView === tab.id
+                    ? "bg-[#0A0A0F] text-white shadow-md"
+                    : "text-[#0A0A0F]/40 hover:bg-black/[0.03] hover:text-[#0A0A0F]"
+                }`}
               >
                 <tab.icon size={13} />
                 <span className="hidden sm:inline">{tab.label}</span>
@@ -479,19 +480,19 @@ function ShopDashboardContent() {
             {/* Stats Grid */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {[
-                { label: "Total Views", value: shop.views || 0, icon: Eye, color: "#FF6A00" },
-                { label: "WhatsApp Leads", value: shop.leads || 0, icon: MessageSquare, color: "#25D366" },
-                { label: "Rating", value: shop.avgRating || "5.0", icon: Star, color: "#FFB800" },
-                { label: "Catalog Items", value: catalogCount, icon: ShoppingBag, color: "#888" },
+                { label: "Total Views", value: shop.views || 0, icon: Eye },
+                { label: "WhatsApp Leads", value: shop.leads || 0, icon: MessageSquare },
+                { label: "Avg Rating", value: shop.avgRating || "5.0", icon: Star },
+                { label: "Catalog Items", value: catalogCount, icon: ShoppingBag },
               ].map((stat, i) => (
-                <div key={i} className="bg-white p-4 rounded-xl border border-black/[0.06]">
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center" style={{ color: stat.color }}>
+                <div key={i} className="bg-white p-4 rounded-lg border border-black/[0.05] shadow-sm">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="w-8 h-8 rounded-lg bg-[#FF6A00]/5 flex items-center justify-center text-[#FF6A00]">
                       <stat.icon size={16} />
                     </div>
                   </div>
-                  <div className="text-2xl font-bold text-[#0F0F0F] mb-0.5">{stat.value}</div>
-                  <div className="text-[10px] text-[#999]">{stat.label}</div>
+                  <div className="text-[20px] font-bold text-[#0A0A0F] mb-0.5">{stat.value}</div>
+                  <div className="text-[10px] font-bold text-[#0A0A0F]/30 uppercase tracking-[0.1em]">{stat.label}</div>
                 </div>
               ))}
             </div>
@@ -499,13 +500,13 @@ function ShopDashboardContent() {
             {/* Performance Section */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               {/* Chart Card */}
-              <div className="lg:col-span-2 bg-white rounded-xl border border-black/[0.06] p-6">
+              <div className="lg:col-span-2 bg-white rounded-lg border border-black/[0.05] shadow-sm p-6">
                 <div className="flex items-center justify-between mb-4">
                   <div>
-                    <h3 className="text-[13px] font-semibold text-[#0F0F0F]">Weekly Views</h3>
-                    <p className="text-[10px] text-[#999]">Last 7 days performance</p>
+                    <h3 className="text-[13px] font-bold text-[#0A0A0F] tracking-tight">Weekly Views</h3>
+                    <p className="text-[10px] font-medium text-[#0A0A0F]/30">Last 7 days performance</p>
                   </div>
-                  <div className="px-2 py-1 bg-gray-50 rounded-lg text-[9px] font-semibold text-[#666]">Last 7 Days</div>
+                  <div className="px-2 py-1 bg-black/[0.02] border border-black/[0.04] rounded-lg text-[9px] font-bold text-[#0A0A0F]/30 uppercase tracking-widest">Last 7 Days</div>
                 </div>
                 <div className="h-40 flex items-end gap-2">
                   {(() => {
@@ -517,10 +518,10 @@ function ShopDashboardContent() {
                       return (
                         <div key={i} className="flex-1 relative group">
                           <div
-                            className={`w-full transition-all rounded-lg ${isToday ? 'bg-[#FF6A00]' : 'bg-[#FF6A00]/20 hover:bg-[#FF6A00]/60'}`}
+                            className={`w-full transition-all rounded-lg ${isToday ? 'bg-[#FF6A00]' : 'bg-[#FF6A00]/15 hover:bg-[#FF6A00]/50'}`}
                             style={{ height: `${heightPct}%` }}
                           />
-                          <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-[#0F0F0F] text-white text-[9px] px-2 py-1 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10">
+                          <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-[#0A0A0F] text-white text-[9px] px-2 py-1 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10">
                             {s.views} view{s.views !== 1 ? 's' : ''}
                           </div>
                         </div>
@@ -528,20 +529,20 @@ function ShopDashboardContent() {
                     });
                   })()}
                 </div>
-                <div className="flex justify-between mt-3 text-[9px] font-medium text-[#999]">
+                <div className="flex justify-between mt-3 text-[9px] font-bold text-[#0A0A0F]/20 uppercase">
                   {getWeeklyViewStats(shop).map((s, i) => (
-                    <span key={i} className={i === 6 ? 'text-[#FF6A00] font-bold' : ''}>{s.day}</span>
+                    <span key={i} className={i === 6 ? 'text-[#FF6A00]' : ''}>{s.day}</span>
                   ))}
                 </div>
               </div>
 
               {/* QR & Share Card */}
-              <div className="bg-white rounded-xl border border-black/[0.06] p-6 text-center">
-                <div className="w-12 h-12 bg-gray-50 rounded-xl flex items-center justify-center mx-auto mb-3">
-                  <QrCode size={20} className="text-[#FF6A00]" />
+              <div className="bg-white rounded-lg border border-black/[0.05] shadow-sm p-6 text-center">
+                <div className="w-10 h-10 bg-[#FF6A00]/5 rounded-lg flex items-center justify-center mx-auto mb-3">
+                  <QrCode size={18} className="text-[#FF6A00]" />
                 </div>
-                <h3 className="text-[13px] font-semibold text-[#0F0F0F] mb-3">Store Discovery</h3>
-                <div className="bg-gray-50 p-4 rounded-xl mb-3 flex items-center justify-center">
+                <h3 className="text-[13px] font-bold text-[#0A0A0F] tracking-tight mb-3">Business Discovery Code</h3>
+                <div className="bg-black/[0.02] border border-black/[0.04] p-4 rounded-lg mb-3 flex items-center justify-center">
                   <img
                     src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(window.location.origin + "/shop/" + slugify(shop.slug))}`}
                     alt="Store QR"
@@ -552,14 +553,14 @@ function ShopDashboardContent() {
                   <button
                     onClick={handleDownloadQR}
                     disabled={downloadingQR}
-                    className="flex-1 py-2 bg-[#0F0F0F] text-white text-[11px] font-semibold rounded-lg flex items-center justify-center gap-2 hover:bg-black/90 active:scale-95 transition-all disabled:opacity-50"
+                    className="flex-1 py-2 bg-[#0A0A0F] text-white text-[11px] font-bold rounded-lg flex items-center justify-center gap-2 hover:bg-black/80 active:scale-95 transition-all disabled:opacity-50"
                   >
                     {downloadingQR ? (
                       <RefreshCw size={12} className="animate-spin" />
                     ) : (
                       <Upload size={12} className="rotate-180" />
                     )}
-                    Download QR
+                    Download
                   </button>
                   <button
                     onClick={() => {
@@ -571,7 +572,7 @@ function ShopDashboardContent() {
                         type: "success"
                       });
                     }}
-                    className="flex-1 py-2 border border-black/[0.06] text-[11px] font-semibold rounded-lg flex items-center justify-center gap-1"
+                    className="flex-1 py-2 border border-black/[0.06] text-[11px] font-bold rounded-lg flex items-center justify-center gap-1.5 text-[#0A0A0F]/50 hover:text-[#0A0A0F] hover:border-black/[0.1] transition-all"
                   >
                     <Share2 size={12} /> Share
                   </button>
@@ -583,28 +584,28 @@ function ShopDashboardContent() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <button
                 onClick={() => setActiveView("catalog")}
-                className="bg-white p-5 rounded-xl border border-black/[0.06] text-left hover:border-[#FF6A00]/30 transition-all group"
+                className="bg-white p-5 rounded-lg border border-black/[0.05] text-left hover:border-[#FF6A00]/30 hover:shadow-md transition-all group"
               >
-                <div className="w-10 h-10 bg-[#FF6A00]/10 rounded-lg flex items-center justify-center mb-3">
+                <div className="w-10 h-10 bg-[#FF6A00]/5 rounded-lg flex items-center justify-center mb-3">
                   <ListFilter size={18} className="text-[#FF6A00]" />
                 </div>
-                <h3 className="text-[14px] font-semibold text-[#0F0F0F] mb-1">Catalog Manager</h3>
-                <p className="text-[11px] text-[#666]">Update your items, prices, and categories.</p>
-                <div className="mt-3 text-[#FF6A00] text-[11px] font-semibold opacity-0 group-hover:opacity-100 transition-opacity">
+                <h3 className="text-[14px] font-bold text-[#0A0A0F] tracking-tight mb-1">Catalog Manager</h3>
+                <p className="text-[11px] font-medium text-[#0A0A0F]/40">Update your items, prices, and categories.</p>
+                <div className="mt-3 text-[#FF6A00] text-[11px] font-bold opacity-0 group-hover:opacity-100 transition-opacity">
                   Manage Catalog →
                 </div>
               </button>
 
               <button
                 onClick={() => setActiveView("gallery")}
-                className="bg-white p-5 rounded-xl border border-black/[0.06] text-left hover:border-[#FF6A00]/30 transition-all group"
+                className="bg-white p-5 rounded-lg border border-black/[0.05] text-left hover:border-blue-500/30 hover:shadow-md transition-all group"
               >
-                <div className="w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center mb-3">
+                <div className="w-10 h-10 bg-blue-500/5 rounded-lg flex items-center justify-center mb-3">
                   <ImageIcon size={18} className="text-blue-500" />
                 </div>
-                <h3 className="text-[14px] font-semibold text-[#0F0F0F] mb-1">Photo Gallery</h3>
-                <p className="text-[11px] text-[#666]">Showcase your shop with photos.</p>
-                <div className="mt-3 text-[#FF6A00] text-[11px] font-semibold opacity-0 group-hover:opacity-100 transition-opacity">
+                <h3 className="text-[14px] font-bold text-[#0A0A0F] tracking-tight mb-1">Photo Gallery</h3>
+                <p className="text-[11px] font-medium text-[#0A0A0F]/40">Showcase your shop with high-quality photos.</p>
+                <div className="mt-3 text-blue-500 text-[11px] font-bold opacity-0 group-hover:opacity-100 transition-opacity">
                   Upload Photos →
                 </div>
               </button>
@@ -615,17 +616,17 @@ function ShopDashboardContent() {
               const { score, items } = getProfileCompletion(shop);
               if (score === 100) return null;
               return (
-                <div className="bg-white rounded-xl border border-black/[0.06] overflow-hidden">
+                <div className="bg-white rounded-lg border border-black/[0.06] overflow-hidden">
                   <div className="p-5 border-b border-black/[0.04]">
                     <div className="flex items-center justify-between mb-3">
                       <div>
-                        <h3 className="text-[13px] font-bold text-[#0F0F0F]">Complete Your Profile</h3>
-                        <p className="text-[10px] text-[#999] mt-0.5">More complete = more customers</p>
+                        <h3 className="text-[13px] font-bold text-[#0A0A0F]">Complete Your Profile</h3>
+                        <p className="text-[10px] text-[#0A0A0F]/30 mt-0.5">More complete = more customers</p>
                       </div>
                       <span className="text-[24px] font-black text-[#FF6A00]">{score}%</span>
                     </div>
                     {/* Progress bar */}
-                    <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                    <div className="h-2 bg-black/[0.04] rounded-full overflow-hidden">
                       <div
                         className="h-full bg-gradient-to-r from-[#FF6A00] to-[#FF9A72] rounded-full transition-all duration-700"
                         style={{ width: `${score}%` }}
@@ -637,22 +638,22 @@ function ShopDashboardContent() {
                       <button
                         key={i}
                         onClick={() => !item.done && setActiveView(item.tab)}
-                        className={`w-full flex items-center gap-3 p-3 rounded-xl text-left transition-all ${item.done ? "opacity-60" : "hover:bg-gray-50 group cursor-pointer"
+                        className={`w-full flex items-center gap-3 p-3 rounded-lg text-left transition-all ${item.done ? "opacity-60" : "hover:bg-black/[0.02] group cursor-pointer"
                           }`}
                       >
                         <div className={`w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 border-2 transition-all ${item.done ? "bg-[#FF6A00] border-[#FF6A00]" : "border-gray-200 group-hover:border-[#FF6A00]/50"
                           }`}>
-                          {item.done && <CheckCircle2 size={12} className="text-white" />}
+                          {item.done && <CircleCheckBig size={12} className="text-white" />}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className={`text-[12px] font-semibold ${item.done ? "line-through text-[#999]" : "text-[#0F0F0F]"
+                          <p className={`text-[12px] font-semibold ${item.done ? "line-through text-[#0A0A0F]/30" : "text-[#0A0A0F]"
                             }`}>{item.label}</p>
                           {!item.done && (
-                            <p className="text-[10px] text-[#999] truncate">{item.hint}</p>
+                            <p className="text-[10px] text-[#0A0A0F]/30 truncate">{item.hint}</p>
                           )}
                         </div>
                         {!item.done && (
-                          <ChevronRight size={13} className="text-[#ccc] group-hover:text-[#FF6A00] transition-colors flex-shrink-0" />
+                          <ChevronRight size={13} className="text-[#0A0A0F]/20 group-hover:text-[#FF6A00] transition-colors flex-shrink-0" />
                         )}
                       </button>
                     ))}
@@ -662,14 +663,14 @@ function ShopDashboardContent() {
             })()}
 
             {/* Growth Tip */}
-            <div className="bg-gradient-to-r from-[#FF6A00]/5 to-transparent rounded-xl p-5 border border-[#FF6A00]/10">
+            <div className="bg-gradient-to-r from-[#FF6A00]/5 to-transparent rounded-lg p-5 border border-[#FF6A00]/10">
               <div className="flex items-start gap-3">
                 <div className="w-8 h-8 bg-[#FF6A00]/10 rounded-lg flex items-center justify-center">
                   <Zap size={16} className="text-[#FF6A00]" />
                 </div>
                 <div>
-                  <h4 className="text-[12px] font-semibold text-[#0F0F0F] mb-1">Growth Insight</h4>
-                  <p className="text-[11px] text-[#666]">
+                  <h4 className="text-[12px] font-bold text-[#0A0A0F] mb-1">Growth Insight</h4>
+                  <p className="text-[11px] text-[#0A0A0F]/45">
                     Businesses with complete catalogs see <span className="font-semibold text-[#FF6A00]">2.4x higher</span> customer conversion.
                   </p>
                 </div>
@@ -677,10 +678,10 @@ function ShopDashboardContent() {
             </div>
 
             {/* System Links */}
-            <div className="bg-white rounded-xl border border-black/[0.06] overflow-hidden">
+            <div className="bg-white rounded-lg border border-black/[0.06] overflow-hidden">
               <button
                 onClick={() => setHistoryShop(shop)}
-                className="w-full flex items-center justify-between p-4 hover:bg-gray-50 transition-all text-[12px] font-medium text-[#666]"
+                className="w-full flex items-center justify-between p-4 hover:bg-black/[0.02] transition-all text-[12px] font-medium text-[#0A0A0F]/45"
               >
                 <div className="flex items-center gap-2">
                   <History size={14} />
@@ -691,7 +692,7 @@ function ShopDashboardContent() {
               <Link
                 href={`/shop/${slugify(shop.slug)}`}
                 target="_blank"
-                className="w-full flex items-center justify-between p-4 border-t border-black/[0.06] hover:bg-gray-50 transition-all text-[12px] font-medium text-[#666]"
+                className="w-full flex items-center justify-between p-4 border-t border-black/[0.06] hover:bg-black/[0.02] transition-all text-[12px] font-medium text-[#0A0A0F]/45"
               >
                 <div className="flex items-center gap-2">
                   <ExternalLink size={14} />
@@ -705,21 +706,21 @@ function ShopDashboardContent() {
 
         {/* Catalog Tab */}
         {activeView === "catalog" && (
-          <div className="bg-white rounded-xl border border-black/[0.06] overflow-hidden">
+          <div className="bg-white rounded-lg border border-black/[0.06] overflow-hidden">
             <div className="p-5 border-b border-black/[0.06] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
-                <h2 className="text-[16px] font-bold text-[#0F0F0F]">Catalog Management</h2>
-                <p className="text-[11px] text-[#666]">Manage your products and services</p>
+                <h2 className="text-[16px] font-bold text-[#0A0A0F]">Catalog Management</h2>
+                <p className="text-[11px] text-[#0A0A0F]/45">Manage your products and services</p>
               </div>
               <div className="flex items-center gap-3">
                 <div className="relative">
-                  <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#999]" />
+                  <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#0A0A0F]/30" />
                   <input
                     type="text"
                     placeholder="Search items..."
                     defaultValue={searchQuery}
                     onChange={(e) => handleCatalogSearch(e.target.value)}
-                    className="pl-9 pr-4 py-2 bg-gray-50 border border-black/[0.06] rounded-lg text-[11px] focus:bg-white focus:border-[#FF6A00]/30 outline-none transition-all w-40 sm:w-60 font-medium"
+                    className="pl-9 pr-4 py-2 bg-black/[0.02] border border-black/[0.06] rounded-lg text-[11px] focus:bg-white focus:border-[#FF6A00]/30 outline-none transition-all w-40 sm:w-60 font-medium"
                   />
                 </div>
                 <button
@@ -746,19 +747,19 @@ function ShopDashboardContent() {
                       {filteredMenu.map((category, idx) => {
                         const isCollapsed = collapsedCategories.has(idx) && searchQuery === "";
                         return (
-                          <div key={idx} className="border border-black/[0.06] rounded-xl overflow-hidden mb-4 last:mb-0">
+                          <div key={idx} className="border border-black/[0.06] rounded-lg overflow-hidden mb-4 last:mb-0">
                             {/* Category Header (Same as before) */}
-                            <div className="p-4 bg-gray-50/50 flex justify-between items-center border-b border-black/[0.06]">
+                            <div className="p-4 bg-black/[0.015] flex justify-between items-center border-b border-black/[0.06]">
                               <div
                                 className="flex items-center gap-2 cursor-pointer group/header"
                                 onClick={() => toggleCategory(idx)}
                               >
                                 <div className={`transition-transform duration-200 ${isCollapsed ? "-rotate-90" : ""}`}>
-                                  <ChevronRight size={14} className="text-[#999]" />
+                                  <ChevronRight size={14} className="text-[#0A0A0F]/30" />
                                 </div>
                                 <ShoppingBag size={14} className="text-[#FF6A00]" />
-                                <span className="font-semibold text-[13px] text-[#0F0F0F]">{category.name}</span>
-                                <span className="text-[9px] font-medium text-[#999] bg-white px-1.5 py-0.5 rounded-lg border border-black/[0.02]">
+                                <span className="font-semibold text-[13px] text-[#0A0A0F]">{category.name}</span>
+                                <span className="text-[9px] font-medium text-[#0A0A0F]/30 bg-white px-1.5 py-0.5 rounded-lg border border-black/[0.02]">
                                   {category.items?.length || 0} items
                                 </span>
                               </div>
@@ -771,7 +772,7 @@ function ShopDashboardContent() {
                                   }}
                                   className="p-1.5 hover:bg-white rounded-lg transition-all"
                                 >
-                                  <Settings2 size={12} className="text-[#666]" />
+                                  <Settings2 size={12} className="text-[#0A0A0F]/45" />
                                 </button>
                                 <button
                                   onClick={() => {
@@ -789,8 +790,8 @@ function ShopDashboardContent() {
                             {!isCollapsed && (
                               <div className="p-4 grid grid-cols-1 sm:grid-cols-2 gap-3 animate-in slide-in-from-top-2 duration-200">
                                 {category.items?.map((item, iIdx) => (
-                                  <div key={iIdx} className="flex items-center gap-3 p-3 rounded-xl bg-gray-50/30 hover:bg-white hover:shadow-sm transition-all group/item">
-                                    <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden border border-black/[0.04] relative">
+                                  <div key={iIdx} className="flex items-center gap-3 p-3 rounded-lg bg-black/[0.01] hover:bg-white hover:shadow-sm transition-all group/item">
+                                    <div className="w-12 h-12 bg-black/[0.04] rounded-lg flex items-center justify-center overflow-hidden border border-black/[0.04] relative">
                                       {item.image ? (
                                         <Image
                                           src={item.image.includes(" ") ? item.image.replace(/\s/g, "%20") : item.image}
@@ -801,14 +802,14 @@ function ShopDashboardContent() {
                                           sizes="48px"
                                         />
                                       ) : (
-                                        <ShoppingBag size={16} className="text-[#999]" />
+                                        <ShoppingBag size={16} className="text-[#0A0A0F]/30" />
                                       )}
                                     </div>
                                     <div className="flex-1">
-                                      <p className="text-[12px] font-semibold text-[#0F0F0F]">{item.name}</p>
+                                      <p className="text-[12px] font-bold text-[#0A0A0F]">{item.name}</p>
                                       {item.price !== "" && item.price != null
                                         ? <p className="text-[11px] font-medium text-[#FF6A00]">₹{item.price}</p>
-                                        : <p className="text-[11px] font-medium text-[#999]">On Request</p>
+                                        : <p className="text-[11px] font-medium text-[#0A0A0F]/30">On Request</p>
                                       }
                                     </div>
                                     <div className="flex gap-1">
@@ -826,7 +827,7 @@ function ShopDashboardContent() {
                                           setItemImage(item.image || "");
                                           setShowEditItemModal(true);
                                         }}
-                                        className="p-2 hover:bg-gray-100 active:bg-gray-200 rounded-lg text-[#666] transition-all"
+                                        className="p-2 hover:bg-black/[0.04] active:bg-black/[0.08] rounded-lg text-[#0A0A0F]/45 transition-all"
                                       >
                                         <Settings2 size={13} />
                                       </button>
@@ -855,13 +856,13 @@ function ShopDashboardContent() {
                 } else {
                   return (
                     <div className="text-center py-16">
-                      <div className="w-16 h-16 bg-gray-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                        <ShoppingBag size={32} className="text-[#ccc]" />
+                      <div className="w-16 h-16 bg-black/[0.02] rounded-2xl flex items-center justify-center mx-auto mb-4">
+                        <ShoppingBag size={32} className="text-[#0A0A0F]/20" />
                       </div>
-                      <h3 className="text-[15px] font-semibold text-[#0F0F0F] mb-2">
+                      <h3 className="text-[15px] font-bold text-[#0A0A0F] mb-2">
                         {searchQuery ? "No results found" : "No Items Yet"}
                       </h3>
-                      <p className="text-[12px] text-[#666] mb-6">
+                      <p className="text-[12px] text-[#0A0A0F]/45 mb-6">
                         {searchQuery ? `Try searching for something else` : "Start adding products to your catalog"}
                       </p>
                       {!searchQuery && (
@@ -886,11 +887,11 @@ function ShopDashboardContent() {
         {/* Hours Tab */}
         {activeView === "hours" && (
           <div className="space-y-6">
-            <div className="bg-white rounded-xl border border-black/[0.06] overflow-hidden">
-              <div className="p-5 border-b border-black/[0.06] flex items-center justify-between">
+            <div className="bg-white rounded-lg border border-black/[0.06] overflow-hidden">
+              <div className="p-5 border-b border-black/[0.05] flex items-center justify-between">
                 <div>
-                  <h2 className="text-[16px] font-bold text-[#0F0F0F]">Weekly Schedule</h2>
-                  <p className="text-[11px] text-[#666]">Set your regular operating hours</p>
+                  <h2 className="text-[15px] font-bold text-[#0A0A0F] tracking-tight">Weekly Schedule</h2>
+                  <p className="text-[11px] font-medium text-[#0A0A0F]/35">Set your regular operating hours</p>
                 </div>
                 <Button onClick={handleUpdateHours} disabled={isSaving} size="sm">
                   {isSaving ? "Saving..." : "Save Changes"}
@@ -898,10 +899,10 @@ function ShopDashboardContent() {
               </div>
               <div className="p-5 space-y-3">
                 {Object.keys(openingHours).map((day) => (
-                  <div key={day} className="flex flex-col sm:flex-row sm:items-center justify-between p-3 rounded-xl bg-gray-50/50 border border-black/[0.02] gap-3">
+                  <div key={day} className="flex flex-col sm:flex-row sm:items-center justify-between p-3 rounded-lg bg-black/[0.015] border border-black/[0.02] gap-3">
                     <div className="flex items-center gap-3 w-32">
                       <div className={`w-2 h-2 rounded-full ${openingHours[day].isClosed ? "bg-red-400" : "bg-green-400"}`} />
-                      <span className="text-[12px] font-bold text-[#0F0F0F] capitalize">{day}</span>
+                      <span className="text-[12px] font-bold text-[#0A0A0F] capitalize">{day}</span>
                     </div>
                     <div className="flex items-center gap-4">
                       <div className="flex items-center gap-2">
@@ -915,7 +916,7 @@ function ShopDashboardContent() {
                           })}
                           className="px-2 py-1.5 bg-white border border-black/[0.06] rounded-lg text-[11px] outline-none disabled:opacity-50"
                         />
-                        <span className="text-[10px] text-[#999]">to</span>
+                        <span className="text-[10px] text-[#0A0A0F]/30">to</span>
                         <input
                           type="time"
                           value={openingHours[day].close}
@@ -937,7 +938,7 @@ function ShopDashboardContent() {
                           })}
                           className="w-4 h-4 rounded border-black/[0.06] text-[#FF6A00] focus:ring-[#FF6A00]"
                         />
-                        <span className="text-[11px] font-medium text-[#666]">Closed</span>
+                        <span className="text-[11px] font-medium text-[#0A0A0F]/45">Closed</span>
                       </label>
                     </div>
                   </div>
@@ -945,10 +946,10 @@ function ShopDashboardContent() {
               </div>
             </div>
 
-            <div className="bg-white rounded-xl border border-black/[0.06] overflow-hidden">
-              <div className="p-5 border-b border-black/[0.06]">
-                <h2 className="text-[16px] font-bold text-[#0F0F0F]">Upcoming Holidays</h2>
-                <p className="text-[11px] text-[#666]">Mark your shop as closed for specific dates</p>
+            <div className="bg-white rounded-lg border border-black/[0.05] shadow-sm overflow-hidden">
+              <div className="p-5 border-b border-black/[0.05]">
+                <h2 className="text-[15px] font-bold text-[#0A0A0F] tracking-tight">Upcoming Holidays</h2>
+                <p className="text-[11px] font-medium text-[#0A0A0F]/35">Mark your shop as closed for specific dates</p>
               </div>
               <div className="p-5">
                 <div className="flex flex-col sm:flex-row gap-3 mb-6">
@@ -957,7 +958,7 @@ function ShopDashboardContent() {
                       type="date"
                       value={newHoliday.date}
                       onChange={(e) => setNewHoliday({ ...newHoliday, date: e.target.value })}
-                      className="w-full px-4 py-2 bg-gray-50 border border-black/[0.06] rounded-xl text-[12px] outline-none focus:bg-white transition-all"
+                      className="w-full px-4 py-2 bg-black/[0.02] border border-black/[0.06] rounded-lg text-[12px] outline-none focus:bg-white transition-all"
                     />
                   </div>
                   <div className="flex-[2]">
@@ -966,7 +967,7 @@ function ShopDashboardContent() {
                       placeholder="Holiday Title (e.g. Diwali, Store Maintenance)"
                       value={newHoliday.title}
                       onChange={(e) => setNewHoliday({ ...newHoliday, title: e.target.value })}
-                      className="w-full px-4 py-2 bg-gray-50 border border-black/[0.06] rounded-xl text-[12px] outline-none focus:bg-white transition-all"
+                      className="w-full px-4 py-2 bg-black/[0.02] border border-black/[0.06] rounded-lg text-[12px] outline-none focus:bg-white transition-all"
                     />
                   </div>
                   <Button onClick={handleAddHoliday} disabled={!newHoliday.date || !newHoliday.title} variant="outline" size="sm">
@@ -977,24 +978,24 @@ function ShopDashboardContent() {
                 <div className="space-y-2">
                   {holidays.length > 0 ? (
                     holidays.map((holiday, idx) => (
-                      <div key={idx} className="flex items-center justify-between p-4 bg-gray-50/50 rounded-xl border border-black/[0.02]">
+                      <div key={idx} className="flex items-center justify-between p-4 bg-black/[0.015] rounded-lg border border-black/[0.02]">
                         <div className="flex items-center gap-4">
                           <div className="px-3 py-1 bg-white border border-black/[0.06] rounded-lg text-[10px] font-bold text-[#FF6A00]">
                             {new Date(holiday.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                           </div>
-                          <span className="text-[12px] font-semibold text-[#0F0F0F]">{holiday.title}</span>
+                          <span className="text-[12px] font-bold text-[#0A0A0F]">{holiday.title}</span>
                         </div>
                         <button
                           onClick={() => handleDeleteHoliday(idx)}
-                          className="p-1.5 hover:bg-red-50 rounded-lg text-[#ccc] hover:text-red-500 transition-all"
+                          className="p-1.5 hover:bg-red-50 rounded-lg text-[#0A0A0F]/20 hover:text-red-500 transition-all"
                         >
                           <X size={14} />
                         </button>
                       </div>
                     ))
                   ) : (
-                    <div className="text-center py-8 bg-gray-50/30 rounded-2xl border border-dashed border-black/[0.06]">
-                      <p className="text-[11px] text-[#999]">No holidays scheduled</p>
+                    <div className="text-center py-8 bg-black/[0.01] rounded-2xl border border-dashed border-black/[0.06]">
+                      <p className="text-[11px] text-[#0A0A0F]/30">No holidays scheduled</p>
                     </div>
                   )}
                 </div>
@@ -1005,20 +1006,20 @@ function ShopDashboardContent() {
 
         {/* Gallery Tab */}
         {activeView === "gallery" && (
-          <div className="bg-white rounded-xl border border-black/[0.06] p-6">
+          <div className="bg-white rounded-2xl border border-black/[0.05] shadow-sm p-6">
             <div className="flex justify-between items-center mb-6">
               <div>
-                <h2 className="text-[16px] font-bold text-[#0F0F0F]">Shop Gallery</h2>
-                <p className="text-[11px] text-[#666]">Visual showcase of your business</p>
+                <h2 className="text-[15px] font-bold text-[#0A0A0F] tracking-tight">Photo Gallery</h2>
+                <p className="text-[11px] font-medium text-[#0A0A0F]/35">Visual showcase of your business</p>
               </div>
-              <div className="px-3 py-1 bg-gray-50 rounded-lg text-[10px] font-semibold text-[#999] border border-black/[0.04]">
-                {(shop.gallery || []).length} / 5 Images
+              <div className="px-3 py-1 bg-black/[0.02] border border-black/[0.04] rounded-lg text-[10px] font-bold text-[#0A0A0F]/30 uppercase tracking-widest">
+                {(shop.gallery || []).length} / 5
               </div>
             </div>
 
             <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 gap-4 mb-8">
               {shop.gallery?.map((url, i) => (
-                <div key={i} className="aspect-square relative group rounded-xl overflow-hidden border border-black/[0.06] shadow-sm bg-white">
+                <div key={i} className="aspect-square relative group rounded-lg overflow-hidden border border-black/[0.06] shadow-sm bg-white">
                   <Image
                     src={url.includes(" ") ? url.replace(/\s/g, "%20") : url}
                     alt={`Gallery ${i}`}
@@ -1044,10 +1045,10 @@ function ShopDashboardContent() {
               )}
             </div>
 
-            <div className="bg-blue-50/50 p-4 rounded-xl border border-blue-100 flex items-center gap-3">
-              <ImageIcon size={20} className="text-blue-500" />
-              <p className="text-[11px] text-blue-700 font-medium">
-                Tip: Upload high-quality photos of your products and shop interior to attract more customers.
+            <div className="bg-blue-500/5 p-4 rounded-lg border border-blue-500/10 flex items-center gap-3">
+              <ImageIcon size={16} className="text-blue-500 shrink-0" />
+              <p className="text-[11px] font-medium text-blue-700">
+                Tip: Upload high-quality photos to attract more customers. Tap an image to delete it.
               </p>
             </div>
           </div>
@@ -1056,10 +1057,14 @@ function ShopDashboardContent() {
         {/* Settings Tab */}
         {activeView === "settings" && (
           <div className="max-w-3xl mx-auto space-y-8 pb-20">
-            <div className="bg-white rounded-[32px] border border-black/[0.06] p-8 shadow-sm">
-              <div className="mb-10">
-                <h2 className="text-2xl font-black text-[#0F0F0F] tracking-tight mb-1">Store Configuration</h2>
-                <p className="text-[13px] text-[#666] font-medium">Manage your branding, location, and business metadata.</p>
+            <div className="bg-white rounded-2xl border border-black/[0.05] p-8 shadow-sm">
+              <div className="mb-8">
+                <div className="inline-flex items-center gap-2 px-2.5 py-1 bg-[#FF6A00]/5 text-[#FF6A00] rounded-md border border-[#FF6A00]/10 mb-4">
+                  <Settings2 size={12} />
+                  <span className="text-[10px] font-bold uppercase tracking-widest">Business Configuration</span>
+                </div>
+                <h2 className="text-[22px] font-bold text-[#0A0A0F] tracking-tight mb-1">Store Configuration</h2>
+                <p className="text-[13px] text-[#0A0A0F]/40 font-medium">Manage your branding, location, and business metadata.</p>
               </div>
 
               <ShopForm
@@ -1073,51 +1078,51 @@ function ShopDashboardContent() {
           </div>
         )}
         {activeView === "reviews" && (
-          <div className="bg-white rounded-xl border border-black/[0.06] p-6">
-            <div className="flex items-center justify-between mb-8">
+          <div className="bg-white rounded-lg border border-black/[0.05] shadow-sm p-6">
+            <div className="flex items-center justify-between mb-6">
               <div>
-                <h3 className="text-lg font-bold text-[#0F0F0F]">Customer Reviews</h3>
-                <p className="text-[11px] text-[#999]">Manage what customers are saying about your shop</p>
+                <h3 className="text-[15px] font-bold text-[#0A0A0F] tracking-tight">Customer Reviews</h3>
+                <p className="text-[11px] font-medium text-[#0A0A0F]/35">Manage what customers are saying</p>
               </div>
-              <div className="px-3 py-1 bg-gray-50 rounded-lg text-[11px] font-bold text-[#FF6A00]">
-                {shop.avgRating || "5.0"} Avg Rating
+              <div className="px-3 py-1 bg-[#FF6A00]/5 border border-[#FF6A00]/10 rounded-lg text-[11px] font-bold text-[#FF6A00]">
+                ⭐ {shop.avgRating || "5.0"}
               </div>
             </div>
 
             {loadingReviews ? (
               <div className="py-20 flex flex-col items-center justify-center gap-4">
                 <div className="w-8 h-8 border-2 border-[#FF6A00]/20 border-t-[#FF6A00] rounded-full animate-spin" />
-                <p className="text-[12px] text-[#999] font-medium">Fetching feedback...</p>
+                <p className="text-[12px] text-[#0A0A0F]/30 font-medium">Fetching feedback...</p>
               </div>
             ) : reviews.length > 0 ? (
               <div className="space-y-4">
                 {reviews.map((review) => (
-                  <div key={review.id} className="p-5 rounded-2xl bg-gray-50/50 border border-black/[0.03] group hover:border-[#FF6A00]/10 transition-all">
+                  <div key={review.id} className="p-5 rounded-2xl bg-black/[0.015] border border-black/[0.03] group hover:border-[#FF6A00]/10 transition-all">
                     <div className="flex items-start justify-between gap-4">
                       <div className="flex gap-4">
                         <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center border border-black/[0.06] shadow-sm">
-                          <UserIcon size={20} className="text-[#ccc]" />
+                          <UserIcon size={20} className="text-[#0A0A0F]/20" />
                         </div>
                         <div>
                           <div className="flex items-center gap-3 mb-1">
-                            <span className="text-[15px] font-bold text-[#0F0F0F]">{review.userName}</span>
+                            <span className="text-[15px] font-bold text-[#0A0A0F]">{review.userName}</span>
                             <div className="flex items-center gap-0.5 text-[#FFB800]">
                               {[1, 2, 3, 4, 5].map((s) => (
                                 <Star key={s} size={12} fill={s <= review.rating ? "currentColor" : "none"} />
                               ))}
                             </div>
                           </div>
-                          <p className="text-[11px] text-[#999] mb-3">
+                          <p className="text-[11px] text-[#0A0A0F]/30 mb-3">
                             Posted on {new Date(review.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}
                           </p>
-                          <p className="text-[13px] text-[#666] leading-relaxed italic">
+                          <p className="text-[13px] text-[#0A0A0F]/45 leading-relaxed italic">
                             "{review.comment}"
                           </p>
                         </div>
                       </div>
                       <button
                         onClick={() => handleDeleteReview(review.id)}
-                        className="p-2.5 bg-white border border-red-100 text-red-500 rounded-xl opacity-0 group-hover:opacity-100 transition-all hover:bg-red-50"
+                        className="p-2.5 bg-white border border-red-100 text-red-500 rounded-lg opacity-0 group-hover:opacity-100 transition-all hover:bg-red-50"
                         title="Delete Review"
                       >
                         <Trash2 size={16} />
@@ -1128,11 +1133,11 @@ function ShopDashboardContent() {
               </div>
             ) : (
               <div className="text-center py-20">
-                <div className="w-16 h-16 bg-gray-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                  <ThumbsUpIcon size={32} className="text-[#ccc]" />
+                <div className="w-16 h-16 bg-black/[0.02] rounded-2xl flex items-center justify-center mx-auto mb-4">
+                  <ThumbsUpIcon size={32} className="text-[#0A0A0F]/20" />
                 </div>
-                <h3 className="text-[15px] font-bold text-[#0F0F0F] mb-1">No Reviews Yet</h3>
-                <p className="text-[11px] text-[#999]">Reviews from customers will appear here.</p>
+                <h3 className="text-[15px] font-bold text-[#0A0A0F] mb-1">No Reviews Yet</h3>
+                <p className="text-[11px] text-[#0A0A0F]/30">Reviews from customers will appear here.</p>
               </div>
             )}
           </div>
@@ -1154,10 +1159,10 @@ function ShopDashboardContent() {
               onClick={() => setActiveView(tab.id)}
               className={`flex-1 flex flex-col items-center justify-center py-3 gap-1 text-[9px] font-bold uppercase tracking-wider transition-all ${activeView === tab.id
                 ? "text-[#FF6A00]"
-                : "text-[#999]"
+                : "text-[#0A0A0F]/30"
                 }`}
             >
-              <tab.icon size={18} className={activeView === tab.id ? "text-[#FF6A00]" : "text-[#ccc]"} />
+              <tab.icon size={18} className={activeView === tab.id ? "text-[#FF6A00]" : "text-[#0A0A0F]/20"} />
               {tab.label}
             </button>
           ))}
@@ -1330,11 +1335,11 @@ function ShopDashboardContent() {
         onClose={() => setShowDeleteModal(false)}
         title="Remove Item"
         subtitle="Are you sure you want to delete this item from your catalog?"
-        icon={AlertCircle}
+        icon={CircleAlert}
       >
         <div className="space-y-6">
-          <div className="p-4 bg-gray-50 rounded-xl border border-black/[0.04]">
-            <p className="text-[13px] font-semibold text-[#0F0F0F]">
+          <div className="p-4 bg-black/[0.02] rounded-lg border border-black/[0.04]">
+            <p className="text-[13px] font-bold text-[#0A0A0F]">
               {shop.menu?.[activeCategoryIdx]?.items?.[activeItemIdx]?.name}
             </p>
             <p className="text-[11px] text-[#FF6A00]">₹{shop.menu?.[activeCategoryIdx]?.items?.[activeItemIdx]?.price}</p>
@@ -1380,8 +1385,8 @@ function ShopDashboardContent() {
             )}
           </div>
 
-          <h2 className="text-3xl font-black text-[#0F0F0F] mb-1 tracking-tight">{shop?.name}</h2>
-          <div className="flex items-center gap-2 text-[14px] text-[#666] tracking-widest mb-8">
+          <h2 className="text-3xl font-black text-[#0A0A0F] mb-1 tracking-tight">{shop?.name}</h2>
+          <div className="flex items-center gap-2 text-[14px] text-[#0A0A0F]/45 tracking-widest mb-8">
             <MapPin size={14} className="text-[#FF6A00]" />
             {[shop?.zone, shop?.area, shop?.city].filter(Boolean).join(", ")}
           </div>
@@ -1399,8 +1404,8 @@ function ShopDashboardContent() {
             />
           </div>
 
-          <p className="text-[18px] font-black text-[#0F0F0F] uppercase tracking-tighter">Scan to explore</p>
-          <p className="text-[12px] text-[#999] mt-2 font-medium">Powered by ShopBajar</p>
+          <p className="text-[18px] font-black text-[#0A0A0F] uppercase tracking-tighter">Scan to explore</p>
+          <p className="text-[12px] text-[#0A0A0F]/30 mt-2 font-medium">Powered by ShopBajar</p>
         </div>
       </div>
 
@@ -1415,3 +1420,4 @@ export default function ShopDashboard() {
     </Suspense>
   );
 }
+

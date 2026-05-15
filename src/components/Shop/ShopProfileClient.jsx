@@ -4,19 +4,16 @@ import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
   Star, MapPin, MessageSquare, Phone, Share2, Heart,
-  Clock, Award, Users, CheckCircle2, Globe, ChevronRight,
+  Clock, Award, Users, CircleCheckBig, Globe, ChevronRight,
   ShoppingBag, Search, X, ExternalLink, Truck, Shield, DollarSign,
   Mail, Clock as ClockIcon, Calendar, Navigation, Info,
-  Store,
-  Plus,
-  ArrowRight,
-  ShieldCheck,
-  Image as ImageIcon,
-  ThumbsUp,
-  Star as StarIcon,
-  Send,
-  User,
-  Loader2
+  Store, Plus, ArrowRight, ShieldCheck, Image as ImageIcon,
+  ThumbsUp, Star as StarIcon, Send, User, Loader2, Copy,
+  ArrowLeft,
+  LayoutGrid,
+  List,
+  Menu as MenuIcon,
+  Eye
 } from "lucide-react";
 import Dialog from "../UI/Dialog";
 import Link from "next/link";
@@ -31,7 +28,7 @@ import OpenNowBadge from "../UI/OpenNowBadge";
 
 const ShopProfileClient = ({ shop }) => {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState("menu");
+  const [activeTab, setActiveTab] = useState("products");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedItem, setSelectedItem] = useState(null);
   const [showShareTooltip, setShowShareTooltip] = useState(false);
@@ -45,10 +42,45 @@ const ShopProfileClient = ({ shop }) => {
     name: ""
   });
   const [showShareModal, setShowShareModal] = useState(false);
+  const [isSaved, setIsSaved] = useState(false);
+  const [showCompactHeader, setShowCompactHeader] = useState(false);
 
   useEffect(() => {
-    if (shop?.id) incrementViews(shop.id);
+    if (shop?.id) {
+      incrementViews(shop.id);
+      if (typeof window !== "undefined") {
+        const savedShops = JSON.parse(localStorage.getItem("saved_shops") || "[]");
+        setIsSaved(savedShops.includes(shop.id));
+      }
+    }
   }, [shop?.id]);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      if (window.scrollY > 180) {
+        setShowCompactHeader(true);
+      } else {
+        setShowCompactHeader(false);
+      }
+    };
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  const handleSave = () => {
+    if (typeof window !== "undefined" && shop?.id) {
+      const savedShops = JSON.parse(localStorage.getItem("saved_shops") || "[]");
+      if (isSaved) {
+        const nextSaved = savedShops.filter(id => id !== shop.id);
+        localStorage.setItem("saved_shops", JSON.stringify(nextSaved));
+        setIsSaved(false);
+      } else {
+        savedShops.push(shop.id);
+        localStorage.setItem("saved_shops", JSON.stringify(savedShops));
+        setIsSaved(true);
+      }
+    }
+  };
 
   useEffect(() => {
     if (activeTab === 'reviews' && reviews.length === 0) {
@@ -84,7 +116,6 @@ const ShopProfileClient = ({ shop }) => {
     setSubmittingReview(false);
   };
 
-  const brandColor = shop.primaryColor || "#FF6A00";
   const avgRating = shop.rating || "5.0";
   const totalReviews = shop.reviewCount || 0;
   const menuItems = shop.menu || [];
@@ -106,7 +137,7 @@ const ShopProfileClient = ({ shop }) => {
       const shareText = `Check out *${shop.name}* on ${BRAND}! A ${shop.category} in ${shop.area ? shop.area + ', ' : ''}${shop.city}.`;
       try {
         await navigator.share({ title: shop.name, text: shareText, url });
-      } catch (err) { 
+      } catch (err) {
         setShowShareModal(true);
       }
     } else {
@@ -144,729 +175,577 @@ const ShopProfileClient = ({ shop }) => {
   };
 
   return (
-    <div className="min-h-screen bg-[#FAFAF8]">
+    <div className="min-h-screen bg-transparent selection:bg-[#FF6A00]/10 selection:text-[#FF6A00] relative">
 
-      {/* Hero Banner */}
-      <div className="relative h-56 md:h-72 w-full overflow-hidden bg-gradient-to-r from-[#FF6A00]/20 to-[#FF9A72]/20">
+      {/* ── FIXED IMMERSIVE BACKGROUND (COVER + DYNAMIC BRAND GRADIENT) ── */}
+      <div
+        className="fixed inset-0 z-0 overflow-hidden pointer-events-none"
+        style={{
+          background: `linear-gradient(180deg, ${shop.primaryColor || '#FF6A00'}15 0%, #F7F7F5 40%, #FFFFFF 100%)`
+        }}
+      >
+        <div className="absolute inset-0 dot-grid opacity-[0.08]" />
         {shop.coverImage ? (
-          <Image
-            src={shop.coverImage}
-            alt={shop.name}
-            fill
-            priority
-            className="object-cover"
-            sizes="100vw"
-          />
+          <div className={`absolute top-0 left-0 right-0 h-60 md:h-[350px] transition-opacity duration-500 ${showCompactHeader ? "opacity-25" : "opacity-100"}`}>
+            <Image
+              src={shop.coverImage}
+              alt={shop.name}
+              fill
+              priority
+              className="object-cover opacity-80"
+              sizes="100vw"
+            />
+            <div
+              className="absolute inset-0"
+              style={{
+                background: `linear-gradient(180deg, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0) 50%, ${shop.primaryColor || '#FF6A00'}20 80%, #F7F7F5 100%)`
+              }}
+            />
+          </div>
         ) : (
-          <div className="w-full h-full flex items-center justify-center">
-            <Store size={80} className="text-[#FF6A00]/20" />
+          <div
+            className="absolute top-0 left-0 right-0 h-60 md:h-[350px] flex items-center justify-center"
+            style={{ backgroundColor: shop.primaryColor || '#0A0A0F' }}
+          >
+            <div className="w-20 h-20 md:w-24 md:h-24 rounded-2xl bg-white/[0.15] backdrop-blur-md border border-white/[0.2] flex items-center justify-center shadow-lg">
+              <Store size={40} className="text-white" />
+            </div>
+            <div
+              className="absolute inset-0"
+              style={{
+                background: `linear-gradient(180deg, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0) 50%, #F7F7F5 100%)`
+              }}
+            />
           </div>
         )}
+      </div>
 
-        {/* Back Button */}
-        <button
-          onClick={() => router.back()}
-          className="absolute top-4 left-4 w-9 h-9 rounded-xl bg-white border border-black/[0.06] flex items-center justify-center text-[#666] hover:text-[#0F0F0F] transition-all"
-        >
-          <ChevronRight className="rotate-180" size={18} />
+      {/* ── DYNAMIC OVERLAY HEADER (MOBILE ONLY) ───────────── */}
+      <div className={`lg:hidden fixed top-0 left-0 right-0 z-[100] h-[72px] flex items-center px-4 pt-2 pointer-events-auto transition-all duration-300 ${showCompactHeader ? "bg-white/90 backdrop-blur-xl border-b border-black/[0.05] shadow-sm justify-center" : "bg-gradient-to-b from-black/60 via-black/20 to-transparent justify-between"}`}>
+        <button onClick={() => router.back()} className={`rounded-full backdrop-blur-md flex items-center justify-center shadow-lg active:scale-95 transition-all duration-300 ${showCompactHeader ? "w-0 h-0 opacity-0 pointer-events-none overflow-hidden" : "w-9 h-9 opacity-100 bg-black/30 border border-white/10 text-white"}`}>
+          <ArrowLeft size={18} />
         </button>
 
-        {/* Share Button */}
-        <div className="absolute top-4 right-4">
-          <div className="relative">
-            <button
-              onClick={handleShare}
-              className="w-9 h-9 rounded-xl bg-white border border-black/[0.06] flex items-center justify-center text-[#666] hover:text-[#0F0F0F] transition-all"
-            >
-              <Share2 size={16} />
-            </button>
-            {showShareTooltip && (
-              <div className="absolute top-full right-0 mt-2 px-3 py-1.5 bg-[#0F0F0F] text-white text-[10px] font-medium rounded-lg whitespace-nowrap z-10">
-                Link copied!
+        <div className={`flex items-center gap-2.5 transition-all duration-300 min-w-0 ${showCompactHeader ? "opacity-100 translate-y-0 max-w-full" : "opacity-0 translate-y-2 pointer-events-none max-w-[210px]"}`}>
+          <div className="w-7 h-7 rounded-lg bg-white p-0.5 shadow-sm border border-black/[0.08] flex-shrink-0 relative overflow-hidden">
+            {shop.logo ? (
+              <Image
+                src={shop.logo.includes(" ") ? shop.logo.replace(/\s/g, "%20") : shop.logo}
+                alt={shop.name}
+                fill
+                unoptimized
+                className="object-cover rounded-md"
+              />
+            ) : (
+              <div className="w-full h-full rounded-md bg-gradient-to-br from-[#FF6A00] to-[#E65F00] flex items-center justify-center text-white text-[11px] font-bold">
+                {shop.name?.charAt(0)}
               </div>
             )}
           </div>
+          <span className="text-[15px] font-bold text-[#0A0A0F] tracking-tight truncate">
+            {shop.name}
+          </span>
+        </div>
+
+        <div className={`flex items-center gap-2 transition-all duration-300 ${showCompactHeader ? "w-0 h-0 opacity-0 pointer-events-none overflow-hidden" : "opacity-100"}`}>
+          <button onClick={handleSave} className={`w-9 h-9 rounded-full bg-black/30 backdrop-blur-md border border-white/10 flex items-center justify-center shadow-lg active:scale-95 transition-all ${isSaved ? "text-red-500" : "text-white"}`} title={isSaved ? "Remove from saved" : "Save shop"}>
+            <Heart size={18} fill={isSaved ? "currentColor" : "none"} />
+          </button>
+          <button onClick={handleShare} className="w-9 h-9 rounded-full bg-black/30 backdrop-blur-md border border-white/10 flex items-center justify-center text-white shadow-lg active:scale-95 transition-all" title="Share shop">
+            <Share2 size={18} />
+          </button>
         </div>
       </div>
 
-      <div className="max-w-4xl mx-auto px-4 -mt-16 relative z-10 pb-32">
+      {/* ── MAIN CONTENT (SCROLLING CARDS & DETAILS) ── */}
+      <div className="relative z-10 pt-48 md:pt-[260px] pb-24">
+        <div className="max-w-7xl mx-auto px-4 md:px-6">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
 
-        {/* Shop Info Card */}
-        <div className="bg-white rounded-2xl border border-black/[0.06] overflow-hidden mb-6">
-          <div className="p-6">
-            {/* Logo & Basic Info */}
-            <div className="flex flex-col md:flex-row gap-5 mb-5">
-              <div className="w-20 h-20 rounded-xl bg-white border border-black/[0.06] overflow-hidden flex-shrink-0 relative">
-                {shop.logo ? (
-                  <Image
-                    src={shop.logo.includes(" ") ? shop.logo.replace(/\s/g, "%20") : shop.logo}
-                    alt={shop.name}
-                    fill
-                    unoptimized
-                    className="object-cover"
-                    sizes="80px"
-                  />
-                ) : (
-                  <div className="w-full h-full bg-gradient-to-br from-[#FF6A00] to-[#FF9A72] flex items-center justify-center text-white text-2xl font-bold">
-                    {shop.name?.charAt(0)}
-                  </div>
-                )}
+            {/* Left Panel: Profile Summary */}
+            <div className="lg:col-span-4 space-y-4 lg:sticky lg:top-6 lg:z-30 transition-all duration-300 self-start">
+              
+              {/* Desktop Navigation & Actions */}
+              <div className="hidden lg:flex items-center justify-between bg-white/80 backdrop-blur-md p-1.5 rounded-2xl border border-black/[0.06] shadow-sm">
+                <Button variant="ghost" size="sm" icon={ArrowLeft} onClick={() => router.back()} className="text-[#0A0A0F]/60 hover:text-[#0A0A0F] font-bold">Back</Button>
+                <div className="flex items-center gap-1">
+                  <Button variant="ghost" size="sm" icon={Share2} onClick={handleShare} className="text-[#0A0A0F]/60 hover:text-[#0A0A0F] font-bold">Share</Button>
+                  <Button variant="ghost" size="sm" icon={Heart} onClick={handleSave} className={`font-bold ${isSaved ? "text-red-500 hover:text-red-600 bg-red-50/50" : "text-[#0A0A0F]/60 hover:text-[#0A0A0F]"}`}>
+                    {isSaved ? "Saved" : "Save"}
+                  </Button>
+                </div>
               </div>
 
-              <div className="flex-1">
-                <div className="flex flex-wrap items-center gap-2 mb-2">
-                  <h1 className="text-2xl font-bold text-[#0F0F0F] tracking-tight">
-                    {shop.name}
-                  </h1>
-                  {shop.isVerified && (
-                    <div className="flex items-center gap-1 px-2 py-0.5 bg-blue-50 rounded-lg border border-blue-100">
-                      <ShieldCheck size={12} className="text-blue-500" />
-                      <span className="text-[9px] font-bold text-blue-600 uppercase tracking-tight">Verified</span>
-                    </div>
-                  )}
-                </div>
-
-                <div className="flex flex-wrap items-center gap-4 text-[12px] text-[#666] mb-3">
-                  <Link
-                    href={`/explore?category=${encodeURIComponent(slugify(shop.category))}`}
-                    className="flex items-center gap-1 hover:text-[#FF6A00] transition-colors"
-                  >
-                    <Store size={12} className="text-[#FF6A00]" />
-                    <span>{shop.category}</span>
-                  </Link>
-                  {shop.clusterType && (
-                    <div className="flex items-center gap-1">
-                      <Award size={12} className="text-[#FF6A00]" />
-                      <span className="font-semibold">{shop.clusterType}</span>
-                    </div>
-                  )}
-                  <div className="flex items-center gap-1">
-                    <MapPin size={12} className="text-[#FF6A00]" />
-                    <span className="capitalize">{shop.area}, {shop.city}</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <Star size={12} className="text-[#FFB800] fill-[#FFB800]" />
-                    <span className="font-semibold text-[#0F0F0F]">{avgRating}</span>
-                    <span className="text-[#999]">({totalReviews})</span>
-                  </div>
-                </div>
-
-                <p className="text-[13px] text-[#666] leading-relaxed">
-                  {shop.description || "Welcome to our shop! We offer quality products and services tailored to your needs."}
-                </p>
-              </div>
-            </div>
-
-            {/* Action Buttons */}
-            <div className="flex flex-wrap gap-3 pt-4 border-t border-black/[0.06]">
-              <button
-                onClick={handleGeneralWhatsApp}
-                className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-[#25D366] text-white text-[13px] font-semibold rounded-xl hover:bg-[#20BD5A] transition-all"
-              >
-                <MessageSquare size={16} /> WhatsApp
-              </button>
-              {shop.phone && (
-                <button
-                  onClick={() => {
-                    incrementLeads(shop.id);
-                    window.location.href = `tel:${shop.phone}`;
-                  }}
-                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-[#0F0F0F] text-white text-[13px] font-semibold rounded-xl hover:bg-[#333] transition-all"
-                >
-                  <Phone size={16} /> Call
-                </button>
-              )}
-              <OpenNowBadge shop={shop} size="md" />
-            </div>
-          </div>
-        </div>
-
-        {/* Tab Navigation */}
-        <div className="md:sticky md:top-0 md:bottom-auto fixed bottom-6 left-4 right-4 z-40 flex gap-1 bg-white/90 backdrop-blur-md rounded-xl p-1 border border-black/[0.06] md:mb-8">
-          {["menu", "about", "gallery", "reviews"].map((tab) => {
-            const tabLabels = {
-              menu: shop.category?.toLowerCase() === 'restaurant' ? 'Menu' : 'Products',
-              about: 'About',
-              gallery: 'Gallery',
-              reviews: 'Reviews'
-            };
-            return (
-              <button
-                key={tab}
-                onClick={() => setActiveTab(tab)}
-                className={`flex-1 py-2.5 text-[12px] font-semibold rounded-lg transition-all capitalize ${activeTab === tab
-                  ? "bg-[#0F0F0F] text-white"
-                  : "text-[#666] hover:text-[#0F0F0F]"
-                  }`}
-              >
-                {tabLabels[tab]}
-              </button>
-            );
-          })}
-        </div>
-
-        {/* Tab Content */}
-        {activeTab === "menu" && (
-          <div className="space-y-6">
-            {/* Search */}
-            <div className="relative">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-[#999]" size={16} />
-              <input
-                type="text"
-                placeholder="Search items..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-white border border-black/[0.06] rounded-xl py-3 pl-11 pr-4 text-[13px] outline-none focus:border-[#FF6A00]/30 transition-all"
-              />
-            </div>
-
-            {searchQuery ? (
-              // Search Results
-              <div className="space-y-3">
-                {filteredItems.map((item, idx) => (
-                  <div
-                    key={idx}
-                    onClick={() => setSelectedItem(item)}
-                    className="bg-white rounded-xl border border-black/[0.06] p-4 flex items-center gap-4 cursor-pointer hover:border-[#FF6A00]/30 transition-all"
-                  >
-                    <div className="w-14 h-14 rounded-lg bg-gray-50 flex items-center justify-center overflow-hidden flex-shrink-0 relative">
-                      {item.image ? (
-                        <Image
-                          src={item.image}
-                          alt={item.name}
-                          fill
-                          className="object-cover"
-                          sizes="56px"
-                        />
+              <Card className="p-4 md:p-6 shadow-2xl border border-black/[0.06] rounded-lg overflow-hidden bg-white">
+                {/* Header Info Row */}
+                <div className="flex items-center gap-3 md:gap-4 mb-4">
+                  <div className="relative flex-shrink-0">
+                    <div className="w-16 h-16 md:w-20 md:h-20 rounded-2xl bg-white p-1 shadow-md border border-black/[0.06] relative overflow-hidden">
+                      {shop.logo ? (
+                        <div className="relative w-full h-full rounded-lg overflow-hidden">
+                          <Image
+                            src={shop.logo.includes(" ") ? shop.logo.replace(/\s/g, "%20") : shop.logo}
+                            alt={shop.name}
+                            fill
+                            unoptimized
+                            className="object-cover"
+                          />
+                        </div>
                       ) : (
-                        <ShoppingBag size={22} className="text-[#ccc]" />
+                        <div className="w-full h-full rounded-lg bg-gradient-to-br from-[#FF6A00] to-[#E65F00] flex items-center justify-center text-white text-2xl font-bold">
+                          {shop.name?.charAt(0)}
+                        </div>
                       )}
                     </div>
-                    <div className="flex-1">
-                      <h3 className="text-[14px] font-semibold text-[#0F0F0F]">{item.name}</h3>
-                      <p className="text-[10px] text-[#999] mt-0.5">{item.category}</p>
-                      {item.price
-                        ? <span className="text-[13px] font-bold text-[#FF6A00] mt-1 block">₹{item.price}</span>
-                        : <span className="text-[11px] font-medium text-[#999] mt-1 block">Contact for Price</span>
-                      }
-                    </div>
-                    <Plus size={18} className="text-[#999]" />
+                    {shop.isVerified && (
+                      <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center shadow-lg border-2 border-white z-10" title="Verified Business">
+                        <ShieldCheck size={14} className="text-white" />
+                      </div>
+                    )}
                   </div>
-                ))}
-                {filteredItems.length === 0 && (
-                  <div className="text-center py-12 bg-white rounded-xl border border-black/[0.06]">
-                    <ShoppingBag size={40} className="text-[#ccc] mx-auto mb-3" />
-                    <p className="text-[13px] text-[#666]">No items found</p>
-                  </div>
-                )}
-              </div>
-            ) : menuItems.length > 0 ? (
-              // Category View
-              <div className="space-y-8">
-                {menuItems.map((section, idx) => (
-                  <div key={idx} className="space-y-4">
-                    <div className="flex items-center gap-3">
-                      <h3 className="text-[15px] font-semibold text-[#0F0F0F]">{section.name || section.category}</h3>
-                      <div className="h-px flex-1 bg-black/[0.06]" />
-                      <span className="text-[10px] text-[#999]">{section.items?.length || 0} items</span>
-                    </div>
-                    <div className="grid grid-cols-1 gap-3">
-                      {(section.items || []).map((item, itemIdx) => (
-                        <div
-                          key={itemIdx}
-                          onClick={() => setSelectedItem({ ...item, category: section.name || section.category })}
-                          className="bg-white rounded-xl border border-black/[0.06] p-4 flex items-center gap-4 cursor-pointer hover:border-[#FF6A00]/30 transition-all group"
-                        >
-                          <div className="w-14 h-14 rounded-lg bg-gray-50 flex items-center justify-center overflow-hidden flex-shrink-0 relative">
-                            {item.image ? (
-                              <Image
-                                src={item.image}
-                                alt={item.name}
-                                fill
-                                className="object-cover group-hover:scale-105 transition-transform"
-                                sizes="56px"
-                              />
-                            ) : (
-                              <ShoppingBag size={22} className="text-[#ccc]" />
-                            )}
-                          </div>
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2">
-                              <h4 className="text-[14px] font-semibold text-[#0F0F0F]">{item.name}</h4>
-                              {item.popular && (
-                                <span className="text-[8px] font-semibold bg-[#FF6A00]/10 text-[#FF6A00] px-1.5 py-0.5 rounded-full">Popular</span>
-                              )}
-                            </div>
-                            <p className="text-[11px] text-[#999] mt-0.5 line-clamp-1">{item.description}</p>
-                          </div>
-                          <div className="text-right">
-                            {item.price
-                              ? <span className="text-[14px] font-bold text-[#FF6A00]">₹{item.price}</span>
-                              : <span className="text-[11px] font-medium text-[#999]">Contact for Price</span>
-                            }
-                            <Plus size={16} className="text-[#999] group-hover:text-[#FF6A00] mt-1 ml-auto" />
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              // Empty State
-              <div className="text-center py-16 bg-white rounded-xl border border-black/[0.06]">
-                <ShoppingBag size={48} className="text-[#ccc] mx-auto mb-4" />
-                <h3 className="text-[15px] font-semibold text-[#0F0F0F] mb-2">Coming Soon</h3>
-                <p className="text-[12px] text-[#666] max-w-xs mx-auto">Catalog is being updated. Contact us directly for inquiries!</p>
-              </div>
-            )}
-          </div>
-        )}
 
-        {activeTab === "about" && (
-          <div className="space-y-6">
-            <div className="bg-white rounded-xl border border-black/[0.06] overflow-hidden">
-              <div className="p-6 space-y-6">
-                {/* Business Info */}
-                <div className="grid grid-cols-2 gap-4 pb-4 border-b border-black/[0.06]">
-                  <div>
-                    <p className="text-[10px] font-semibold text-[#999] uppercase tracking-wider mb-1">Category</p>
-                    <p className="text-[14px] font-medium text-[#0F0F0F]">{shop.category}</p>
-                  </div>
-                  <div>
-                    <p className="text-[10px] font-semibold text-[#999] uppercase tracking-wider mb-1">Business Type</p>
-                    <p className="text-[14px] font-medium text-[#0F0F0F] capitalize">
-                      {shop.businessType?.toLowerCase() === 'mixed' ? 'Products & Services' : (shop.businessType || 'Local Store')}
-                    </p>
-                  </div>
-                  {shop.clusterType && (
-                    <div>
-                      <p className="text-[10px] font-semibold text-[#999] uppercase tracking-wider mb-1">Cluster Hub</p>
-                      <p className="text-[14px] font-medium text-[#0F0F0F]">{shop.clusterType}</p>
+                  <div className="min-w-0 flex-1">
+                    <div className="mb-1">
+                      <h1 className="text-[17px] md:text-[22px] font-bold text-[#0A0A0F] tracking-tight leading-snug">{shop.name}</h1>
                     </div>
-                  )}
-                  <div>
-                    <p className="text-[10px] font-semibold text-[#999] uppercase tracking-wider mb-1">Established</p>
-                    <p className="text-[14px] font-medium text-[#0F0F0F]">{shop.establishedYear || "2024"}</p>
-                  </div>
-                  <div>
-                    <p className="text-[10px] font-semibold text-[#999] uppercase tracking-wider mb-1">Location</p>
-                    <p className="text-[14px] font-medium text-[#0F0F0F]">{shop.area}, {shop.city}</p>
+                    <div className="flex items-center gap-1.5 text-[12px] md:text-[13px] text-[#0A0A0F]/50 font-medium flex-wrap mt-0.5">
+                      <span>{shop.category}</span>
+                      <span className="w-1 h-1 rounded-full bg-black/[0.2] flex-shrink-0" />
+                      <span>{shop.area}, {shop.city}</span>
+                    </div>
                   </div>
                 </div>
 
-                {/* Contact Info */}
-                <div className="space-y-4">
-                  <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 rounded-xl bg-[#FF6A00]/10 flex items-center justify-center">
-                      <Phone size={18} className="text-[#FF6A00]" />
-                    </div>
-                    <div>
-                      <p className="text-[10px] font-semibold text-[#999] uppercase tracking-wider">Phone Number</p>
-                      <a href={`tel:${shop.phone}`} className="text-[14px] font-medium text-[#0F0F0F] hover:text-[#FF6A00] transition-colors">
-                        +91 {shop.phone}
-                      </a>
-                    </div>
+                {/* Rating & Open Status */}
+                <div className="flex items-center justify-between gap-2 p-3 bg-black/[0.02] rounded-lg border border-black/[0.04] mb-5">
+                  <div className="flex items-center gap-1.5 min-w-0">
+                    <StarIcon size={15} className="text-amber-500 flex-shrink-0" fill="currentColor" />
+                    <span className="text-[14px] font-bold text-[#0A0A0F]">{avgRating}</span>
+                    <span className="text-[12px] text-[#0A0A0F]/40 font-medium truncate">({totalReviews} reviews)</span>
                   </div>
-                  <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 rounded-xl bg-[#FF6A00]/10 flex items-center justify-center">
-                      <MapPin size={18} className="text-[#FF6A00]" />
-                    </div>
-                    <div>
-                      <p className="text-[10px] font-semibold text-[#999] uppercase tracking-wider">Address</p>
-                      <p className="text-[14px] font-medium text-[#0F0F0F]">{shop.address || `${shop.area}, ${shop.city}`}</p>
-                    </div>
-                  </div>
+                  <OpenNowBadge shop={shop} size="sm" />
+                </div>
+
+                {/* Quick Actions */}
+                <div className="flex gap-2 mb-5">
+                  <Button variant="primary" className="flex-1 font-bold h-10 text-[13px]" icon={MessageSquare} onClick={handleGeneralWhatsApp}>WhatsApp</Button>
+                  <Button variant="dark" className="w-12 h-10 p-0 rounded-lg flex items-center justify-center" onClick={() => window.location.href = `tel:${shop.phone}`}>
+                    <Phone size={16} />
+                  </Button>
                 </div>
 
                 {/* Description */}
-                {shop.description && (
-                  <div className="pt-4 border-t border-black/[0.06]">
-                    <p className="text-[10px] font-semibold text-[#999] uppercase tracking-wider mb-2">About Us</p>
-                    <p className="text-[13px] text-[#666] leading-relaxed">{shop.description}</p>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Business Hours */}
-            <div className="bg-white rounded-xl border border-black/[0.06] overflow-hidden">
-              <div className="p-6">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="w-10 h-10 rounded-xl bg-[#FF6A00]/10 flex items-center justify-center">
-                    <ClockIcon size={18} className="text-[#FF6A00]" />
-                  </div>
-                  <div>
-                    <p className="text-[15px] font-semibold text-[#0F0F0F]">Business Hours</p>
-                    <p className="text-[11px] text-[#999]">Timing details for the week</p>
-                  </div>
+                <div className="pt-4 border-t border-black/[0.05]">
+                  <p className="text-[13px] text-[#0A0A0F]/65 leading-relaxed font-medium mb-4">
+                    {shop.description || `Welcome to ${shop.name}! We provide high-quality ${shop.category} services in ${shop.area}, ${shop.city}. Visit us for the best experience.`}
+                  </p>
                 </div>
 
-                <div className="space-y-3">
-                  {(() => {
-                    const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
-                    const todayIdx = new Date().getDay();
-                    const orderedDays = [...days.slice(todayIdx), ...days.slice(0, todayIdx)];
-
-                    return orderedDays.map((day, idx) => {
-                      const hours = shop.openingHoursDetails?.[day];
-                      const isToday = idx === 0;
-
-                      return (
-                        <div key={day} className={`flex items-center justify-between py-2 ${isToday ? 'px-3 -mx-3 bg-gray-50 rounded-lg' : ''}`}>
-                          <div className="flex items-center gap-3">
-                            <span className={`text-[13px] capitalize ${isToday ? 'font-bold text-[#0F0F0F]' : 'font-medium text-[#666]'}`}>
-                              {day}
-                            </span>
-                            {isToday && (
-                              <span className="text-[9px] font-bold bg-[#FF6A00] text-white px-1.5 py-0.5 rounded-full uppercase">Today</span>
-                            )}
-                          </div>
-                          <div className="text-right">
-                            {hours && !hours.isClosed ? (
-                              <span className={`text-[13px] ${isToday ? 'font-bold text-[#FF6A00]' : 'font-medium text-[#0F0F0F]'}`}>
-                                {hours.open} - {hours.close}
-                              </span>
-                            ) : (
-                              <span className="text-[13px] font-medium text-red-500 italic">Closed</span>
-                            )}
-                          </div>
-                        </div>
-                      );
-                    });
-                  })()}
-                </div>
-
-                {/* Holidays */}
-                {shop.holidays && shop.holidays.length > 0 && (
-                  <div className="mt-8 pt-6 border-t border-black/[0.06]">
-                    <div className="flex items-center gap-3 mb-4">
-                      <Calendar size={16} className="text-[#999]" />
-                      <p className="text-[12px] font-semibold text-[#0F0F0F]">Upcoming Holidays</p>
-                    </div>
-                    <div className="space-y-2">
-                      {shop.holidays.map((h, i) => (
-                        <div key={i} className="flex items-center justify-between text-[13px]">
-                          <span className="text-[#666] font-medium">{h.name || 'Holiday'}</span>
-                          <span className="text-[#0F0F0F] font-bold">{h.date}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Verified Badge */}
-            {shop.isVerified && (
-              <div className="bg-blue-50 rounded-xl p-4 border border-blue-100 mb-6">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center">
-                    <ShieldCheck size={18} className="text-blue-500" />
-                  </div>
-                  <div>
-                    <p className="text-[13px] font-bold text-blue-900">Verified Business</p>
-                    <p className="text-[11px] text-blue-700 font-medium leading-tight">Identity and physical location verified by ShopBajar</p>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-
-        {activeTab === "gallery" && (
-          <div className="bg-white rounded-xl border border-black/[0.06] p-6">
-            {shop.gallery && shop.gallery.length > 0 ? (
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                {shop.gallery.map((img, idx) => (
-                  <div
-                    key={idx}
-                    className="aspect-square rounded-xl overflow-hidden cursor-pointer hover:opacity-90 transition-all border border-black/[0.06] relative"
-                  >
-                    <Image
-                      src={img}
-                      alt={`Gallery ${idx + 1}`}
-                      fill
-                      className="object-cover"
-                      sizes="(max-width: 768px) 50vw, 33vw"
-                    />
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-12">
-                <ImageIcon size={48} className="text-[#ccc] mx-auto mb-4" />
-                <h3 className="text-[15px] font-semibold text-[#0F0F0F] mb-2">No Photos Yet</h3>
-                <p className="text-[12px] text-[#666]">Gallery will be updated soon</p>
-              </div>
-            )}
-          </div>
-        )}
-
-        {activeTab === "reviews" && (
-          <div className="space-y-6">
-            <div className="bg-white rounded-xl border border-black/[0.06] p-6">
-              <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
-                <div>
-                  <h3 className="text-2xl font-bold text-[#0F0F0F] mb-1">Customer Reviews</h3>
-                  <div className="flex items-center gap-3">
-                    <div className="flex items-center gap-1 text-[#FFB800]">
-                      {[1, 2, 3, 4, 5].map((s) => (
-                        <StarIcon key={s} size={16} fill={s <= Math.round(avgRating) ? "currentColor" : "none"} />
-                      ))}
-                    </div>
-                    <span className="text-[14px] font-bold text-[#0F0F0F]">{avgRating} out of 5</span>
-                    <span className="text-[13px] text-[#999]">({totalReviews} total)</span>
-                  </div>
-                </div>
-                <button
-                  onClick={() => setShowReviewForm(true)}
-                  className="px-6 py-2.5 bg-[#0F0F0F] text-white text-[12px] font-bold rounded-xl hover:bg-[#333] transition-all"
-                >
-                  Write a Review
-                </button>
-              </div>
-
-              {loadingReviews ? (
-                <div className="py-12 flex flex-col items-center justify-center gap-4">
-                  <div className="w-8 h-8 border-2 border-[#FF6A00]/20 border-t-[#FF6A00] rounded-full animate-spin" />
-                  <p className="text-[12px] text-[#999] font-medium">Loading verified reviews...</p>
-                </div>
-              ) : reviews.length > 0 ? (
-                <div className="space-y-6">
-                  {reviews.map((review, i) => (
-                    <div key={i} className="pb-6 border-b border-black/[0.04] last:border-0 last:pb-0">
-                      <div className="flex items-center justify-between mb-3">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center border border-black/[0.05]">
-                            <User size={18} className="text-[#999]" />
-                          </div>
-                          <div>
-                            <p className="text-[14px] font-bold text-[#0F0F0F]">{review.userName}</p>
-                            <p className="text-[11px] text-[#999]">{new Date(review.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</p>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-0.5 text-[#FFB800]">
-                          {[1, 2, 3, 4, 5].map((s) => (
-                            <StarIcon key={s} size={12} fill={s <= review.rating ? "currentColor" : "none"} />
-                          ))}
-                        </div>
+                {/* Contact List */}
+                <div className="pt-4 border-t border-black/[0.05] space-y-3">
+                  <div className="flex items-center justify-between group cursor-pointer" onClick={() => window.open(`https://maps.google.com/?q=${encodeURIComponent(shop.address || `${shop.name}, ${shop.city}`)}`)}>
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-8 h-8 rounded-lg bg-black/[0.03] border border-black/[0.05] flex items-center justify-center text-[#0A0A0F]/30 group-hover:text-[#FF6A00] transition-colors flex-shrink-0">
+                        <Navigation size={14} />
                       </div>
-                      <p className="text-[13px] text-[#666] leading-relaxed italic">
-                        "{review.comment}"
-                      </p>
+                      <div className="min-w-0">
+                        <p className="text-[10px] font-bold text-[#0A0A0F]/30 uppercase tracking-[0.1em] mb-0.5">Address</p>
+                        <p className="text-[12px] font-semibold text-[#0A0A0F]/70 truncate">{shop.address || `${shop.area}, ${shop.city}`}</p>
+                      </div>
                     </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-12">
-                  <ThumbsUp size={48} className="text-[#ccc] mx-auto mb-4" />
-                  <p className="text-[13px] text-[#666] max-w-sm mx-auto">No reviews yet. Be the first to share your experience with this shop!</p>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
+                    <ChevronRight size={14} className="text-[#0A0A0F]/20 group-hover:translate-x-1 transition-transform flex-shrink-0" />
+                  </div>
 
-        {/* Review Form Dialog */}
-        <Dialog
-          isOpen={showReviewForm}
-          onClose={() => setShowReviewForm(false)}
-          title="Write a Review"
-          subtitle={`Sharing your experience with ${shop.name}`}
-          maxWidth="max-w-md"
-        >
-          <form onSubmit={handleReviewSubmit} className="space-y-6">
-            <div className="space-y-3">
-              <p className="text-[11px] font-bold text-[#999] uppercase tracking-wider">Your Rating</p>
-              <div className="flex items-center gap-2">
-                {[1, 2, 3, 4, 5].map((star) => (
+                  <div className="flex items-center justify-between group cursor-pointer" onClick={() => window.location.href = `tel:${shop.phone}`}>
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-8 h-8 rounded-lg bg-black/[0.03] border border-black/[0.05] flex items-center justify-center text-[#0A0A0F]/30 group-hover:text-emerald-500 transition-colors flex-shrink-0">
+                        <Phone size={14} />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-[10px] font-bold text-[#0A0A0F]/30 uppercase tracking-[0.1em] mb-0.5">Contact</p>
+                        <p className="text-[12px] font-semibold text-[#0A0A0F]/70 truncate">+91 {shop.phone}</p>
+                      </div>
+                    </div>
+                    <ChevronRight size={14} className="text-[#0A0A0F]/20 group-hover:translate-x-1 transition-transform flex-shrink-0" />
+                  </div>
+                </div>
+              </Card>
+
+              {/* Business Hours Widget */}
+              <Card className="p-5">
+                <div className="flex items-center gap-2.5 mb-5">
+                  <ClockIcon size={16} className="text-[#0A0A0F]/30" />
+                  <h3 className="text-[14px] font-bold text-[#0A0A0F] tracking-tight">Business Hours</h3>
+                </div>
+                <div className="space-y-3">
+                  {['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'].map((day) => {
+                    const hours = shop.openingHoursDetails?.[day];
+                    const isToday = new Date().toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase() === day;
+                    return (
+                      <div key={day} className={`flex items-center justify-between ${isToday ? "bg-[#FF6A00]/5 -mx-3 px-3 py-1.5 rounded-lg" : "py-0.5"}`}>
+                        <span className={`text-[12px] capitalize font-medium ${isToday ? "text-[#FF6A00] font-bold" : "text-[#0A0A0F]/50"}`}>{day}</span>
+                        <span className={`text-[12px] font-semibold ${isToday ? "text-[#FF6A00]" : "text-[#0A0A0F]/80"}`}>
+                          {hours && !hours.isClosed ? `${hours.open} - ${hours.close}` : "Closed"}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </Card>
+            </div>
+
+            {/* Right Panel: Tabs & Details */}
+            <div className="lg:col-span-8 space-y-6">
+
+              {/* Desktop Tabs */}
+              <div className="bg-white p-1 rounded-lg border border-black/[0.05] flex gap-1 shadow-sm overflow-x-auto scrollbar-hide">
+                {[
+                  { id: "products", label: "Catalog", icon: ShoppingBag },
+                  { id: "gallery", label: "Gallery", icon: ImageIcon },
+                  { id: "reviews", label: "Reviews", icon: MessageSquare },
+                  { id: "info", label: "Details", icon: Info },
+                ].map((tab) => (
                   <button
-                    key={star}
-                    type="button"
-                    onClick={() => setReviewForm({ ...reviewForm, rating: star })}
-                    className={`p-2 transition-all hover:scale-110 ${reviewForm.rating >= star ? "text-[#FFB800]" : "text-gray-200"}`}
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id)}
+                    className={`flex items-center justify-center gap-2 px-6 py-2 rounded-lg text-[13px] font-bold transition-all whitespace-nowrap flex-1 ${activeTab === tab.id
+                        ? "bg-[#0A0A0F] text-white"
+                        : "text-[#0A0A0F]/45 hover:bg-black/[0.04] hover:text-[#0A0A0F]"
+                      }`}
                   >
-                    <StarIcon size={32} fill={reviewForm.rating >= star ? "currentColor" : "none"} strokeWidth={2.5} />
+                    <tab.icon size={14} />
+                    {tab.label}
                   </button>
                 ))}
               </div>
-            </div>
 
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <label className="text-[11px] font-bold text-[#999] uppercase tracking-wider">Display Name</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="e.g., Rajesh Kumar"
-                  value={reviewForm.name}
-                  onChange={(e) => setReviewForm({ ...reviewForm, name: e.target.value })}
-                  className="w-full bg-gray-50 border border-black/[0.06] rounded-xl py-3 px-4 text-[14px] outline-none focus:border-[#FF6A00]/30 transition-all"
-                />
-              </div>
+              {/* ── PRODUCTS TAB ──────────────────────────────────── */}
+              {activeTab === "products" && (
+                <div className="space-y-6">
+                  {/* Search / Filter Row */}
+                  <div className="flex gap-2">
+                    <div className="relative flex-1">
+                      <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#0A0A0F]/30" />
+                      <input
+                        type="text"
+                        placeholder="Search items..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="w-full h-10 pl-9 pr-4 rounded-lg bg-white border border-black/[0.05] text-[13px] font-medium outline-none focus:border-[#FF6A00]/40 transition-all"
+                      />
+                    </div>
+                    <Button variant="outline" size="md" icon={LayoutGrid} className="w-10 p-0" />
+                  </div>
 
-              <div className="space-y-2">
-                <label className="text-[11px] font-bold text-[#999] uppercase tracking-wider">Your Experience</label>
-                <textarea
-                  required
-                  rows={4}
-                  placeholder="Tell others what you liked about this shop..."
-                  value={reviewForm.comment}
-                  onChange={(e) => setReviewForm({ ...reviewForm, comment: e.target.value })}
-                  className="w-full bg-gray-50 border border-black/[0.06] rounded-xl py-3 px-4 text-[14px] outline-none focus:border-[#FF6A00]/30 transition-all resize-none"
-                />
-              </div>
-            </div>
-
-            <button
-              type="submit"
-              disabled={submittingReview}
-              className="w-full py-4 bg-[#FF6A00] text-white rounded-xl font-bold text-[14px] flex items-center justify-center gap-2 hover:bg-[#FF8457] transition-all disabled:opacity-50"
-            >
-              {submittingReview ? (
-                <>
-                  <Loader2 size={18} className="animate-spin" /> Submitting...
-                </>
-              ) : (
-                <>
-                  <Send size={18} /> Post Review
-                </>
-              )}
-            </button>
-          </form>
-        </Dialog>
-
-        {/* Share Modal with QR Code */}
-        <Dialog
-          isOpen={showShareModal}
-          onClose={() => setShowShareModal(false)}
-          title="Share Shop Profile"
-          subtitle="Let others discover this business"
-          maxWidth="max-w-xs"
-        >
-          <div className="flex flex-col items-center gap-6 py-4">
-            <div className="p-4 bg-white rounded-3xl border-2 border-[#FF6A00]/10 shadow-xl shadow-[#FF6A00]/5 relative group">
-              <div className="w-48 h-48 relative bg-gray-50 rounded-xl overflow-hidden flex items-center justify-center">
-                <img 
-                  src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(`${DOMAIN}/shop/${shop.slug}`)}&color=1A1F36&bgcolor=FFFFFF`}
-                  alt="Shop QR Code"
-                  className="w-full h-full p-2"
-                />
-              </div>
-              <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 px-4 py-1.5 bg-[#FF6A00] text-white text-[10px] font-black uppercase tracking-widest rounded-full shadow-lg">
-                Scan to Visit
-              </div>
-            </div>
-
-            <div className="w-full space-y-3">
-              <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-2xl border border-black/[0.05]">
-                <div className="flex-1 truncate text-[12px] font-medium text-[#666]">
-                  {`${DOMAIN}/shop/${shop.slug}`}
-                </div>
-                <button 
-                  onClick={copyToClipboard}
-                  className="p-2 bg-white rounded-lg border border-black/[0.08] text-[#1A1F36] hover:text-[#FF6A00] transition-colors relative"
-                >
-                  <Share2 size={16} />
-                  {showShareTooltip && (
-                    <div className="absolute bottom-full right-0 mb-2 px-2 py-1 bg-black text-white text-[9px] rounded whitespace-nowrap">
-                      Copied!
+                  {searchQuery ? (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      {filteredItems.map((item, idx) => (
+                        <ProductCard key={idx} item={item} onOrder={handleWhatsAppOrder} onView={(item) => setSelectedItem(item)} />
+                      ))}
+                    </div>
+                  ) : menuItems.length > 0 ? (
+                    <div className="space-y-10">
+                      {menuItems.map((section, idx) => (
+                        <div key={idx} className="space-y-4">
+                          <div className="flex items-center justify-between px-1">
+                            <h3 className="text-[16px] font-bold text-[#0A0A0F] tracking-tight">{section.name || section.category}</h3>
+                            <span className="text-[11px] font-bold text-[#0A0A0F]/20 uppercase tracking-widest">{section.items?.length || 0} items</span>
+                          </div>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            {(section.items || []).map((item, itemIdx) => (
+                              <ProductCard key={itemIdx} item={{ ...item, category: section.name || section.category }} onOrder={handleWhatsAppOrder} onView={(item) => setSelectedItem(item)} />
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="py-24 text-center bg-white rounded-lg border border-dashed border-black/[0.1]">
+                      <ShoppingBag size={48} className="mx-auto text-[#0A0A0F]/10 mb-4" />
+                      <h3 className="text-[15px] font-bold text-[#0A0A0F] mb-1">Catalogue is empty</h3>
+                      <p className="text-[13px] text-[#0A0A0F]/40 font-medium">This shop hasn't listed any products yet.</p>
                     </div>
                   )}
-                </button>
-              </div>
-              
-              <div className="grid grid-cols-2 gap-2 pt-2">
-                <button 
-                  onClick={handleGeneralWhatsApp}
-                  className="py-3 px-4 bg-[#25D366] text-white text-[12px] font-bold rounded-xl flex items-center justify-center gap-2 hover:opacity-90"
-                >
-                  <MessageSquare size={14} /> WhatsApp
-                </button>
-                <button 
-                  onClick={() => {
-                    const url = `${DOMAIN}/shop/${shop.slug}`;
-                    window.open(`https://facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`, '_blank');
-                  }}
-                  className="py-3 px-4 bg-[#1877F2] text-white text-[12px] font-bold rounded-xl flex items-center justify-center gap-2 hover:opacity-90"
-                >
-                  Facebook
-                </button>
-              </div>
-            </div>
-          </div>
-        </Dialog>
-      </div>
-
-      {/* Item Modal */}
-      <Dialog
-        isOpen={!!selectedItem}
-        onClose={() => setSelectedItem(null)}
-        maxWidth="max-w-md"
-        showHeader={false}
-      >
-        {selectedItem && (
-          <div className="flex flex-col">
-            <div className="relative aspect-square w-full bg-gray-50 overflow-hidden rounded-t-2xl">
-              {selectedItem.image ? (
-                <Image
-                  src={selectedItem.image}
-                  alt={selectedItem.name}
-                  fill
-                  className="object-cover"
-                  sizes="(max-width: 768px) 100vw, 448px"
-                />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center">
-                  <ShoppingBag size={56} className="text-[#ccc]" />
                 </div>
               )}
-              <button
-                onClick={() => setSelectedItem(null)}
-                className="absolute top-4 right-4 w-8 h-8 rounded-lg bg-white flex items-center justify-center text-[#666] hover:text-[#0F0F0F] transition-all"
-              >
-                <X size={16} />
+
+              {/* ── GALLERY TAB ───────────────────────────────────── */}
+              {activeTab === "gallery" && (
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                  {shop.gallery && shop.gallery.length > 0 ? (
+                    shop.gallery.map((img, idx) => (
+                      <div key={idx} className="aspect-square rounded-lg overflow-hidden border border-black/[0.05] relative group cursor-pointer">
+                        <Image src={img} alt="g" fill className="object-cover group-hover:scale-110 transition-transform duration-500" />
+                        <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                          <ExternalLink size={20} className="text-white" />
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="col-span-full py-24 text-center bg-white rounded-lg border border-dashed border-black/[0.1]">
+                      <ImageIcon size={48} className="mx-auto text-[#0A0A0F]/10 mb-4" />
+                      <p className="text-[13px] text-[#0A0A0F]/40 font-medium">No gallery images available.</p>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* ── REVIEWS TAB ───────────────────────────────────── */}
+              {activeTab === "reviews" && (
+                <div className="space-y-6">
+                  <Card className="p-6">
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+                      <div>
+                        <h3 className="text-[18px] font-bold text-[#0A0A0F] tracking-tight mb-1">Customer Reviews</h3>
+                        <div className="flex items-center gap-2">
+                          <div className="flex items-center text-amber-500">
+                            {[1, 2, 3, 4, 5].map(s => <StarIcon key={s} size={14} fill={s <= Math.round(avgRating) ? "currentColor" : "none"} />)}
+                          </div>
+                          <span className="text-[15px] font-bold text-[#0A0A0F]">{avgRating}</span>
+                          <span className="text-[13px] text-[#0A0A0F]/30 font-medium">Based on {totalReviews} ratings</span>
+                        </div>
+                      </div>
+                      <Button variant="dark" size="md" onClick={() => setShowReviewForm(true)}>Post a Review</Button>
+                    </div>
+                  </Card>
+
+                  {loadingReviews ? (
+                    <div className="py-20 flex justify-center"><Loader2 size={24} className="animate-spin text-[#FF6A00]" /></div>
+                  ) : reviews.length > 0 ? (
+                    <div className="space-y-4">
+                      {reviews.map((review, i) => (
+                        <Card key={i} className="p-5">
+                          <div className="flex justify-between items-start mb-3">
+                            <div className="flex items-center gap-3">
+                              <div className="w-10 h-10 rounded-full bg-zinc-100 flex items-center justify-center text-[#0A0A0F]/30">
+                                <User size={20} />
+                              </div>
+                              <div>
+                                <p className="text-[14px] font-bold text-[#0A0A0F]">{review.userName}</p>
+                                <p className="text-[11px] font-medium text-[#0A0A0F]/30">{new Date(review.createdAt).toLocaleDateString()}</p>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-0.5 text-amber-500">
+                              {[1, 2, 3, 4, 5].map(s => <StarIcon key={s} size={10} fill={s <= review.rating ? "currentColor" : "none"} />)}
+                            </div>
+                          </div>
+                          <p className="text-[13px] text-[#0A0A0F]/60 font-medium leading-relaxed italic">"{review.comment}"</p>
+                        </Card>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="py-20 text-center">
+                      <ThumbsUp size={48} className="mx-auto text-[#0A0A0F]/10 mb-4" />
+                      <p className="text-[13px] text-[#0A0A0F]/40 font-medium">Be the first to review this shop.</p>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* ── INFO TAB ──────────────────────────────────────── */}
+              {activeTab === "info" && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <Card className="p-6 space-y-6">
+                    <div>
+                      <h3 className="text-[15px] font-bold text-[#0A0A0F] mb-4">Verification Status</h3>
+                      <div className={`p-4 rounded-lg border flex items-center gap-4 ${shop.isVerified ? "bg-blue-500/[0.03] border-blue-500/10" : "bg-zinc-50 border-black/[0.05]"}`}>
+                        <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${shop.isVerified ? "bg-blue-500/10 text-blue-500" : "bg-zinc-200 text-zinc-500"}`}>
+                          <ShieldCheck size={20} />
+                        </div>
+                        <div>
+                          <p className={`text-[13px] font-bold ${shop.isVerified ? "text-blue-600" : "text-zinc-600"}`}>
+                            {shop.isVerified ? "Verified Merchant" : "Unverified Listing"}
+                          </p>
+                          <p className="text-[11px] font-medium text-[#0A0A0F]/40 leading-tight">
+                            {shop.isVerified ? "This business has been physically verified by our team." : "This listing is yet to be verified by the ShopBajar team."}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div>
+                      <h3 className="text-[15px] font-bold text-[#0A0A0F] mb-4">Metadata</h3>
+                      <div className="space-y-4">
+                        {[
+                          { label: "Category", val: shop.category },
+                          { label: "Area Hub", val: shop.clusterType || "General Market" },
+                          { label: "Business ID", val: shop.id?.slice(-8).toUpperCase() },
+                          { label: "Founded", val: shop.establishedYear || "2024" },
+                        ].map((item, i) => (
+                          <div key={i} className="flex justify-between items-center py-2 border-b border-black/[0.03] last:border-0">
+                            <span className="text-[12px] font-medium text-[#0A0A0F]/40 uppercase tracking-widest">{item.label}</span>
+                            <span className="text-[13px] font-bold text-[#0A0A0F]">{item.val}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </Card>
+
+                  <Card className="p-0 overflow-hidden min-h-[300px]">
+                    {/* Minimalist Map Placeholder or actual map if available */}
+                    <div className="w-full h-full bg-[#FAFAF8] flex flex-col items-center justify-center p-8 text-center">
+                      <MapPin size={40} className="text-[#FF6A00]/20 mb-4" />
+                      <h3 className="text-[14px] font-bold text-[#0A0A0F] mb-1">Visual Location</h3>
+                      <p className="text-[12px] text-[#0A0A0F]/40 font-medium mb-6">{shop.address || `${shop.area}, ${shop.city}`}</p>
+                      <Button variant="outline" size="sm" icon={ExternalLink} onClick={() => window.open(`https://maps.google.com/?q=${encodeURIComponent(shop.address || `${shop.name}, ${shop.city}`)}`)}>
+                        Open in Google Maps
+                      </Button>
+                    </div>
+                  </Card>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ── MODALS ────────────────────────────────────────────── */}
+      <Dialog
+        isOpen={showReviewForm}
+        onClose={() => setShowReviewForm(false)}
+        title="Post a Review"
+        subtitle={`Sharing your experience with ${shop.name}`}
+      >
+        <form onSubmit={handleReviewSubmit} className="space-y-6 pt-2">
+          <div className="flex flex-col items-center gap-3">
+            <p className="text-[11px] font-bold text-[#0A0A0F]/30 uppercase tracking-[0.2em]">Select Rating</p>
+            <div className="flex gap-2">
+              {[1, 2, 3, 4, 5].map((star) => (
+                <button
+                  key={star}
+                  type="button"
+                  onClick={() => setReviewForm({ ...reviewForm, rating: star })}
+                  className={`p-1.5 rounded-lg transition-all ${reviewForm.rating >= star ? "text-amber-500 scale-110" : "text-[#0A0A0F]/10 hover:text-[#0A0A0F]/20"}`}
+                >
+                  <StarIcon size={28} fill={reviewForm.rating >= star ? "currentColor" : "none"} />
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <div className="space-y-1.5">
+              <label className="text-[11px] font-bold text-[#0A0A0F]/30 uppercase tracking-widest px-1">Display Name</label>
+              <input
+                type="text"
+                required
+                placeholder="e.g., Alex Rivers"
+                value={reviewForm.name}
+                onChange={(e) => setReviewForm({ ...reviewForm, name: e.target.value })}
+                className="w-full h-11 px-4 rounded-lg bg-black/[0.03] border border-black/[0.05] text-[14px] font-medium outline-none focus:border-[#FF6A00]/40 transition-all"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-[11px] font-bold text-[#0A0A0F]/30 uppercase tracking-widest px-1">Comment</label>
+              <textarea
+                required
+                rows={4}
+                placeholder="How was your experience?"
+                value={reviewForm.comment}
+                onChange={(e) => setReviewForm({ ...reviewForm, comment: e.target.value })}
+                className="w-full p-4 rounded-lg bg-black/[0.03] border border-black/[0.05] text-[14px] font-medium outline-none focus:border-[#FF6A00]/40 transition-all resize-none"
+              />
+            </div>
+          </div>
+
+          <Button type="submit" variant="dark" size="xl" className="w-full" loading={submittingReview}>
+            Submit Review
+          </Button>
+        </form>
+      </Dialog>
+
+      <Dialog
+        isOpen={showShareModal}
+        onClose={() => setShowShareModal(false)}
+        title="Share Profile"
+        subtitle="Invite others to explore this business"
+        maxWidth="max-w-[340px]"
+      >
+        <div className="flex flex-col items-center gap-6 py-4">
+          <div className="p-4 bg-white rounded-lg border border-black/[0.08] shadow-xl relative">
+            <div className="w-40 h-40 flex items-center justify-center">
+              <img
+                src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(`${DOMAIN}/shop/${shop.slug}`)}&color=0A0A0F&bgcolor=FFFFFF`}
+                alt="QR"
+                className="w-full h-full"
+              />
+            </div>
+            <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-[#FF6A00] text-white text-[9px] font-bold uppercase tracking-widest rounded shadow-lg">
+              Scan Profile
+            </div>
+          </div>
+
+          <div className="w-full space-y-4">
+            <div className="p-3 rounded-lg bg-black/[0.03] border border-black/[0.05] flex items-center justify-between gap-3">
+              <span className="text-[11px] font-semibold text-[#0A0A0F]/40 truncate flex-1">{`${DOMAIN}/shop/${shop.slug}`}</span>
+              <button onClick={copyToClipboard} className="p-1.5 rounded-md hover:bg-black/[0.05] text-[#0A0A0F]/40 hover:text-[#FF6A00] transition-all">
+                <Copy size={14} />
               </button>
             </div>
 
-            <div className="p-6">
-              <div className="mb-4">
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="px-2 py-0.5 rounded-full bg-[#FF6A00]/10 text-[#FF6A00] text-[9px] font-semibold">
-                    {selectedItem.category}
-                  </span>
-                  {selectedItem.popular && (
-                    <span className="px-2 py-0.5 rounded-full bg-[#0F0F0F] text-white text-[9px] font-semibold">
-                      Popular
-                    </span>
-                  )}
+            <div className="grid grid-cols-2 gap-2">
+              <Button variant="secondary" size="md" icon={MessageSquare} className="bg-emerald-50 text-emerald-600 border-emerald-100 hover:bg-emerald-100" onClick={handleGeneralWhatsApp}>WhatsApp</Button>
+              <Button variant="secondary" size="md" className="bg-blue-50 text-blue-600 border-blue-100 hover:bg-blue-100" onClick={() => window.open(`https://facebook.com/sharer/sharer.php?u=${encodeURIComponent(`${DOMAIN}/shop/${shop.slug}`)}`, '_blank')}>Facebook</Button>
+            </div>
+          </div>
+        </div>
+      </Dialog>
+
+      <Dialog
+        isOpen={!!selectedItem}
+        onClose={() => setSelectedItem(null)}
+        title={selectedItem?.name || "Product Details"}
+        subtitle={selectedItem?.category || shop?.name}
+        maxWidth="max-w-[420px]"
+      >
+        {selectedItem && (
+          <div className="flex flex-col gap-6 py-2">
+            <div className="w-full aspect-video rounded-lg bg-zinc-50 border border-black/[0.05] overflow-hidden relative shadow-inner">
+              {selectedItem.image ? (
+                <Image src={selectedItem.image} alt={selectedItem.name} fill className="object-cover" />
+              ) : (
+                <div className="w-full h-full flex flex-col items-center justify-center text-zinc-300 gap-2 bg-[#FAFAF8]">
+                  <ShoppingBag size={40} className="text-zinc-300" />
+                  <span className="text-[12px] font-medium text-zinc-400">No image available</span>
                 </div>
-                <div className="flex justify-between items-start mb-3">
-                  <h2 className="text-xl font-bold text-[#0F0F0F]">{selectedItem.name}</h2>
-                  {selectedItem.price
-                    ? <span className="text-lg font-bold text-[#FF6A00]">₹{selectedItem.price}</span>
-                    : <span className="text-sm font-semibold text-[#999]">Contact for Price</span>
-                  }
+              )}
+              {selectedItem.popular && (
+                <div className="absolute top-3 left-3 bg-[#FF6A00] text-white text-[10px] font-black px-2.5 py-1 rounded-md uppercase tracking-wider shadow-lg">
+                  Popular Offering
                 </div>
-                <p className="text-[13px] text-[#666] leading-relaxed">
-                  {selectedItem.description || "Premium quality item. Contact us for more details."}
+              )}
+            </div>
+
+            <div className="space-y-4">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <h3 className="text-[18px] font-bold text-[#0A0A0F] tracking-tight mb-1">{selectedItem.name}</h3>
+                  <p className="text-[12px] font-bold text-[#FF6A00] bg-[#FF6A00]/10 inline-block px-2 py-0.5 rounded-md">
+                    {selectedItem.price ? `₹${selectedItem.price}` : "Price on Enquiry"}
+                  </p>
+                </div>
+              </div>
+
+              <div className="pt-3 border-t border-black/[0.05]">
+                <h4 className="text-[11px] font-bold text-[#0A0A0F]/30 uppercase tracking-widest mb-1.5">Description</h4>
+                <p className="text-[13px] text-[#0A0A0F]/70 font-medium leading-relaxed whitespace-pre-line">
+                  {selectedItem.description || "Premium quality offering from our catalog. Contact us for more details, custom orders, or availability."}
                 </p>
               </div>
 
-              <div className="space-y-3">
-                <button
-                  onClick={() => handleWhatsAppOrder(selectedItem)}
-                  className="w-full flex items-center justify-center gap-2 py-3 bg-[#25D366] text-white text-[13px] font-semibold rounded-xl hover:bg-[#20BD5A] transition-all"
+              <div className="pt-4 border-t border-black/[0.05]">
+                <Button
+                  variant="primary"
+                  size="xl"
+                  className="w-full font-bold shadow-lg shadow-[#FF6A00]/20"
+                  icon={MessageSquare}
+                  onClick={() => {
+                    handleWhatsAppOrder(selectedItem);
+                    setSelectedItem(null);
+                  }}
                 >
-                  <MessageSquare size={16} /> Order on WhatsApp
-                </button>
-                <button
-                  onClick={() => setSelectedItem(null)}
-                  className="w-full py-3 text-[12px] font-medium text-[#999] hover:text-[#666] transition-all"
-                >
-                  Close
-                </button>
+                  Enquire on WhatsApp
+                </Button>
               </div>
             </div>
           </div>
@@ -875,5 +754,52 @@ const ShopProfileClient = ({ shop }) => {
     </div>
   );
 };
+
+/* ── SUB-COMPONENTS ────────────────────────────────────────── */
+
+const ProductCard = ({ item, onOrder, onView }) => (
+  <Card padding={false} className="p-2.5 flex items-center gap-3 group bg-white hover:border-[#FF6A00]/30 transition-all">
+    <div className="w-16 h-16 lg:w-18 lg:h-18 rounded-lg bg-zinc-50 border border-black/[0.05] overflow-hidden flex-shrink-0 relative cursor-pointer" onClick={() => onView?.(item)}>
+      {item.image ? (
+        <Image src={item.image} alt={item.name} fill className="object-cover group-hover:scale-110 transition-transform duration-500" />
+      ) : (
+        <div className="w-full h-full flex items-center justify-center text-zinc-300">
+          <ShoppingBag size={24} />
+        </div>
+      )}
+    </div>
+    <div className="flex-1 min-w-0 py-0.5">
+      <div className="flex items-center gap-2 mb-0.5">
+        <h4 className="text-[14px] font-bold text-[#0A0A0F] truncate tracking-tight cursor-pointer hover:text-[#FF6A00] transition-colors" onClick={() => onView?.(item)}>{item.name}</h4>
+        {item.popular && (
+          <span className="text-[8px] font-bold bg-[#FF6A00]/10 text-[#FF6A00] px-1.5 py-0.5 rounded-md uppercase tracking-wider flex-shrink-0">Popular</span>
+        )}
+      </div>
+      <p className="text-[11px] text-[#0A0A0F]/45 font-medium mb-2.5 line-clamp-1 cursor-pointer" onClick={() => onView?.(item)}>{item.description || "Premium quality product."}</p>
+      <div className="flex items-center justify-between gap-2">
+        <span className="text-[14px] font-bold text-[#FF6A00]">
+          {item.price ? `₹${item.price}` : "Enquire"}
+        </span>
+        <div className="flex items-center gap-1.5">
+          <button
+            onClick={() => onView?.(item)}
+            className="h-7 px-2.5 rounded-lg bg-black/[0.03] flex items-center gap-1 text-[#0A0A0F]/60 hover:bg-black/[0.08] hover:text-[#0A0A0F] transition-all text-[11px] font-bold shadow-sm"
+            title="View Details"
+          >
+            <Eye size={13} />
+            <span>View</span>
+          </button>
+          <button
+            onClick={() => onOrder(item)}
+            className="w-7 h-7 rounded-lg bg-[#FF6A00]/10 flex items-center justify-center text-[#FF6A00] hover:bg-[#FF6A00] hover:text-white transition-all shadow-sm group/btn"
+            title="Order / Enquire"
+          >
+            <Plus size={15} className="group-hover/btn:rotate-90 transition-transform" />
+          </button>
+        </div>
+      </div>
+    </div>
+  </Card>
+);
 
 export default ShopProfileClient;

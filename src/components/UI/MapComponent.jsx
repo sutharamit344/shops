@@ -61,7 +61,7 @@ const MapCenterUpdater = ({ center }) => {
 
 export default function MapComponent({ center, onLocationSelect, height = "300px" }) {
   return (
-    <div className="w-full rounded-2xl overflow-hidden border border-[#1A1F36]/10 mb-4 z-0 relative shadow-inner" style={{ height }}>
+    <div className="w-full rounded-2xl overflow-hidden border border-[#0A0A0F]/10 mb-4 z-0 relative shadow-inner" style={{ height }}>
       <MapContainer
         center={center}
         zoom={15}
@@ -79,3 +79,4 @@ export default function MapComponent({ center, onLocationSelect, height = "300px
     </div>
   );
 }
+

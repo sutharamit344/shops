@@ -135,7 +135,7 @@ const SmartSearch = ({ onFocusStateChange, pageTitle, pageContext }) => {
     ];
 
     const all = [...pool];
-  
+
     // Remove duplicates based on text (not just path) to prevent same-text doubles
     const seen = new Set();
     return all
@@ -271,14 +271,29 @@ const SmartSearch = ({ onFocusStateChange, pageTitle, pageContext }) => {
   if (!mounted) return null;
 
   return (
-    <div ref={containerRef} className={`w-full transition-all duration-300 z-50 md:max-w-2xl mx-auto ${isFocused ? "fixed inset-0 mt-[69px] lg:mt-0 lg:top-0 bg-white z-[999] p-4 flex flex-col md:relative md:p-0 md:bg-transparent md:z-50 md:flex-none" : "relative"}`}>
-      <div className={`relative flex items-center bg-white transition-all ${isFocused ? "rounded-t-[20px] md:rounded-2xl border-b md:border-2 border-[#FF6A00] ring-0 md:ring-4 md:ring-[#FF6A00]/10 shadow-xl" : "rounded-[20px] md:rounded-2xl border-2 border-black/[0.06] hover:border-black/[0.15]"}`}>
+    <div
+      ref={containerRef}
+      className={`w-full transition-all duration-200 z-50 ${isFocused
+          ? "fixed inset-0 mt-[60px] lg:mt-0 lg:top-0 bg-white z-[999] p-3 flex flex-col md:relative md:p-0 md:bg-transparent md:z-50 md:flex-none"
+          : "relative"
+        }`}
+    >
+      {/* Input bar */}
+      <div
+        className={`relative flex items-center bg-white transition-all duration-150 ${isFocused
+            ? "rounded-t-lg md:rounded-lg border border-black/[0.12] shadow-[0_0_0_3px_rgba(255,106,0,0.08)]"
+            : "rounded-lg border border-black/[0.08] hover:border-black/[0.14]"
+          }`}
+      >
         {isFocused ? (
-          <button onClick={() => { setIsOpen(false); setIsFocused(false); }} className="ml-3 lg:hidden p-2 text-gray-400">
-            <ArrowLeft size={18} />
+          <button
+            onClick={() => { setIsOpen(false); setIsFocused(false); }}
+            className="ml-2.5 lg:hidden p-1.5 text-[#0A0A0F]/40 hover:text-[#0A0A0F]"
+          >
+            <ArrowLeft size={16} />
           </button>
         ) : (
-          <Search className="ml-4 md:ml-5 text-gray-400 flex-shrink-0 w-4 h-4 md:w-[18px] md:h-[18px]" />
+          <Search className="ml-3 text-[#0A0A0F]/30 flex-shrink-0" size={14} />
         )}
 
         <input
@@ -289,120 +304,126 @@ const SmartSearch = ({ onFocusStateChange, pageTitle, pageContext }) => {
             setIsOpen(true);
             setActiveIndex(-1);
           }}
-          onFocus={() => {
-            setIsOpen(true);
-            setIsFocused(true);
-          }}
+          onFocus={() => { setIsOpen(true); setIsFocused(true); }}
           onKeyDown={handleKeyDown}
           placeholder={pageTitle || "Search shops, category, or area..."}
-          className="w-full h-12 md:h-14 px-3 md:px-4 bg-transparent outline-none text-[15px] font-bold text-[#1A1F36] placeholder:text-gray-400 placeholder:font-medium"
+          className="w-full h-9 md:h-9 px-2.5 bg-transparent outline-none text-[13px] font-medium text-[#0A0A0F] placeholder:text-[#0A0A0F]/35"
           role="combobox"
           aria-expanded={isOpen}
         />
+
         {query && (
-          <button onClick={() => dispatch(setQuery(""))} className="p-2 mr-1 hover:bg-gray-100 rounded-full transition-colors text-gray-400">
-            <X size={16} />
+          <button
+            onClick={() => dispatch(setQuery(""))}
+            className="p-1.5 mr-1 hover:bg-black/[0.04] rounded-md transition-colors text-[#0A0A0F]/30 hover:text-[#0A0A0F]/60"
+          >
+            <X size={13} />
           </button>
         )}
         <button
           onClick={() => handleSearch()}
-          className={`mr-2 h-9 md:h-10 px-3 md:px-4 bg-[#FF6A00] text-white rounded-xl md:rounded-xl text-[13px] font-black hover:bg-[#E65F00] transition-all active:scale-95 flex items-center gap-2 flex-shrink-0 ${isFocused ? "flex" : "hidden md:flex"}`}
+          className={`mr-1.5 h-7 px-3 bg-[#FF6A00] text-white rounded-md text-[12px] font-semibold hover:bg-[#E65F00] transition-all flex items-center gap-1.5 flex-shrink-0 ${isFocused ? "flex" : "hidden md:flex"
+            }`}
         >
-          <Search size={15} />
-          <span className="hidden md:inline uppercase tracking-widest">Search</span>
+          <Search size={12} />
+          <span className="hidden md:inline">Search</span>
         </button>
       </div>
 
       {(isOpen || isFocused) && (
-        <div className={`w-full bg-white md:absolute md:top-full md:left-0 md:right-0 md:mt-2 md:rounded-b-[24px] md:border-x md:border-b md:border md:border-black/[0.06] animate-in fade-in slide-in-from-top-2 duration-200 md:shadow-2xl overflow-hidden z-[110] ${isFocused ? "flex-1 overflow-y-auto" : "hidden md:block"}`}>
-          <div className="py-2 max-h-full md:max-h-[450px] overflow-y-auto" role="listbox">
+        <div
+          className={`w-full bg-white md:absolute md:top-full md:left-0 md:right-0 md:mt-1 md:rounded-b-lg md:border md:border-black/[0.08] md:border-t-0 animate-in fade-in slide-in-from-top-1 duration-150 md:shadow-xl overflow-hidden z-[110] ${isFocused ? "flex-1 overflow-y-auto" : "hidden md:block"
+            }`}
+        >
+          <div className="py-1 max-h-full md:max-h-[400px] overflow-y-auto" role="listbox">
             {suggestions.map((item, index) => (
               <React.Fragment key={index}>
                 {item.isHeader ? (
-                  <div className="px-5 py-2.5 bg-gray-50/50">
-                    <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{item.text}</span>
+                  <div className="px-4 pt-3 pb-1.5">
+                    <span className="text-[10px] font-semibold text-[#0A0A0F]/30 uppercase tracking-widest">{item.text}</span>
                   </div>
                 ) : (
-                  <div className="group relative">
+                  <div
+                    onClick={() => handleSearch(item)}
+                    onMouseEnter={() => setActiveIndex(index)}
+                    className={`w-full px-3.5 py-2.5 flex items-center gap-3 text-left cursor-pointer transition-colors ${activeIndex === index ? "bg-black/[0.03]" : "hover:bg-black/[0.02]"
+                      }`}
+                    role="option"
+                  >
                     <div
-                      onClick={() => handleSearch(item)}
-                      onMouseEnter={() => setActiveIndex(index)}
-                      className={`w-full px-5 py-4 md:py-3.5 flex items-center gap-4 text-left cursor-pointer transition-colors ${activeIndex === index ? "bg-[#FAFAF8]" : ""}`}
-                      role="option"
+                      className={`w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 ${item.type === "history" ? "bg-black/[0.04] text-[#0A0A0F]/40" :
+                          item.type === "category" ? "bg-[#FF6A00]/10 text-[#FF6A00]" :
+                            item.type === "shop" ? "bg-emerald-50 text-emerald-600" :
+                              item.type === "cluster" ? "bg-amber-50 text-amber-600" :
+                                item.type === "location" ? "bg-blue-50 text-blue-600" :
+                                  "bg-black/[0.04] text-[#0A0A0F]/40"
+                        }`}
                     >
-                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${item.type === 'history' ? 'bg-gray-50 text-gray-400' :
-                        item.type === 'category' ? 'bg-[#FF6A00]/10 text-[#FF6A00]' :
-                          item.type === 'shop' ? 'bg-emerald-50 text-emerald-500' :
-                            item.type === 'cluster' ? 'bg-amber-50 text-amber-500' :
-                              item.type === 'location' ? 'bg-blue-50 text-blue-500' :
-                                'bg-gray-50 text-gray-400'
-                        }`}>
-                        {item.type === 'history' ? <History size={18} /> :
-                          item.type === 'category' ? <CategoryIcon name={item.text} size={18} /> :
-                            item.type === 'shop' ? <Store size={18} /> :
-                              item.type === 'cluster' ? <Award size={18} /> :
-                                item.type === 'location' ? <MapPin size={18} /> :
-                                  <Search size={18} />}
-                      </div>
-                      <div className="flex-1 overflow-hidden">
-                        <p className={`text-[15px] font-bold truncate ${activeIndex === index ? "text-[#FF6A00]" : "text-[#1A1F36]"}`}>
-                          {highlightMatch(item.text, query)}
-                        </p>
-                        <p className="text-[11px] text-gray-400 font-bold uppercase tracking-wider truncate">
-                          {item.type === 'shop' ? (item.category || 'Shop') :
-                            item.count > 0 ? `${item.type} • ${item.count} Shops` : item.type}
-                        </p>
-                      </div>
-
-                      {item.type === 'shop' && (
-                        <div className="flex gap-2 pr-2">
-                          {item.whatsapp && (
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                const msg = encodeURIComponent(`Hi! Found your shop *${item.text}* on ${BRAND}!`);
-                                window.open(`https://wa.me/91${item.whatsapp.replace(/\D/g, '')}?text=${msg}`, '_blank');
-                              }}
-                              className="w-10 h-10 rounded-xl bg-[#25D366]/10 text-[#25D366] flex items-center justify-center hover:bg-[#25D366] hover:text-white transition-all active:scale-90"
-                              title="WhatsApp"
-                            >
-                              <MessageSquare size={16} />
-                            </button>
-                          )}
-                          {item.phone && (
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                window.location.href = `tel:${item.phone}`;
-                              }}
-                              className="w-10 h-10 rounded-xl bg-[#0F0F0F]/5 text-[#0F0F0F] flex items-center justify-center hover:bg-[#0F0F0F] hover:text-white transition-all active:scale-90"
-                              title="Call Now"
-                            >
-                              <Phone size={16} />
-                            </button>
-                          )}
-                          <div className="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center text-gray-400 group-hover:bg-[#FF6A00]/5 group-hover:text-[#FF6A00] transition-all">
-                            <ChevronRight size={16} />
-                          </div>
-                        </div>
-                      )}
+                      {item.type === "history" ? <History size={14} /> :
+                        item.type === "category" ? <CategoryIcon name={item.text} size={14} /> :
+                          item.type === "shop" ? <Store size={14} /> :
+                            item.type === "cluster" ? <Award size={14} /> :
+                              item.type === "location" ? <MapPin size={14} /> :
+                                <Search size={14} />}
                     </div>
+                    <div className="flex-1 min-w-0">
+                      <p className={`text-[13px] font-medium truncate ${activeIndex === index ? "text-[#FF6A00]" : "text-[#0A0A0F]"
+                        }`}>
+                        {highlightMatch(item.text, query)}
+                      </p>
+                      <p className="text-[11px] text-[#0A0A0F]/35 truncate">
+                        {item.type === "shop" ? (item.category || "Shop") :
+                          item.count > 0 ? `${item.count} shops` : item.type}
+                      </p>
+                    </div>
+
+                    {item.type === "shop" && (
+                      <div className="flex gap-1.5 pr-1">
+                        {item.whatsapp && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              const msg = encodeURIComponent(`Hi! Found your shop *${item.text}* on ${BRAND}!`);
+                              window.open(`https://wa.me/91${item.whatsapp.replace(/\D/g, "")}?text=${msg}`, "_blank");
+                            }}
+                            className="w-7 h-7 rounded-md bg-[#25D366]/10 text-[#25D366] flex items-center justify-center hover:bg-[#25D366] hover:text-white transition-all"
+                          >
+                            <MessageSquare size={13} />
+                          </button>
+                        )}
+                        {item.phone && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              window.location.href = `tel:${item.phone}`;
+                            }}
+                            className="w-7 h-7 rounded-md bg-black/[0.04] text-[#0A0A0F]/50 flex items-center justify-center hover:bg-[#0A0A0F] hover:text-white transition-all"
+                          >
+                            <Phone size={13} />
+                          </button>
+                        )}
+                        <div className="w-7 h-7 rounded-md bg-black/[0.03] flex items-center justify-center text-[#0A0A0F]/25 group-hover:text-[#FF6A00] transition-all">
+                          <ChevronRight size={13} />
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
               </React.Fragment>
             ))}
             {suggestions.length === 0 && query && (
-              <div className="px-10 py-20 text-center">
-                <Search size={40} className="mx-auto text-gray-200 mb-4" />
-                <p className="text-gray-400 font-bold">No results found for "{query}"</p>
+              <div className="px-4 py-10 text-center">
+                <Search size={24} className="mx-auto text-[#0A0A0F]/15 mb-2" />
+                <p className="text-[13px] text-[#0A0A0F]/35">No results for "{query}"</p>
               </div>
             )}
           </div>
-          <div className="bg-gray-50 px-5 py-4 border-t border-black/[0.04] flex items-center justify-between">
-            <span className="text-[11px] font-black text-gray-300 uppercase tracking-widest">Discovery Engine v2.0</span>
-            <div className="flex items-center gap-1.5">
-              <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
-              <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Active</span>
+          {/* Footer */}
+          <div className="px-4 py-2.5 border-t border-black/[0.05] flex items-center justify-between bg-black/[0.01]">
+            <span className="text-[10px] font-semibold text-[#0A0A0F]/25 uppercase tracking-widest">Discovery Engine</span>
+            <div className="flex items-center gap-1">
+              <div className="w-1.5 h-1.5 rounded-full bg-green-500" />
+              <span className="text-[10px] font-semibold text-[#0A0A0F]/30 uppercase tracking-widest">Live</span>
             </div>
           </div>
         </div>

@@ -124,22 +124,23 @@ export default function NotFound() {
 
   // Final 404 UI
   return (
-    <div className="min-h-screen bg-[#FAFAF8] flex flex-col">
+    <div className="min-h-screen bg-[#F7F7F5] flex flex-col selection:bg-[#FF6A00]/10">
       <Navbar />
-      <main className="flex-1 flex flex-col items-center justify-center px-4 pt-24 pb-16 text-center">
-        <div className="w-24 h-24 bg-[#FF6A00]/10 rounded-[32px] flex items-center justify-center mb-8">
-          <Store size={44} className="text-[#FF6A00]" />
+      <div className="absolute inset-0 dot-grid opacity-[0.05] pointer-events-none" />
+      <main className="flex-1 flex flex-col items-center justify-center px-4 relative z-10 text-center">
+        <div className="w-20 h-20 bg-black/[0.03] border border-black/[0.05] rounded-2xl flex items-center justify-center mb-8 shadow-sm">
+          <Store size={32} className="text-[#0A0A0F]/20" />
         </div>
-        <h1 className="text-4xl md:text-5xl font-black text-[#1A1F36] mb-4 tracking-tight italic">Page Not Found</h1>
-        <p className="text-[17px] text-gray-400 font-medium mb-10 max-w-md">
-          The location or shop you're looking for doesn't seem to exist in our marketplace.
+        <h1 className="text-[32px] md:text-[48px] font-bold text-[#0A0A0F] mb-3 tracking-tight">Location not found</h1>
+        <p className="text-[15px] text-[#0A0A0F]/45 font-medium mb-10 max-w-sm">
+          The business or discovery path you're requesting is not active on the ShopBajar network.
         </p>
-        <div className="flex gap-4 flex-wrap justify-center">
+        <div className="flex gap-3 flex-wrap justify-center">
           <Link href="/">
-            <Button className="h-12 px-8 rounded-2xl bg-[#1A1F36] text-white font-bold hover:shadow-xl transition-all">Back to Home</Button>
+            <Button variant="dark" size="lg" className="px-8 shadow-xl">Return Home</Button>
           </Link>
-          <Link href="/explore-nearby">
-            <Button variant="outline" className="h-12 px-8 rounded-2xl border-black/[0.1] font-bold">Discover Shops</Button>
+          <Link href="/explore">
+            <Button variant="outline" size="lg" className="px-8">Discovery Engine</Button>
           </Link>
         </div>
       </main>

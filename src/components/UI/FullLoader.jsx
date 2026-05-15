@@ -3,75 +3,75 @@
 import React from "react";
 import Image from "next/image";
 import { BRAND } from "@/lib/config";
+import { Store } from "lucide-react";
 
-const FullLoader = ({ message = "Loading experience..." }) => {
+const FullLoader = ({ message = "Initializing Network..." }) => {
   return (
-    <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-[#FAFAF8] overflow-hidden">
-      {/* Dynamic Background Elements */}
-      <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-[#FF6A00]/5 blur-[120px] rounded-full animate-pulse" />
-      <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-[#1A1F36]/5 blur-[120px] rounded-full animate-pulse delay-1000" />
+    <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-[#F7F7F5] overflow-hidden selection:bg-[#FF6A00]/10 selection:text-[#FF6A00]">
+      {/* Dot Grid Background */}
+      <div className="absolute inset-0 dot-grid opacity-[0.05] pointer-events-none" />
 
       {/* Center Content */}
-      <div className="relative flex flex-col items-center">
-        {/* Animated Logo Container */}
-        <div className="relative mb-12 group">
-          {/* External Rotating Rings */}
-          <div className="absolute inset-[-15px] border border-dashed border-[#FF6A00]/20 rounded-full animate-rotate-slow" />
-          <div className="absolute inset-[-30px] border border-dotted border-[#1A1F36]/5 rounded-full animate-rotate-slow [animation-direction:reverse]" />
-
-          {/* Main Logo Hexagon/Circle Container */}
-          <div className="relative w-24 h-24 flex items-center justify-center">
-            {/* Liquid Background */}
-            <div className="absolute inset-0 bg-white shadow-[0_20px_50px_rgba(255,106,0,0.12)] border border-[#FF6A00]/10 animate-liquid" />
-
-            {/* Logo */}
-            <Image
-              src="/brand-logo-v1.png"
-              alt={BRAND}
-              width={72}
-              height={72}
-              className="relative z-10 w-full h-full object-contain animate-in zoom-in duration-1000 fade-in transition-transform duration-700 group-hover:scale-110"
-              priority
-            />
+      <div className="relative flex flex-col items-center animate-in fade-in zoom-in-95 duration-700">
+        {/* Animated Business Container */}
+        <div className="relative mb-10">
+          <div className="absolute inset-[-20px] border border-black/[0.03] rounded-full animate-pulse" />
+          <div className="relative w-16 h-16 bg-white rounded-2xl flex items-center justify-center shadow-2xl border border-black/[0.05] z-10 overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-br from-white via-white to-black/[0.02]" />
+            <Store size={32} className="text-[#FF6A00] relative z-10 animate-in zoom-in-50 duration-500" />
           </div>
-
-          {/* Floating Particles */}
-          <div className="absolute top-0 right-0 w-2 h-2 bg-[#FF6A00] rounded-full blur-[2px] animate-ping" />
-          <div className="absolute bottom-4 -left-2 w-1.5 h-1.5 bg-[#1A1F36]/20 rounded-full animate-bounce" />
+          {/* Scanning Line */}
+          <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-[#FF6A00]/40 to-transparent animate-scan" />
         </div>
 
-        {/* Branding & Message */}
-        <div className="flex flex-col items-center gap-4 text-center px-6">
-          <div className="relative">
-            <h2 className="text-[28px] font-black tracking-tighter text-[#1A1F36] flex items-center">
+        {/* Branding & Status */}
+        <div className="flex flex-col items-center gap-6 text-center">
+          <div className="flex items-center gap-2">
+            <h2 className="text-[24px] font-bold tracking-tight text-[#0A0A0F]">
               Shop<span className="text-[#FF6A00]">Bajar</span>
-              <span className="absolute -top-1 -right-4 flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#FF6A00] opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-[#FF6A00]"></span>
-              </span>
             </h2>
           </div>
 
-          <div className="flex flex-col items-center gap-1">
-            <p className="text-[12px] font-bold text-[#1A1F36]/40 uppercase tracking-[0.3em] animate-pulse">
-              {message}
-            </p>
-            {/* Progress Bar Emulation */}
-            <div className="w-32 h-[2px] bg-[#1A1F36]/5 rounded-full mt-4 overflow-hidden">
-              <div className="h-full bg-gradient-to-r from-transparent via-[#FF6A00] to-transparent w-full -translate-x-full animate-[shimmer_2s_infinite]" />
+          <div className="flex flex-col items-center gap-4">
+            <div className="flex items-center gap-3">
+              <div className="w-1.5 h-1.5 rounded-full bg-[#FF6A00] animate-ping" />
+              <p className="text-[11px] font-bold text-[#0A0A0F]/30 uppercase tracking-[0.25em]">
+                {message}
+              </p>
+            </div>
+
+            {/* Minimal High-Density Loader */}
+            <div className="w-40 h-[1.5px] bg-black/[0.03] rounded-full overflow-hidden relative">
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[#FF6A00] to-transparent w-full -translate-x-full animate-loading-bar" />
             </div>
           </div>
         </div>
       </div>
 
-      {/* Footer Branding */}
-      <div className="absolute bottom-10 flex flex-col items-center gap-4 animate-in slide-in-from-bottom duration-1000">
-        <div className="flex items-center gap-3">
-          <div className="h-[1px] w-8 bg-gradient-to-r from-transparent to-[#1A1F36]/10" />
-          <span className="text-[10px] font-black tracking-[0.4em] uppercase text-[#1A1F36]/20">Premium Marketplace</span>
-          <div className="h-[1px] w-8 bg-gradient-to-l from-transparent to-[#1A1F36]/10" />
+      {/* Infrastructure Note */}
+      <div className="absolute bottom-12 flex flex-col items-center gap-3">
+        <div className="flex items-center gap-2">
+          <span className="text-[9px] font-bold tracking-[0.3em] uppercase text-[#0A0A0F]/15">Distributed Network Architecture</span>
         </div>
       </div>
+
+      <style jsx global>{`
+        @keyframes scan {
+          0% { transform: translateY(-20px); opacity: 0; }
+          50% { opacity: 1; }
+          100% { transform: translateY(80px); opacity: 0; }
+        }
+        @keyframes loading-bar {
+          0% { transform: translateX(-100%); }
+          100% { transform: translateX(100%); }
+        }
+        .animate-scan {
+          animation: scan 2s linear infinite;
+        }
+        .animate-loading-bar {
+          animation: loading-bar 1.5s cubic-bezier(0.65, 0.815, 0.735, 0.395) infinite;
+        }
+      `}</style>
     </div>
   );
 };

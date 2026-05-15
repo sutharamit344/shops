@@ -18,7 +18,6 @@ import {
   ChevronDown, LayoutGrid, List
 } from "lucide-react";
 import Navbar from "@/components/Navbar";
-import Button from "@/components/UI/Button";
 import SmartSearch from "@/components/Search/SmartSearch";
 import DiscoveryView from "@/components/Search/DiscoveryView";
 import { getNearestLocation, updateLocationCache } from "@/lib/db";
@@ -99,19 +98,16 @@ const DiscoveryClient = ({ slug, parsed: initialParsed }) => {
   // Reflects the URL (what the user is browsing)
   const currentActiveLocation = React.useMemo(() => {
     let city = searchParsed?.city || initialParsed?.city || localCity || "";
-    let area = searchParsed?.area || localArea || "";
+    let area = searchParsed?.area || initialParsed?.area || localArea || "";
+    let category = searchParsed?.category || initialParsed?.category || localCategory || "";
 
     // Filter out area segment if it's actually a category or cluster slug
     if (area && (clusters?.length > 0 || categories?.length > 0)) {
-      const isCluster = clusters.some(c =>
-        slugify(c.name) === slugify(area) ||
-        c.name.toLowerCase().includes(area.toLowerCase())
-      );
       const isCategory = categories.some(c =>
         slugify(c.name) === slugify(area) ||
         c.name.toLowerCase().includes(area.toLowerCase())
       );
-      if (isCluster || isCategory) area = "";
+      if (isCategory || slugify(area) === slugify(category)) area = "";
     }
 
     return {
@@ -125,35 +121,39 @@ const DiscoveryClient = ({ slug, parsed: initialParsed }) => {
   const { sortBy = 'relevance', tags = {} } = useSelector((state) => state.filters || {});
   const activeFilterCount = (sortBy !== 'relevance' ? 1 : 0) + Object.values(tags).filter(Boolean).length;
 
-  // Helper for dynamic title
-  const getDynamicTitle = () => {
-    let city = searchParsed?.city || initialParsed?.city || localCity;
-    let category = searchParsed?.category || initialParsed?.category || localCategory;
-    let area = searchParsed?.area || localArea;
+  // Refactored shared title logic
+  const constructPageTitle = (cat, ar, ci, clType) => {
+    let category = cat || "";
+    let area = ar || "";
+    let city = ci || "";
+    let cluster = clType || "";
 
-    // Fix: If area is actually a category or cluster, remove it from area context
-    if (area && (categories?.length > 0 || clusters?.length > 0)) {
+    if (cluster) {
+      const parts = [`Shops in ${properCase(cluster)}`];
+      if (area && city) parts.push(`${properCase(area)}, ${properCase(city)}`);
+      else if (area) parts.push(`${properCase(area)}`);
+      else if (city) parts.push(`${properCase(city)}`);
+      return parts.join(', ');
+    }
+
+    // 1. Resolve Area vs Category redundancy
+    if (area && (categories?.length > 0 || slugify(area) === slugify(category))) {
       const isActuallyCategory = categories.some(c =>
         slugify(c.name) === slugify(area) ||
         c.name.toLowerCase().includes(area.toLowerCase())
       );
-      const isActuallyCluster = clusters.some(c =>
-        slugify(c.name) === slugify(area) ||
-        c.name.toLowerCase().includes(area.toLowerCase())
-      );
-      
-      if (isActuallyCategory) {
+      if (isActuallyCategory || slugify(area) === slugify(category)) {
         if (!category) category = area;
-        area = "";
-      } else if (isActuallyCluster) {
         area = "";
       }
     }
 
+    // 2. Clean "Shops" suffix
+    if (category.toLowerCase().endsWith(" shops")) category = category.slice(0, -6).trim();
+    else if (category.toLowerCase().endsWith(" shop")) category = category.slice(0, -5).trim();
 
-
-    // Check for "Near You" match
-    let isNearYou = false;
+    // 3. Identify "Near Me" context
+    let isNearMe = false;
     if (typeof window !== "undefined") {
       const lastCity = (localStorage.getItem('last_city') || "").toLowerCase();
       const lastArea = (localStorage.getItem('last_area') || "").toLowerCase();
@@ -162,20 +162,16 @@ const DiscoveryClient = ({ slug, parsed: initialParsed }) => {
 
       if (tCity && lastCity.includes(tCity)) {
         if (!tArea || (tArea && lastArea.includes(tArea))) {
-          isNearYou = true;
+          isNearMe = true;
         }
       }
     }
 
-    let parts = [];
-    if (category) {
-      parts.push(`${properCase(category)} Shops`);
-    } else {
-      parts.push("Shops");
-    }
+    const parts = [];
+    parts.push(category ? `${properCase(category)} Shops` : "Shops");
 
-    if (isNearYou) {
-      parts.push("Near You");
+    if (isNearMe) {
+      parts.push("Near Me");
     } else if (area && city) {
       parts.push(`in ${properCase(area)}, ${properCase(city)}`);
     } else if (city) {
@@ -185,7 +181,13 @@ const DiscoveryClient = ({ slug, parsed: initialParsed }) => {
     const title = parts.join(' ');
     return title === "Shops" ? "Explore Marketplace" : title;
   };
-  const titleText = getDynamicTitle();
+
+  const activeCategory = searchParsed ? searchParsed.category : (initialParsed?.category || localCategory);
+  const activeCluster = searchParsed ? searchParsed.clusterType : "";
+  const activeArea = searchParsed ? searchParsed.area : (initialParsed?.area || localArea);
+  const activeCity = searchParsed ? searchParsed.city : (initialParsed?.city || localCity);
+
+  const titleText = constructPageTitle(activeCategory, activeArea, activeCity, activeCluster);
 
   const hasSyncedRef = useRef(false);
   const [hasSynced, setHasSynced] = useState(false);
@@ -198,13 +200,13 @@ const DiscoveryClient = ({ slug, parsed: initialParsed }) => {
     let clusterType = "";
 
     // 1. Distinguish between Area and Category
-    if (!finalCategory && finalArea) {
+    if (finalArea) {
       const isActuallyCategory = categories.some(c =>
         slugify(c.name) === slugify(finalArea) ||
         c.name.toLowerCase().includes(finalArea.toLowerCase())
       );
-      if (isActuallyCategory) {
-        finalCategory = finalArea;
+      if (isActuallyCategory || slugify(finalArea) === slugify(finalCategory || "")) {
+        if (!finalCategory) finalCategory = finalArea;
         finalArea = "";
       }
     }
@@ -222,28 +224,20 @@ const DiscoveryClient = ({ slug, parsed: initialParsed }) => {
     }
 
     dispatch(setParsed({ ...initialParsed, category: finalCategory, area: finalArea, clusterType }));
-    // Set the full title as the search input value (e.g. "Electronics Shops in Thaltej, Ahmedabad")
-    // We compute it here directly since titleText is derived after this effect runs
-    const titleParts = [];
-    if (finalCategory) {
-      titleParts.push(`${properCase(finalCategory)} Shops`);
-    } else {
-      titleParts.push("Shops");
-    }
-    const urlArea = finalArea || initialParsed?.area || "";
-    const urlCity = initialParsed?.city || localCity || "";
-    if (urlArea && urlCity) {
-      titleParts.push(`in ${properCase(urlArea)}, ${properCase(urlCity)}`);
-    } else if (urlCity) {
-      titleParts.push(`in ${properCase(urlCity)}`);
-    }
-    const inputTitle = titleParts.join(" ");
-    dispatch(setQuery(inputTitle !== "Shops" ? inputTitle : ""));
     dispatch(setCategory(finalCategory));
     
     hasSyncedRef.current = true;
     setHasSynced(true);
   }, [initialParsed, categories, clusters, dispatch]);
+
+  // Reactive sync: Ensure search input box perfectly matches the dynamic page title
+  useEffect(() => {
+    if (titleText && titleText !== "Explore Marketplace") {
+      dispatch(setQuery(titleText));
+    } else {
+      dispatch(setQuery(""));
+    }
+  }, [titleText, dispatch]);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -282,7 +276,7 @@ const DiscoveryClient = ({ slug, parsed: initialParsed }) => {
       // Pass GPS-detected area name into thunk so it can use it for filtering
       detectedAreaName: userLocationName || "",
     }));
-  }, [hasSynced, initialParsed, userCoords?.lat, userCoords?.lng, localArea, userLocationName, dispatch]);
+  }, [hasSynced, initialParsed, userCoords?.lat, userCoords?.lng, localArea, userLocationName, sortBy, tags, dispatch]);
 
   const applyLocation = (city, area, pincode, village, lat, lng, isCurrent = false) => {
     const cleanCity = city.replace(/ District| Division/g, "");
@@ -350,78 +344,80 @@ const DiscoveryClient = ({ slug, parsed: initialParsed }) => {
   const [viewMode, setViewMode] = useState("grid");
 
   return (
-    <div className="min-h-screen bg-[#FAFAF8]">
+    <div className="min-h-screen bg-[#F7F7F5]">
       <Navbar />
 
-      <main className="pt-[69px] sm:pt-22 md:pt-28 pb-8 px-4 md:px-8">
-        {/* Mobile Sticky Search */}
-        <div className="sticky top-[69px] z-40 py-2 transition-all lg:hidden bg-[#FAFAF8]/95 backdrop-blur-md border-b border-black/[0.04] -mx-4 px-4 mb-4">
-          <div className="max-w-7xl mx-auto flex items-center gap-3">
+      <main className="pt-[60px] pb-12">
+        {/* Mobile Sticky Sub-header */}
+        <div className="sticky top-[60px] z-40 bg-[#F7F7F5]/90 backdrop-blur-lg border-b border-black/[0.05] px-4 py-2 mb-4 lg:hidden">
+          <div className="flex items-center gap-2">
             <div className="flex-1">
               <SmartSearch pageTitle={titleText} pageContext={currentActiveLocation} />
             </div>
-            <Button
-              variant={activeFilterCount > 0 ? "primary" : "ghost"}
+            <button
               onClick={() => setIsFilterOpen(true)}
-              className="px-3 h-12 relative rounded-2xl"
+              className={`relative h-9 w-9 rounded-lg flex items-center justify-center border transition-all flex-shrink-0 ${
+                activeFilterCount > 0
+                  ? "bg-[#FF6A00] border-[#FF6A00] text-white"
+                  : "bg-white border-black/[0.07] text-[#0A0A0F]/50 hover:border-black/[0.15]"
+              }`}
             >
-              <SlidersHorizontal size={20} />
+              <SlidersHorizontal size={15} />
               {activeFilterCount > 0 && (
-                <span className="absolute -top-1 -right-1 w-5 h-5 bg-[#FF6A00] text-white text-[10px] flex items-center justify-center rounded-full border-2 border-white font-bold">
+                <span className="absolute -top-1 -right-1 w-4 h-4 bg-white text-[#FF6A00] text-[9px] flex items-center justify-center rounded-full border border-[#FF6A00] font-bold">
                   {activeFilterCount}
                 </span>
               )}
-            </Button>
+            </button>
           </div>
         </div>
 
-        <div className="max-w-7xl mx-auto">
-          {/* Header Section: Title, Location & Toggle */}
-          <div className="flex flex-col md:flex-row md:items-end items-center justify-between gap-6 mb-3">
-            <div className="flex flex-col gap-2 items-start md:items-center md:flex-row items-center justify-between flex-nowrap w-full">
-              <h1 className="text-2xl md:text-4xl font-black text-[#1A1F36] tracking-tighter leading-tight ">
+        <div className="max-w-7xl mx-auto px-4 md:px-6">
+          {/* Page Header */}
+          <div className="flex items-center justify-between gap-4 py-4 mb-1">
+            {/* Left: Title + Location */}
+            <div className="flex flex-col gap-1 min-w-0">
+              <h1 className="text-[22px] md:text-[28px] font-bold text-[#0A0A0F] tracking-tight leading-tight truncate">
                 {titleText}
               </h1>
-
-              <div className="flex flex-wrap items-center gap-3">
-                <button
-                  onClick={() => {
-                    const lastLat = localStorage.getItem('last_lat');
-                    const lastLng = localStorage.getItem('last_lng');
-
-                    setDetectedData({
-                      lat: parseFloat(lastLat) || userCoords?.lat || null,
-                      lng: parseFloat(lastLng) || userCoords?.lng || null,
-                      city: userHomeLocation.city,
-                      area: userHomeLocation.area,
-                      pincode: (isCurrentLocationMode && userLocationName?.split(', ').pop()) || ""
-                    });
-                    setIsModalOpen(true);
-                  }}
-                  className="group flex items-center gap-2 text-[14px] md:text-[16px] font-bold text-[#FF6A00] transition-all hover:text-[#e65f00]"
-                >
-                  <MapPin size={16} className="text-[#FF6A00]/60 group-hover:text-[#FF6A00] transition-all duration-300  group-hover:animate-bounce" />
-                  <span className="relative truncate">
-                    {userHomeLocation.full}
-                  </span>
-                  <ChevronDown size={14} className="ml-0.5 text-gray-400 group-hover:text-[#FF6A00] transition-colors" />
-                </button>
-              </div>
+              <button
+                onClick={() => {
+                  const lastLat = localStorage.getItem('last_lat');
+                  const lastLng = localStorage.getItem('last_lng');
+                  setDetectedData({
+                    lat: parseFloat(lastLat) || userCoords?.lat || null,
+                    lng: parseFloat(lastLng) || userCoords?.lng || null,
+                    city: userHomeLocation.city,
+                    area: userHomeLocation.area,
+                    pincode: (isCurrentLocationMode && userLocationName?.split(', ').pop()) || ""
+                  });
+                  setIsModalOpen(true);
+                }}
+                className="flex items-center gap-1 text-[13px] font-medium text-[#0A0A0F]/45 hover:text-[#FF6A00] transition-colors duration-150 w-fit"
+              >
+                <MapPin size={12} className="text-[#FF6A00]" />
+                <span className="truncate">{userHomeLocation.full}</span>
+                <ChevronDown size={11} className="text-[#0A0A0F]/25" />
+              </button>
             </div>
 
-            {/* Desktop View Toggle */}
-            <div className="hidden md:flex items-center gap-1 p-1 bg-white border border-black/[0.08] rounded-2xl shadow-sm">
+            {/* Right: View toggle */}
+            <div className="hidden md:flex items-center gap-0.5 p-0.5 bg-white border border-black/[0.07] rounded-lg shadow-sm flex-shrink-0">
               <button
                 onClick={() => setViewMode("grid")}
-                className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${viewMode === "grid" ? "bg-[#1A1F36] text-white shadow-md" : "text-gray-400 hover:text-gray-600"}`}
+                className={`w-8 h-8 rounded-md flex items-center justify-center transition-all ${
+                  viewMode === "grid" ? "bg-[#0A0A0F] text-white" : "text-[#0A0A0F]/35 hover:text-[#0A0A0F]"
+                }`}
               >
-                <LayoutGrid size={18} />
+                <LayoutGrid size={15} />
               </button>
               <button
                 onClick={() => setViewMode("list")}
-                className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${viewMode === "list" ? "bg-[#1A1F36] text-white shadow-md" : "text-gray-400 hover:text-gray-600"}`}
+                className={`w-8 h-8 rounded-md flex items-center justify-center transition-all ${
+                  viewMode === "list" ? "bg-[#0A0A0F] text-white" : "text-[#0A0A0F]/35 hover:text-[#0A0A0F]"
+                }`}
               >
-                <List size={18} />
+                <List size={15} />
               </button>
             </div>
           </div>
@@ -435,8 +431,10 @@ const DiscoveryClient = ({ slug, parsed: initialParsed }) => {
             onSubtitleClick={() => setIsModalOpen(true)}
             onRefresh={detectLocation}
             isDetecting={isDetecting}
-            onClusterClick={(clusterName, location) => {
-              const url = generateDiscoveryUrl("", location || initialParsed.location || "ahmedabad", "all", clusterName);
+            onClusterClick={(clusterName, clusterCity, clusterArea) => {
+              const city = clusterCity || initialParsed.city || "ahmedabad";
+              const area = clusterArea || initialParsed.area || "";
+              const url = generateDiscoveryUrl(clusterName, city, "all", area);
               router.push(url);
             }}
           />

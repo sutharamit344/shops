@@ -1,5 +1,6 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import { slugify } from "../../lib/urlArchitect";
+import { getBusinessStatus } from "../../lib/shopUtils";
 
 // --- Utility: Haversine distance in km ---
 const getDistance = (lat1, lon1, lat2, lon2) => {
@@ -124,9 +125,22 @@ export const fetchSearchResults = createAsyncThunk(
       }
     }
 
+    const param3 = (category || "").toLowerCase().trim();
+
+    // Re-resolve param3 as cluster if it matches a cluster name
+    if (param3 && !finalClusterType) {
+      const clusterMatch = allClusters.find(c => normalize(c.name) === normalize(param3) || slugify(c.name) === slugify(param3));
+      if (clusterMatch) {
+        finalClusterType = clusterMatch.name;
+        finalCategory = ""; // It's a cluster, not a category
+        if (!finalCity) finalCity = clusterMatch.city;
+        if (!finalArea) finalArea = clusterMatch.area;
+      }
+    }
+
     // Re-resolve param2 as cluster or category if it is not an area
     if (param2 && !finalClusterType) {
-      const clusterMatch = allClusters.find(c => normalize(c.name) === normalize(param2));
+      const clusterMatch = allClusters.find(c => normalize(c.name) === normalize(param2) || slugify(c.name) === slugify(param2));
       if (clusterMatch) {
         finalClusterType = clusterMatch.name;
         if (!finalCity) finalCity = clusterMatch.city;
@@ -184,6 +198,10 @@ export const fetchSearchResults = createAsyncThunk(
           if (tags?.whatsapp && !shop.whatsapp) matchTags = false;
           if (tags?.verified && !shop.isVerified) matchTags = false;
           if (tags?.featured && !shop.isFeatured) matchTags = false;
+          if (tags?.openNow) {
+            const status = getBusinessStatus(shop);
+            if (!status || !status.isOpen) matchTags = false;
+          }
 
           // 3. Location Match
           let matchLocation = true;
@@ -195,18 +213,15 @@ export const fetchSearchResults = createAsyncThunk(
             const dist = getDistance(userCoords.lat, userCoords.lng, shop.lat, shop.lng);
             matchLocation = dist <= radius;
           } else if (tArea) {
-            // Match area AND city strictly
-            matchLocation =
-              (sArea === tArea || sArea.includes(tArea) || tArea.includes(sArea)) &&
-              (sCity === tCity || sCity.includes(tCity));
+            // Allow all areas within the same city to support "nearby shops" feature
+            // Exact area matches will be flagged via isLocationMatch and sorted to the top
+            matchLocation = sCity === tCity || sCity.includes(tCity) || tCity.includes(sCity);
           } else if (tCity) {
-            // FIX: Only match city against city — removed sArea === tCity comparison
             matchLocation = sCity === tCity || sCity.includes(tCity) || tCity.includes(sCity);
           }
 
           return matchCategory && matchLocation && matchTags;
         })
-        // FIX: Clone shop objects instead of mutating Redux state directly
         .map(shop => {
           const sArea = (shop.area || "").toLowerCase().trim();
           const sCity = (shop.city || "").toLowerCase().trim();
@@ -214,7 +229,7 @@ export const fetchSearchResults = createAsyncThunk(
           return {
             ...shop,
             isClusterMatch,
-            isLocationMatch: tArea ? (sArea === tArea || sArea.includes(tArea)) : false,
+            isLocationMatch: tArea ? (sArea === tArea || sArea.includes(tArea) || tArea.includes(sArea)) : true,
             isCityMatch: tCity ? (sCity === tCity || sCity.includes(tCity)) : false,
           };
         });
@@ -235,7 +250,7 @@ export const fetchSearchResults = createAsyncThunk(
       }
     }
 
-    // Sort: Exact Area > Distance > Rating
+    // Sort: Exact Area > Selected Sort > Tie-breakers
     filtered.sort((a, b) => {
       // 1. Prioritize exact area matches first
       if (tAreaFinal) {
@@ -246,17 +261,21 @@ export const fetchSearchResults = createAsyncThunk(
       }
 
       // 2. Explicit rating sort
-      if (sortBy === "rating") return (b.avgRating || 0) - (a.avgRating || 0);
-
-      // 3. Distance sort (if GPS coords available)
-      if (userCoords?.lat && userCoords?.lng) {
-        const distA = a.lat && a.lng ? getDistance(userCoords.lat, userCoords.lng, a.lat, a.lng) : Infinity;
-        const distB = b.lat && b.lng ? getDistance(userCoords.lat, userCoords.lng, b.lat, b.lng) : Infinity;
-        if (Math.abs(distA - distB) > 0.1) return distA - distB;
+      if (sortBy === "rating") {
+        return (b.avgRating || 0) - (a.avgRating || 0);
       }
 
-      // 4. Default: Rating
-      return (b.avgRating || 0) - (a.avgRating || 0);
+      // 3. Explicit distance sort
+      if (sortBy === "distance" && userCoords?.lat && userCoords?.lng) {
+        const distA = a.lat && a.lng ? getDistance(userCoords.lat, userCoords.lng, a.lat, a.lng) : Infinity;
+        const distB = b.lat && b.lng ? getDistance(userCoords.lat, userCoords.lng, b.lat, b.lng) : Infinity;
+        if (Math.abs(distA - distB) > 0.01) return distA - distB;
+      }
+
+      // 4. Relevance / Default: combine rating and whether it's verified/featured
+      const scoreA = (a.avgRating || 0) + (a.isVerified ? 2 : 0) + (a.isFeatured ? 3 : 0);
+      const scoreB = (b.avgRating || 0) + (b.isVerified ? 2 : 0) + (b.isFeatured ? 3 : 0);
+      return scoreB - scoreA;
     });
 
     return {

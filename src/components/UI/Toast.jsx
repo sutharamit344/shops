@@ -3,7 +3,7 @@
 import React, { useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { hideToast } from "@/redux/slices/toastSlice";
-import { CheckCircle2, AlertCircle, Info, X } from "lucide-react";
+import { CircleCheckBig, CircleAlert, Info, X } from "lucide-react";
 
 const Toast = () => {
   const { message, type, isVisible, id } = useSelector((state) => state.toast);
@@ -22,19 +22,19 @@ const Toast = () => {
 
   const styles = {
     success: {
-      bg: "bg-[#1A1F36]",
+      bg: "bg-[#0A0A0F]",
       border: "border-green-500/30",
-      icon: <CheckCircle2 className="text-green-400" size={18} />,
+      icon: <CircleCheckBig className="text-green-400" size={18} />,
       text: "text-white"
     },
     error: {
       bg: "bg-red-50",
       border: "border-red-100",
-      icon: <AlertCircle className="text-red-500" size={18} />,
+      icon: <CircleAlert className="text-red-500" size={18} />,
       text: "text-red-800"
     },
     info: {
-      bg: "bg-[#1A1F36]",
+      bg: "bg-[#0A0A0F]",
       border: "border-blue-500/30",
       icon: <Info className="text-blue-400" size={18} />,
       text: "text-white"
@@ -60,3 +60,4 @@ const Toast = () => {
 };
 
 export default Toast;
+

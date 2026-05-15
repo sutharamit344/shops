@@ -12,7 +12,7 @@ export default function CategoryListingClient({ shops, title, subtitle, view }) 
   return (
     <div className="min-h-screen bg-cream">
       <Navbar />
-      <main className="max-w-6xl mx-auto px-4 py-12 pt-24">
+      <main className="max-w-7xl mx-auto px-4 py-12 pt-24">
         <SectionHeader title={title} subtitle={subtitle} />
 
         {shops.length === 0 ? (

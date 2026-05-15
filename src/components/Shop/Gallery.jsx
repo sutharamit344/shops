@@ -28,7 +28,7 @@ const ShopGallery = ({ images }) => {
           <div
             key={i}
             onClick={() => openLightbox(i)}
-            className="relative rounded-xl overflow-hidden shadow-sm group cursor-pointer aspect-square border border-navy/5"
+            className="relative rounded-lg overflow-hidden shadow-sm group cursor-pointer aspect-square border border-navy/5"
           >
             <img
               src={image}
@@ -67,7 +67,7 @@ const ShopGallery = ({ images }) => {
           <div className="max-w-5xl max-h-[85vh] w-full flex items-center justify-center">
             <img
               src={images[activeIndex]}
-              className="max-w-full max-h-full object-contain rounded-xl shadow-2xl scale-in-center"
+              className="max-w-full max-h-full object-contain rounded-lg shadow-2xl scale-in-center"
               alt="Expanded gallery"
             />
           </div>

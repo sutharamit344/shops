@@ -25,13 +25,13 @@ const ShopContact = ({ phone, area, city, name }) => {
 
         <div className="grid grid-cols-1 gap-2 pt-2">
           <a href={`tel:+91${phone}`} className="w-full">
-            <Button size="sm" className="w-full bg-primary text-white py-3 rounded-xl shadow-lg shadow-primary/10 transition-all text-[10px] font-black uppercase tracking-widest">
+            <Button size="sm" className="w-full bg-primary text-white py-3 rounded-lg shadow-lg shadow-primary/10 transition-all text-[10px] font-black uppercase tracking-widest">
               <Phone size={12} /> Call Now
             </Button>
           </a>
 
           <a href={whatsappUrl} target="_blank" rel="noopener noreferrer" className="w-full">
-            <Button size="sm" className="w-full bg-[#25D366] text-white py-3 rounded-xl shadow-lg shadow-[#25D366]/10 transition-all text-[10px] font-black uppercase tracking-widest">
+            <Button size="sm" className="w-full bg-[#25D366] text-white py-3 rounded-lg shadow-lg shadow-[#25D366]/10 transition-all text-[10px] font-black uppercase tracking-widest">
               <MessageSquare size={12} /> WhatsApp
             </Button>
           </a>

@@ -5,8 +5,8 @@ const Select = ({ label, name, value, onChange, options = [], required = false, 
   return (
     <div className={`flex flex-col gap-1.5 w-full ${className}`}>
       {label && (
-        <label className="text-[11px] font-semibold text-[#1A1F36]/40 uppercase tracking-[0.08em] pl-1">
-          {label} {required && <span className="text-[#FF6A00]">*</span>}
+        <label className="text-[11px] font-bold text-[#0A0A0F]/30 uppercase tracking-[0.1em] px-1">
+          {label} {required && <span className="text-[#FF6A00] opacity-50">*</span>}
         </label>
       )}
       <div className="relative group">
@@ -15,26 +15,26 @@ const Select = ({ label, name, value, onChange, options = [], required = false, 
           value={value}
           onChange={onChange}
           required={required}
-          className={`w-full h-11 pl-4 pr-10 rounded-xl border bg-white text-[14px] font-medium text-[#1A1F36] transition-all outline-none appearance-none cursor-pointer
+          className={`w-full h-10 pl-3.5 pr-10 rounded-lg border bg-white text-[13.5px] font-medium text-[#0A0A0F] transition-all outline-none appearance-none cursor-pointer shadow-sm
             ${error 
-              ? "border-red-400 focus:ring-2 focus:ring-red-100" 
-              : "border-black/10 focus:border-[#FF6A00]/60 focus:ring-2 focus:ring-[#FF6A00]/15"
+              ? "border-red-500/50 focus:ring-2 focus:ring-red-500/5" 
+              : "border-black/[0.08] focus:border-[#FF6A00]/40 focus:ring-2 focus:ring-[#FF6A00]/5"
             }`}
         >
           {options.map((opt, i) => (
-            <option key={`${opt.value}-${i}`} value={opt.value} disabled={opt.disabled}>
+            <option key={`${opt.value}-${i}`} value={opt.value} disabled={opt.disabled} className="text-[#0A0A0F] py-2">
               {opt.label}
             </option>
           ))}
         </select>
-        <div className={`absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none transition-colors ${error ? "text-red-400" : "text-[#1A1F36]/30 group-focus-within:text-[#FF6A00]"}`}>
+        <div className={`absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none transition-colors ${error ? "text-red-500" : "text-[#0A0A0F]/20 group-focus-within:text-[#FF6A00]"}`}>
           <ChevronDown size={14} />
         </div>
       </div>
       {(error || helpText) && (
-        <p className={`text-[11px] font-semibold px-1 ${error ? "text-red-500 flex items-center gap-1" : "text-[#1A1F36]/40 uppercase tracking-tighter"}`}>
+        <p className={`text-[10px] font-semibold px-1 tracking-tight ${error ? "text-red-500 flex items-center gap-1" : "text-[#0A0A0F]/30 uppercase tracking-[0.05em]"}`}>
           {error && (
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
               <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
             </svg>
           )}

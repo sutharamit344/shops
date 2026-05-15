@@ -20,8 +20,13 @@ const MapComponent = dynamic(() => import("@/components/UI/MapComponent"), {
 
 // Icons
 import {
-  Save, CheckCircle2, AlertCircle, Plus, Loader2, Navigation, 
-  ChevronRight, ChevronLeft, ShieldCheck, Sparkles, Eye, LinkIcon
+  Save, CircleCheckBig, CircleAlert, Plus, Loader2, Navigation,
+  ChevronRight, ChevronLeft, ShieldCheck, Sparkles, Eye, LinkIcon,
+  MapIcon,
+  Search,
+  Building2,
+  Mail,
+  Globe
 } from "lucide-react";
 
 const ShopForm = ({ initialData, onSubmit, isEdit = false, isLoading = false, error: externalError }) => {
@@ -43,7 +48,7 @@ const ShopForm = ({ initialData, onSubmit, isEdit = false, isLoading = false, er
     description: "",
     mapEmbed: "",
     primaryColor: "#FF6A00",
-    secondaryColor: "#1A1F36",
+    secondaryColor: "#0A0A0F",
     rating: "5.0",
     logo: "",
     businessType: "mixed",
@@ -549,24 +554,24 @@ const ShopForm = ({ initialData, onSubmit, isEdit = false, isLoading = false, er
         </div>
       )}
       {/* ── PROGRESS STEPS ─────────────────────────────────────── */}
-      <div className="max-w-xl mx-auto mb-16 relative">
-        <div className="absolute top-5 left-0 w-full h-[2px] bg-[#1A1F36]/[0.06] -z-0">
+      <div className="max-w-xl mx-auto mb-12 relative px-4">
+        <div className="absolute top-[18px] left-0 w-full h-[1px] bg-black/[0.05] -z-0">
           <div className="h-full bg-[#FF6A00] transition-all duration-700 ease-in-out" style={{ width: `${((currentStep - 1) / (totalSteps - 1)) * 100}%` }} />
         </div>
         <div className="relative flex justify-between z-10">
           {steps.map((step, i) => (
             <div key={i} className="flex flex-col items-center">
-              <div className={`w-10 h-10 rounded-2xl flex items-center justify-center font-bold text-[13px] transition-all duration-500 shadow-md
+              <div className={`w-9 h-9 rounded-lg flex items-center justify-center font-bold text-[12px] transition-all duration-500
                 ${currentStep > i + 1
                   ? "bg-[#FF6A00] text-white"
                   : currentStep === i + 1
-                    ? "bg-[#1A1F36] text-white scale-110 shadow-md"
-                    : "bg-white text-[#1A1F36]/20 border border-[#1A1F36]/[0.06]"
+                    ? "bg-[#0A0A0F] text-white shadow-xl scale-110"
+                    : "bg-white text-[#0A0A0F]/20 border border-black/[0.05]"
                 }`}>
-                {currentStep > i + 1 ? <CheckCircle2 size={18} /> : i + 1}
+                {currentStep > i + 1 ? <CircleCheckBig size={16} /> : i + 1}
               </div>
-              <div className="absolute top-12 flex flex-col items-center">
-                <span className={`text-[11px] font-bold uppercase tracking-wider transition-colors duration-300 ${currentStep === i + 1 ? "text-[#1A1F36]" : "text-[#1A1F36]/30"}`}>
+              <div className="absolute top-10 flex flex-col items-center whitespace-nowrap">
+                <span className={`text-[10px] font-bold uppercase tracking-[0.15em] transition-colors duration-300 ${currentStep === i + 1 ? "text-[#0A0A0F]" : "text-[#0A0A0F]/20"}`}>
                   {step.title}
                 </span>
               </div>
@@ -579,8 +584,8 @@ const ShopForm = ({ initialData, onSubmit, isEdit = false, isLoading = false, er
         {/* ── ERROR DISPLAY ─────────────────────────────────────── */}
         {displayError && (
           <div className="bg-red-50 rounded-2xl p-5 flex items-start gap-4 border border-red-100 animate-in shake duration-300">
-            <div className="w-10 h-10 rounded-xl bg-red-100 flex items-center justify-center text-red-500 shrink-0">
-              <AlertCircle size={20} />
+            <div className="w-10 h-10 rounded-lg bg-red-100 flex items-center justify-center text-red-500 shrink-0">
+              <CircleAlert size={20} />
             </div>
             <div>
               <p className="text-[11px] font-bold text-red-600 uppercase tracking-widest mb-1">Attention Required</p>
@@ -590,12 +595,11 @@ const ShopForm = ({ initialData, onSubmit, isEdit = false, isLoading = false, er
         )}
 
         {/* ── STEP 1: BASICS ─────────────────────────────────────── */}
-        {/* ... (keep step 1 content) ... */}
         {currentStep === 1 && (
-          <div className="space-y-8 animate-in fade-in duration-500 slide-in-from-bottom-2">
+          <div className="space-y-8 animate-in fade-in duration-700 slide-in-from-bottom-2">
             <div>
-              <h2 className="text-2xl font-extrabold text-[#1A1F36] tracking-tight mb-2">Business Identity</h2>
-              <p className="text-[15px] text-[#1A1F36]/50 font-medium">Tell us what your business is called and what you specialize in.</p>
+              <h2 className="text-[20px] font-bold text-[#0A0A0F] tracking-tight mb-1">Business Identity</h2>
+              <p className="text-[13px] text-[#0A0A0F]/45 font-medium">Define your store name, category, and core specialties.</p>
             </div>
 
             <div className="space-y-8">
@@ -649,25 +653,25 @@ const ShopForm = ({ initialData, onSubmit, isEdit = false, isLoading = false, er
               />
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <HybridSelect
-                    label="Market Category"
-                    name="category"
-                    value={formData.category}
-                    onChange={handleChange}
-                    required
-                    options={[
-                      { value: "", label: "Select a category", disabled: true },
-                      ...dbCategories.map(c => ({ value: c, label: c })),
-                      { value: "OTHER_PROPOSE", label: "➕ Propose new category..." }
-                    ]}
-                    showInput={showNewCategoryInput}
-                    onToggleInput={setShowNewCategoryInput}
-                    inputName="proposedCategory"
-                    inputValue={proposedCategory}
-                    onInputChange={(e) => setProposedCategory(e.target.value)}
-                    inputPlaceholder="e.g., Organic Lifestyle"
-                    inputHelpText="We will review and add this to our directory"
-                  />
+                <HybridSelect
+                  label="Market Category"
+                  name="category"
+                  value={formData.category}
+                  onChange={handleChange}
+                  required
+                  options={[
+                    { value: "", label: "Select a category", disabled: true },
+                    ...dbCategories.map(c => ({ value: c, label: c })),
+                    { value: "OTHER_PROPOSE", label: "➕ Propose new category..." }
+                  ]}
+                  showInput={showNewCategoryInput}
+                  onToggleInput={setShowNewCategoryInput}
+                  inputName="proposedCategory"
+                  inputValue={proposedCategory}
+                  onInputChange={(e) => setProposedCategory(e.target.value)}
+                  inputPlaceholder="e.g., Organic Lifestyle"
+                  inputHelpText="We will review and add this to our directory"
+                />
 
                 <Select
                   label="Service Model"
@@ -695,35 +699,35 @@ const ShopForm = ({ initialData, onSubmit, isEdit = false, isLoading = false, er
             {/* 📍 SECTION: LOCATION */}
             <div className="space-y-6">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-[#FF6A00]/10 flex items-center justify-center text-[#FF6A00]">
+                <div className="w-10 h-10 rounded-lg bg-[#FF6A00]/10 flex items-center justify-center text-[#FF6A00]">
                   <MapIcon size={20} />
                 </div>
                 <div>
-                  <h2 className="text-xl font-bold text-[#1A1F36]">Shop Location</h2>
-                  <p className="text-[13px] text-[#1A1F36]/50">Pin your shop accurately for customers to find you.</p>
+                  <h2 className="text-xl font-bold text-[#0A0A0F]">Shop Location</h2>
+                  <p className="text-[13px] text-[#0A0A0F]/50">Pin your shop accurately for customers to find you.</p>
                 </div>
               </div>
 
-              <div className="bg-[#FAFAF8] rounded-[32px] p-2 border border-[#1A1F36]/[0.06] overflow-hidden relative">
+              <div className="bg-[#F7F7F5] rounded-lg border border-black/[0.05] overflow-hidden relative">
                 {/* Map Search Overlay */}
-                <div className="absolute top-6 left-6 right-6 z-[400] flex gap-2">
+                <div className="absolute top-4 left-4 right-4 z-[400] flex gap-2">
                   <div className="flex-1 relative group">
-                    <div className="absolute left-4 top-1/2 -translate-y-1/2 text-[#1A1F36]/30 group-focus-within:text-[#FF6A00] transition-colors">
-                      <Search size={18} />
+                    <div className="absolute left-3 top-1/2 -translate-y-1/2 text-[#0A0A0F]/30 group-focus-within:text-[#FF6A00] transition-colors">
+                      <Search size={14} />
                     </div>
                     <input
                       type="text"
-                      placeholder="Search for your area, building or street..."
+                      placeholder="Search for area, building or street..."
                       value={mapSearchQuery}
                       onChange={(e) => setMapSearchQuery(e.target.value)}
                       onKeyDown={(e) => e.key === 'Enter' && handleMapSearch(e)}
-                      className="w-full h-12 pl-12 pr-4 bg-white/90 backdrop-blur-md border border-white rounded-2xl text-[14px] font-medium shadow-xl focus:outline-none focus:ring-2 focus:ring-[#FF6A00]/20 transition-all"
+                      className="w-full h-9 pl-9 pr-4 bg-white/90 backdrop-blur-md border border-black/[0.05] rounded-lg text-[12px] font-medium shadow-xl focus:outline-none focus:ring-1 focus:ring-[#FF6A00]/40 transition-all"
                     />
                   </div>
                   <button
                     type="button"
                     onClick={handleMapSearch}
-                    className="h-12 px-6 bg-[#1A1F36] text-white rounded-2xl font-bold text-[13px] shadow-xl hover:bg-[#FF6A00] transition-all active:scale-95 flex items-center gap-2"
+                    className="h-9 px-4 bg-[#0A0A0F] text-white rounded-lg font-bold text-[11px] shadow-xl hover:bg-[#FF6A00] transition-all active:scale-95 flex items-center gap-2"
                   >
                     Find
                   </button>
@@ -748,16 +752,16 @@ const ShopForm = ({ initialData, onSubmit, isEdit = false, isLoading = false, er
                         handleLocationSelect({ lat: pos.coords.latitude, lng: pos.coords.longitude });
                       }, () => setIsGeocoding(false));
                     }}
-                    className="pointer-events-auto flex items-center gap-2 px-5 py-3 bg-white text-[#1A1F36] rounded-2xl text-[13px] font-bold shadow-xl hover:text-[#FF6A00] transition-all active:scale-95 border border-white"
+                    className="pointer-events-auto flex items-center gap-2 px-5 py-3 bg-white text-[#0A0A0F] rounded-2xl text-[13px] font-bold shadow-xl hover:text-[#FF6A00] transition-all active:scale-95 border border-white"
                   >
                     <Navigation size={16} className="text-[#FF6A00]" />
                     Use Current Location
                   </button>
 
                   {isGeocoding && (
-                    <div className="pointer-events-auto bg-white/90 backdrop-blur-md px-4 py-2 rounded-xl shadow-xl flex items-center gap-3 border border-white">
+                    <div className="pointer-events-auto bg-white/90 backdrop-blur-md px-4 py-2 rounded-lg shadow-xl flex items-center gap-3 border border-white">
                       <Loader2 size={16} className="animate-spin text-[#FF6A00]" />
-                      <span className="text-[12px] font-bold text-[#1A1F36]">Smart Locating...</span>
+                      <span className="text-[12px] font-bold text-[#0A0A0F]">Smart Locating...</span>
                     </div>
                   )}
                 </div>
@@ -767,12 +771,12 @@ const ShopForm = ({ initialData, onSubmit, isEdit = false, isLoading = false, er
             {/* 🏢 SECTION: ADDRESS DETAILS */}
             <div className="space-y-6">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center text-blue-500">
+                <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center text-blue-500">
                   <Building2 size={20} />
                 </div>
                 <div>
-                  <h2 className="text-xl font-bold text-[#1A1F36]">Address Details</h2>
-                  <p className="text-[13px] text-[#1A1F36]/50">Verify and complete your business address.</p>
+                  <h2 className="text-xl font-bold text-[#0A0A0F]">Address Details</h2>
+                  <p className="text-[13px] text-[#0A0A0F]/50">Verify and complete your business address.</p>
                 </div>
               </div>
 
@@ -935,22 +939,22 @@ const ShopForm = ({ initialData, onSubmit, isEdit = false, isLoading = false, er
             {/* 🌐 SECTION: DISCOVERY & SEO */}
             <div className="space-y-6">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-purple-50 flex items-center justify-center text-purple-500">
+                <div className="w-10 h-10 rounded-lg bg-purple-50 flex items-center justify-center text-purple-500">
                   <Globe size={20} />
                 </div>
                 <div>
-                  <h2 className="text-xl font-bold text-[#1A1F36]">Discovery & SEO</h2>
-                  <p className="text-[13px] text-[#1A1F36]/50">How your shop appears to customers online.</p>
+                  <h2 className="text-xl font-bold text-[#0A0A0F]">Discovery & SEO</h2>
+                  <p className="text-[13px] text-[#0A0A0F]/50">How your shop appears to customers online.</p>
                 </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="p-6 bg-white border border-[#1A1F36]/[0.06] rounded-[24px] space-y-4">
-                  <div className="flex items-center gap-2 text-[11px] font-bold text-[#1A1F36]/40 uppercase tracking-wider">
+                <div className="p-6 bg-white border border-[#0A0A0F]/[0.06] rounded-[24px] space-y-4">
+                  <div className="flex items-center gap-2 text-[11px] font-bold text-[#0A0A0F]/40 uppercase tracking-wider">
                     <LinkIcon size={12} />
                     Live SEO URL Preview
                   </div>
-                  <div className="text-[14px] font-medium text-[#1A1F36] break-all">
+                  <div className="text-[14px] font-medium text-[#0A0A0F] break-all">
                     shopbajar.com/
                     <span className="text-[#FF6A00]">{slugify(formData.city || "city")}/</span>
                     <span className="text-[#FF6A00]">{slugify(formData.area || "area")}/</span>
@@ -958,7 +962,7 @@ const ShopForm = ({ initialData, onSubmit, isEdit = false, isLoading = false, er
                   </div>
                 </div>
 
-                <div className="p-6 bg-[#1A1F36] rounded-[24px] space-y-4 shadow-xl">
+                <div className="p-6 bg-[#0A0A0F] rounded-[24px] space-y-4 shadow-xl">
                   <div className="flex items-center gap-2 text-[11px] font-bold text-white/40 uppercase tracking-wider">
                     <Eye size={12} />
                     Marketplace Discovery
@@ -975,15 +979,15 @@ const ShopForm = ({ initialData, onSubmit, isEdit = false, isLoading = false, er
             </div>
 
             {/* Agreement Card */}
-            <div className="p-8 bg-gradient-to-br from-[#1A1F36] to-[#2D3450] rounded-[32px] text-white relative overflow-hidden shadow-2xl">
+            <div className="p-8 bg-gradient-to-br from-[#0A0A0F] to-[#2D3450] rounded-[32px] text-white relative overflow-hidden shadow-2xl">
               <div className="absolute top-0 right-0 p-8 opacity-10"><ShieldCheck size={120} /></div>
               <div className="relative z-10 max-w-lg">
                 <h3 className="text-[11px] font-bold text-[#FF6A00] uppercase tracking-[0.2em] mb-4">Final Registration</h3>
                 <p className="text-[18px] font-bold mb-6 leading-tight">Your digital storefront is almost ready for launch.</p>
                 <div className="flex flex-wrap items-center gap-6 text-[13px] font-bold opacity-70">
-                  <div className="flex items-center gap-2"><CheckCircle2 size={16} className="text-[#25D366]" /> <span>Free Listing</span></div>
-                  <div className="flex items-center gap-2"><CheckCircle2 size={16} className="text-[#25D366]" /> <span>Live Maps</span></div>
-                  <div className="flex items-center gap-2"><CheckCircle2 size={16} className="text-[#25D366]" /> <span>Direct WhatsApp</span></div>
+                  <div className="flex items-center gap-2"><CircleCheckBig size={16} className="text-[#25D366]" /> <span>Free Listing</span></div>
+                  <div className="flex items-center gap-2"><CircleCheckBig size={16} className="text-[#25D366]" /> <span>Live Maps</span></div>
+                  <div className="flex items-center gap-2"><CircleCheckBig size={16} className="text-[#25D366]" /> <span>Direct WhatsApp</span></div>
                 </div>
               </div>
             </div>
@@ -991,7 +995,7 @@ const ShopForm = ({ initialData, onSubmit, isEdit = false, isLoading = false, er
         )}
 
         {/* ── NAVIGATION ─────────────────────────────────────────── */}
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-6 pt-10 border-t border-[#1A1F36]/[0.06]">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-6 pt-10 border-t border-[#0A0A0F]/[0.06]">
           <Button
             type="button"
             variant="outline"
@@ -1038,3 +1042,4 @@ const ShopForm = ({ initialData, onSubmit, isEdit = false, isLoading = false, er
 };
 
 export default ShopForm;
+

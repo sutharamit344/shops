@@ -55,7 +55,7 @@ const UpdateComparisonDialog = ({ shop, isOpen, onClose }) => {
   };
 
   const ChangeRecord = ({ label, oldVal, newVal, type }) => (
-    <div className="flex items-start gap-4 p-4 bg-white rounded-2xl border border-[#1A1F36]/[0.07] shadow-md animate-in slide-in-from-left duration-300">
+    <div className="flex items-start gap-4 p-4 bg-white rounded-2xl border border-[#0A0A0F]/[0.07] shadow-md animate-in slide-in-from-left duration-300">
       <div className="w-8 h-8 rounded-full bg-orange-100 flex items-center justify-center shrink-0">
         <RefreshCw size={14} className="text-[#FF6A00]" />
       </div>
@@ -115,7 +115,7 @@ const UpdateComparisonDialog = ({ shop, isOpen, onClose }) => {
               </div>
               
               {changes.length === 0 ? (
-                <div className="p-12 text-center bg-[#1A1F36]/[0.02] rounded-xl border border-[#1A1F36]/[0.07]">
+                <div className="p-12 text-center bg-[#0A0A0F]/[0.02] rounded-lg border border-[#0A0A0F]/[0.07]">
                   <Check className="mx-auto text-whatsapp mb-3" size={32} />
                   <p className="text-[10px] font-black text-navy/40 uppercase tracking-widest">No primary identity changes detected.</p>
                 </div>
@@ -130,7 +130,7 @@ const UpdateComparisonDialog = ({ shop, isOpen, onClose }) => {
             </div>
 
             {/* Verified Activity Section */}
-             <div className="space-y-6 pt-10 border-t border-[#1A1F36]/[0.07]">
+             <div className="space-y-6 pt-10 border-t border-[#0A0A0F]/[0.07]">
               <div className="flex items-center gap-3">
                 <Clock size={16} className="text-navy/40" />
                 <h3 className="text-[10px] font-black text-navy uppercase tracking-[0.2em]">Action Activity Log</h3>
@@ -141,14 +141,14 @@ const UpdateComparisonDialog = ({ shop, isOpen, onClose }) => {
                   <p className="text-[9px] text-navy/20 italic font-black uppercase tracking-widest text-center py-6">No audit history recorded yet.</p>
                 ) : (
                   history.map(log => (
-                     <div key={log.id} className="flex items-start gap-4 p-4 bg-[#1A1F36]/[0.02] rounded-xl border border-[#1A1F36]/[0.07] text-[10px]">
-                       <div className="p-2 bg-white rounded-lg text-[#1A1F36]/20 shadow-md shrink-0 border border-[#1A1F36]/[0.07]">
+                     <div key={log.id} className="flex items-start gap-4 p-4 bg-[#0A0A0F]/[0.02] rounded-lg border border-[#0A0A0F]/[0.07] text-[10px]">
+                       <div className="p-2 bg-white rounded-lg text-[#0A0A0F]/20 shadow-md shrink-0 border border-[#0A0A0F]/[0.07]">
                         <Clock size={14} />
                       </div>
                       <div className="flex-1 min-w-0 space-y-2">
                         <p className="font-bold text-navy leading-relaxed">{log.details}</p>
                         <div className="flex justify-between items-center text-[9px] font-black uppercase tracking-widest text-navy/30">
-                            <span className="flex items-center gap-2"><div className="w-1 h-1 rounded-full bg-[#1A1F36]/20" /> {log.performedBy}</span>
+                            <span className="flex items-center gap-2"><div className="w-1 h-1 rounded-full bg-[#0A0A0F]/20" /> {log.performedBy}</span>
                            <span>{log.timestamp ? new Date(log.timestamp).toLocaleDateString() : 'Just now'}</span>
                         </div>
                       </div>
@@ -174,4 +174,5 @@ const UpdateComparisonDialog = ({ shop, isOpen, onClose }) => {
 };
 
 export default UpdateComparisonDialog;
+
 

@@ -7,7 +7,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { 
   Mail, 
   Trash2, 
-  CheckCircle2, 
+  CircleCheckBig, 
   Clock, 
   User, 
   MessageSquare, 
@@ -94,13 +94,13 @@ const InquiryManager = () => {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
         <div>
-          <h1 className="text-3xl md:text-4xl font-bold text-[#1A1F36] tracking-tight mb-2">Customer Inquiries</h1>
+          <h1 className="text-3xl md:text-4xl font-bold text-[#0A0A0F] tracking-tight mb-2">Customer Inquiries</h1>
           <p className="text-[14px] text-[#666]">Manage messages and support requests from the contact form.</p>
         </div>
         <div className="flex items-center gap-3">
           <button 
             onClick={fetchMessages} 
-            className="w-12 h-12 bg-white border border-[#1A1F36]/[0.07] rounded-xl flex items-center justify-center hover:border-[#FF6A00]/30 transition-all text-[#1A1F36]/75 shadow-md"
+            className="w-12 h-12 bg-white border border-[#0A0A0F]/[0.07] rounded-lg flex items-center justify-center hover:border-[#FF6A00]/30 transition-all text-[#0A0A0F]/75 shadow-md"
             title="Refresh"
           >
             <RefreshCw size={18} className={loading ? "animate-spin text-[#FF6A00]" : ""} />
@@ -116,18 +116,18 @@ const InquiryManager = () => {
                <input 
                  type="text"
                  placeholder="Search messages, names, emails..."
-                 className="w-full h-12 bg-white border border-[#1A1F36]/[0.07] rounded-xl pl-12 pr-4 text-sm font-medium outline-none focus:border-[#FF6A00]/30 shadow-md transition-all"
+                 className="w-full h-12 bg-white border border-[#0A0A0F]/[0.07] rounded-lg pl-12 pr-4 text-sm font-medium outline-none focus:border-[#FF6A00]/30 shadow-md transition-all"
                  value={searchQuery}
                  onChange={(e) => setSearchQuery(e.target.value)}
                />
             </div>
-            <div className="flex bg-white p-1 rounded-xl border border-[#1A1F36]/[0.07] shadow-md">
+            <div className="flex bg-white p-1 rounded-lg border border-[#0A0A0F]/[0.07] shadow-md">
                {["all", "new", "read"].map((f) => (
                  <button
                    key={f}
                    onClick={() => setFilter(f)}
                    className={`px-6 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${
-                     filter === f ? "bg-[#1A1F36] text-white" : "text-gray-400 hover:text-[#1A1F36]"
+                     filter === f ? "bg-[#0A0A0F] text-white" : "text-gray-400 hover:text-[#0A0A0F]"
                    }`}
                  >
                    {f}
@@ -135,16 +135,16 @@ const InquiryManager = () => {
                ))}
             </div>
          </div>
-         <div className="bg-white px-6 py-3 rounded-xl border border-[#1A1F36]/[0.07] shadow-md flex items-center justify-between">
+         <div className="bg-white px-6 py-3 rounded-lg border border-[#0A0A0F]/[0.07] shadow-md flex items-center justify-between">
             <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Total Inquiries</span>
-            <span className="text-xl font-black text-[#1A1F36]">{messages.length}</span>
+            <span className="text-xl font-black text-[#0A0A0F]">{messages.length}</span>
          </div>
       </div>
 
       {/* Message List */}
       {loading ? (
         <div className="space-y-4">
-          {[1, 2, 3].map(i => <div key={i} className="h-40 bg-white rounded-2xl animate-pulse border border-[#1A1F36]/[0.07]" />)}
+          {[1, 2, 3].map(i => <div key={i} className="h-40 bg-white rounded-2xl animate-pulse border border-[#0A0A0F]/[0.07]" />)}
         </div>
       ) : filteredMessages.length > 0 ? (
         <div className="space-y-4">
@@ -152,7 +152,7 @@ const InquiryManager = () => {
             <div 
               key={msg.id} 
               className={`bg-white rounded-2xl border transition-all duration-300 shadow-md hover:shadow-xl overflow-hidden ${
-                msg.status === 'new' ? 'border-[#FF6A00]/20 bg-white' : 'border-[#1A1F36]/[0.07] opacity-80'
+                msg.status === 'new' ? 'border-[#FF6A00]/20 bg-white' : 'border-[#0A0A0F]/[0.07] opacity-80'
               }`}
             >
               <div className="p-6 md:p-8 flex flex-col md:flex-row gap-6">
@@ -170,7 +170,7 @@ const InquiryManager = () => {
                 <div className="flex-1 min-w-0">
                   <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
                     <div>
-                      <h3 className="text-lg font-black text-[#1A1F36] mb-1">{msg.name}</h3>
+                      <h3 className="text-lg font-black text-[#0A0A0F] mb-1">{msg.name}</h3>
                       <div className="flex items-center gap-3 text-[11px] font-bold text-gray-400 uppercase tracking-wider">
                          <a href={`mailto:${msg.email}`} className="flex items-center gap-1.5 hover:text-[#FF6A00] transition-colors"><Mail size={12} /> {msg.email}</a>
                          <span className="w-1 h-1 rounded-full bg-gray-200"></span>
@@ -181,10 +181,10 @@ const InquiryManager = () => {
                        <button 
                          onClick={() => handleToggleRead(msg.id, msg.status)}
                          className={`h-9 px-4 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2 ${
-                           msg.status === 'new' ? 'bg-green-50 text-green-600 hover:bg-green-600 hover:text-white' : 'bg-gray-50 text-gray-400 hover:bg-[#1A1F36] hover:text-white'
+                           msg.status === 'new' ? 'bg-green-50 text-green-600 hover:bg-green-600 hover:text-white' : 'bg-gray-50 text-gray-400 hover:bg-[#0A0A0F] hover:text-white'
                          }`}
                        >
-                         {msg.status === 'new' ? <CheckCircle2 size={14} /> : <Clock size={14} />}
+                         {msg.status === 'new' ? <CircleCheckBig size={14} /> : <Clock size={14} />}
                          {msg.status === 'new' ? 'Mark as Read' : 'Mark as Unread'}
                        </button>
                        <button 
@@ -196,9 +196,9 @@ const InquiryManager = () => {
                     </div>
                   </div>
 
-                  <div className="bg-[#FAFAF8] p-5 rounded-xl border border-[#1A1F36]/[0.03]">
-                     <p className="text-[10px] font-black text-[#1A1F36]/30 uppercase tracking-[0.2em] mb-3">Subject: {msg.subject}</p>
-                     <p className="text-[#1A1F36]/80 text-[15px] font-medium leading-relaxed whitespace-pre-wrap">
+                  <div className="bg-[#FAFAF8] p-5 rounded-lg border border-[#0A0A0F]/[0.03]">
+                     <p className="text-[10px] font-black text-[#0A0A0F]/30 uppercase tracking-[0.2em] mb-3">Subject: {msg.subject}</p>
+                     <p className="text-[#0A0A0F]/80 text-[15px] font-medium leading-relaxed whitespace-pre-wrap">
                         {msg.message}
                      </p>
                   </div>
@@ -208,11 +208,11 @@ const InquiryManager = () => {
           ))}
         </div>
       ) : (
-        <div className="bg-white border-2 border-dashed border-[#1A1F36]/[0.05] rounded-3xl py-32 text-center shadow-md">
+        <div className="bg-white border-2 border-dashed border-[#0A0A0F]/[0.05] rounded-3xl py-32 text-center shadow-md">
            <div className="w-20 h-20 bg-gray-50 rounded-2xl flex items-center justify-center mx-auto mb-6 text-gray-300">
               <MessageSquare size={40} />
            </div>
-           <h3 className="text-xl font-black text-[#1A1F36] mb-2 tracking-tight">Zero Inquiries Found</h3>
+           <h3 className="text-xl font-black text-[#0A0A0F] mb-2 tracking-tight">Zero Inquiries Found</h3>
            <p className="text-gray-400 text-sm font-medium">When users fill out your contact form, they will appear here.</p>
         </div>
       )}
@@ -221,3 +221,4 @@ const InquiryManager = () => {
 };
 
 export default InquiryManager;
+

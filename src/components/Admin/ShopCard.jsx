@@ -8,7 +8,7 @@ import { useModal } from "@/hooks/useModal";
 import ShopHistoryDialog from "@/components/Shop/HistoryDialog";
 import { useAuth } from "@/hooks/useAuth";
 import Link from "next/link";
-import { AlertCircle, Check, History, Mail, MapPin, RefreshCw, ShieldCheck, Store, X, ExternalLink, CheckCircle2, Clock } from "lucide-react";
+import { CircleAlert, Check, History, Mail, MapPin, RefreshCw, ShieldCheck, Store, X, ExternalLink, CircleCheckBig, Clock } from "lucide-react";
 import { slugify } from "@/lib/slugify";
 
 const AdminShopCard = ({ shop, onRefresh, isSelected = false, onToggleSelect }) => {
@@ -74,9 +74,9 @@ const AdminShopCard = ({ shop, onRefresh, isSelected = false, onToggleSelect }) 
     <div className={`bg-white rounded-2xl border shadow-md hover:shadow-lg transition-all p-5 group relative overflow-hidden ${
       isSelected
         ? "border-[#FF6A00]/60 shadow-[#FF6A00]/10"
-        : "border-[#1A1F36]/[0.07] hover:border-[#FF6A00]/30"
+        : "border-[#0A0A0F]/[0.07] hover:border-[#FF6A00]/30"
     }`}>
-      <div className="absolute top-0 left-0 w-1.5 h-full bg-[#1A1F36]/5 group-hover:bg-[#FF6A00] transition-colors" />
+      <div className="absolute top-0 left-0 w-1.5 h-full bg-[#0A0A0F]/5 group-hover:bg-[#FF6A00] transition-colors" />
 
       {/* Checkbox */}
       {onToggleSelect && (
@@ -92,7 +92,7 @@ const AdminShopCard = ({ shop, onRefresh, isSelected = false, onToggleSelect }) 
 
       <div className="flex flex-col lg:flex-row justify-between lg:items-center gap-6">
         <div className="flex-1 flex items-center gap-5 min-w-0">
-          <div className="w-14 h-14 bg-gray-50 rounded-xl flex items-center justify-center border border-[#1A1F36]/[0.07] shrink-0 group-hover:scale-105 transition-transform duration-500 overflow-hidden">
+          <div className="w-14 h-14 bg-gray-50 rounded-lg flex items-center justify-center border border-[#0A0A0F]/[0.07] shrink-0 group-hover:scale-105 transition-transform duration-500 overflow-hidden">
             {shop.logo ? (
               <img src={shop.logo} alt={shop.name} className="w-full h-full object-cover" />
             ) : (
@@ -101,7 +101,7 @@ const AdminShopCard = ({ shop, onRefresh, isSelected = false, onToggleSelect }) 
           </div>
           <div className="space-y-1.5 min-w-0">
             <div className="flex items-center gap-3 flex-wrap">
-              <h3 className="text-[17px] font-bold text-[#1A1F36] tracking-tight truncate max-w-[300px]">{shop.name}</h3>
+              <h3 className="text-[17px] font-bold text-[#0A0A0F] tracking-tight truncate max-w-[300px]">{shop.name}</h3>
 
               {isUpdate && (
                 <div className="bg-[#FF6A00]/10 text-[#FF6A00] px-2.5 py-1 rounded-full text-[9px] font-bold uppercase tracking-wider flex items-center gap-1.5 border border-[#FF6A00]/20 animate-pulse">
@@ -111,13 +111,13 @@ const AdminShopCard = ({ shop, onRefresh, isSelected = false, onToggleSelect }) 
 
               {isApproved && (
                 <div className="bg-green-50 text-green-600 px-2.5 py-1 rounded-full text-[9px] font-bold uppercase tracking-wider flex items-center gap-1.5 border border-green-100">
-                  <CheckCircle2 size={10} /> Live
+                  <CircleCheckBig size={10} /> Live
                 </div>
               )}
 
               {isRejected && (
                 <div className="bg-red-50 text-red-500 px-2.5 py-1 rounded-full text-[9px] font-bold uppercase tracking-wider flex items-center gap-1.5 border border-red-100">
-                  <AlertCircle size={10} /> Rejected
+                  <CircleAlert size={10} /> Rejected
                 </div>
               )}
 
@@ -141,7 +141,7 @@ const AdminShopCard = ({ shop, onRefresh, isSelected = false, onToggleSelect }) 
             <Link
               href={`/shop/${slugify(shop.slug)}`}
               target="_blank"
-              className="px-4 py-2 bg-white border border-[#1A1F36]/[0.07] hover:border-[#1A1F36] rounded-xl text-[11px] font-bold uppercase tracking-wider text-[#1A1F36] transition-all flex items-center gap-2 shadow-md"
+              className="px-4 py-2 bg-white border border-[#0A0A0F]/[0.07] hover:border-[#0A0A0F] rounded-lg text-[11px] font-bold uppercase tracking-wider text-[#0A0A0F] transition-all flex items-center gap-2 shadow-md"
             >
               <ExternalLink size={14} /> View Page
             </Link>
@@ -151,7 +151,7 @@ const AdminShopCard = ({ shop, onRefresh, isSelected = false, onToggleSelect }) 
             <button
               onClick={handleVerifyUpdate}
               disabled={loading}
-              className="px-6 py-2 bg-[#1A1F36] text-white rounded-xl text-[11px] font-bold uppercase tracking-wider shadow-md flex items-center gap-2 hover:bg-[#333] transition-all"
+              className="px-6 py-2 bg-[#0A0A0F] text-white rounded-lg text-[11px] font-bold uppercase tracking-wider shadow-md flex items-center gap-2 hover:bg-[#333] transition-all"
             >
               <Check size={14} /> Verify Update
             </button>
@@ -162,7 +162,7 @@ const AdminShopCard = ({ shop, onRefresh, isSelected = false, onToggleSelect }) 
               <button
                 onClick={handleApprove}
                 disabled={loading}
-                 className="px-6 py-2 bg-green-600 text-white rounded-xl text-[11px] font-bold uppercase tracking-wider shadow-md shadow-green-600/20 flex items-center gap-2 hover:bg-green-700 transition-all"
+                 className="px-6 py-2 bg-green-600 text-white rounded-lg text-[11px] font-bold uppercase tracking-wider shadow-md shadow-green-600/20 flex items-center gap-2 hover:bg-green-700 transition-all"
               >
                 <Check size={14} /> Approve
               </button>
@@ -170,7 +170,7 @@ const AdminShopCard = ({ shop, onRefresh, isSelected = false, onToggleSelect }) 
               <button
                 onClick={() => setShowRejectForm(!showRejectForm)}
                 disabled={loading}
-                 className={`px-5 py-2 rounded-xl text-[11px] font-bold uppercase tracking-wider transition-all flex items-center gap-2 border ${showRejectForm ? 'bg-red-50 border-red-500 text-red-600' : 'bg-white border-[#1A1F36]/[0.07] text-[#1A1F36]/60 hover:border-red-500 hover:text-red-500'}`}
+                 className={`px-5 py-2 rounded-lg text-[11px] font-bold uppercase tracking-wider transition-all flex items-center gap-2 border ${showRejectForm ? 'bg-red-50 border-red-500 text-red-600' : 'bg-white border-[#0A0A0F]/[0.07] text-[#0A0A0F]/60 hover:border-red-500 hover:text-red-500'}`}
               >
                 <X size={14} /> {showRejectForm ? 'Cancel' : 'Reject'}
               </button>
@@ -180,7 +180,7 @@ const AdminShopCard = ({ shop, onRefresh, isSelected = false, onToggleSelect }) 
           {(isUpdate || isApproved || isPending) && (
             <button
               onClick={() => setShowHistory(true)}
-               className="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center text-[#1A1F36]/60 hover:bg-[#1A1F36] hover:text-white transition-all shadow-md"
+               className="w-10 h-10 rounded-lg bg-gray-50 flex items-center justify-center text-[#0A0A0F]/60 hover:bg-[#0A0A0F] hover:text-white transition-all shadow-md"
               title="Audit Logs"
             >
               <History size={16} />
@@ -190,7 +190,7 @@ const AdminShopCard = ({ shop, onRefresh, isSelected = false, onToggleSelect }) 
       </div>
 
       {showRejectForm && (
-        <form onSubmit={handleReject} className="mt-5 pt-5 border-t border-[#1A1F36]/[0.07] animate-in slide-in-from-top-2 duration-300">
+        <form onSubmit={handleReject} className="mt-5 pt-5 border-t border-[#0A0A0F]/[0.07] animate-in slide-in-from-top-2 duration-300">
           <div className="flex gap-3">
             <input
               required
@@ -198,9 +198,9 @@ const AdminShopCard = ({ shop, onRefresh, isSelected = false, onToggleSelect }) 
               value={reason}
               onChange={(e) => setReason(e.target.value)}
               placeholder="Why is this shop being rejected? (Shown to owner)"
-              className="flex-1 px-4 py-3 bg-red-50/50 border border-red-100 rounded-xl text-[13px] text-red-900 placeholder:text-red-300 outline-none focus:border-red-400 transition-all"
+              className="flex-1 px-4 py-3 bg-red-50/50 border border-red-100 rounded-lg text-[13px] text-red-900 placeholder:text-red-300 outline-none focus:border-red-400 transition-all"
             />
-            <button type="submit" disabled={loading} className="bg-red-500 hover:bg-red-600 px-6 py-3 text-white rounded-xl shadow-md shadow-red-500/20 text-[11px] font-bold uppercase tracking-wider transition-all">
+            <button type="submit" disabled={loading} className="bg-red-500 hover:bg-red-600 px-6 py-3 text-white rounded-lg shadow-md shadow-red-500/20 text-[11px] font-bold uppercase tracking-wider transition-all">
               Confirm Rejection
             </button>
           </div>
@@ -217,3 +217,4 @@ const AdminShopCard = ({ shop, onRefresh, isSelected = false, onToggleSelect }) 
 };
 
 export default AdminShopCard;
+

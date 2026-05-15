@@ -3,19 +3,18 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useSelector, useDispatch } from "react-redux";
 import { loginWithGoogle, logout } from "@/redux/thunks/authThunks";
 import {
-  Menu as MenuIcon, X,
-  LogOut, SlidersHorizontal
+  Menu as MenuIcon, X, LogOut, SlidersHorizontal,
+  LayoutGrid, ChevronDown, Store, LogIn
 } from "lucide-react";
 import { isUserAdmin } from "@/lib/db";
 import Button from "@/components/UI/Button";
 import SmartSearch from "@/components/Search/SmartSearch";
 import { slugify } from "@/lib/slugify";
 import FilterModal from "@/components/Search/FilterModal";
-
 import { BRAND } from "@/lib/config";
 
 const Navbar = () => {
@@ -29,54 +28,60 @@ const Navbar = () => {
   const [currentCity, setCurrentCity] = useState("ahmedabad");
   const [currentArea, setCurrentArea] = useState("");
   const [scrolled, setScrolled] = useState(false);
+  const [userAvatar, setUserAvatar] = useState(null);
 
   useEffect(() => {
     setMounted(true);
-    if (typeof window !== 'undefined') {
-      const savedCity = localStorage.getItem('last_city');
-      const savedArea = localStorage.getItem('last_area');
+    if (typeof window !== "undefined") {
+      const savedCity = localStorage.getItem("last_city");
+      const savedArea = localStorage.getItem("last_area");
       if (savedCity) setCurrentCity(slugify(savedCity));
       if (savedArea) setCurrentArea(slugify(savedArea));
 
-      const handleScroll = () => {
-        setScrolled(window.scrollY > 50);
-      };
-      window.addEventListener("scroll", handleScroll);
+      const handleScroll = () => setScrolled(window.scrollY > 24);
+      window.addEventListener("scroll", handleScroll, { passive: true });
       return () => window.removeEventListener("scroll", handleScroll);
     }
   }, []);
 
-
   const isHome = pathname === "/";
+  const isDiscovery = !isHome && pathname !== "/create" && pathname !== "/dashboard";
 
-  // Refined Color Logic
-  const isDarkTheme = isHome && !scrolled;
+  // Nav appearance
+  const navBg = scrolled || !isHome || isMenuOpen
+    ? "bg-white/90 backdrop-blur-xl border-black/[0.06] shadow-[0_1px_0_rgba(0,0,0,0.05)]"
+    : isHome
+    ? "bg-transparent border-transparent"
+    : "bg-white/90 backdrop-blur-xl border-black/[0.06]";
 
-  const navStyles = (isHome && !scrolled && !isMenuOpen)
-    ? "bg-transparent border-transparent py-5 md:py-7"
-    : (isDarkTheme
-      ? "bg-[#020617] border-white/10 shadow-xl py-3 md:py-4"
-      : "bg-white border-black/[0.05] shadow-lg py-3 md:py-4");
+  const isDark = isHome && !scrolled && !isMenuOpen;
+  const textPrimary = isDark ? "text-white" : "text-[#0A0A0F]";
+  const textMuted = isDark ? "text-white/55" : "text-[#0A0A0F]/45";
 
-  const textColor = isDarkTheme ? "text-white" : "text-[#1A1F36]";
-  const linkColor = isDarkTheme ? "text-white/70" : "text-[#1A1F36]/60";
-  const logoMainColor = isDarkTheme ? "text-white" : "text-[#1A1F36]";
-
-  if (!mounted) return <div className="h-24" />;
+  if (!mounted) return <div className="h-[60px]" />;
 
   return (
     <>
-      <nav className={`fixed top-0 left-0 right-0 z-50 flex items-center px-5 md:px-16 transition-all duration-500 border-b ${navStyles}`}>
+      <nav
+        className={`fixed top-0 left-0 right-0 z-50 h-[60px] border-b transition-all duration-300 ${navBg}`}
+      >
+        <div className="max-w-7xl mx-auto w-full h-full px-4 md:px-6 flex items-center">
         {/* Logo */}
-        <Link href="/" prefetch={false} className="flex items-center gap-3 md:gap-4 flex-shrink-0 group">
+        <Link
+          href="/"
+          prefetch={false}
+          className="flex items-center gap-2.5 flex-shrink-0 group mr-4 md:mr-6"
+        >
           <Image
             src="/brand-logo-v1.png"
             alt={BRAND}
-            width={44}
-            height={44}
-            className="w-11 h-11 md:w-14 md:h-14 object-contain transition-all duration-300 group-hover:scale-105"
+            width={30}
+            height={30}
+            className="w-7 h-7 object-contain transition-transform duration-200 group-hover:scale-105"
           />
-          <span className={`text-[22px] md:text-[32px] font-black tracking-tighter transition-colors duration-300 ${logoMainColor}`}>
+          <span
+            className={`text-[16px] font-bold tracking-tight transition-colors duration-200 ${isDark ? "text-white" : "text-[#0A0A0F]"}`}
+          >
             {BRAND.startsWith("Shop") ? (
               <>
                 Shop<span className="text-[#FF6A00]">{BRAND.replace("Shop", "")}</span>
@@ -87,117 +92,129 @@ const Navbar = () => {
           </span>
         </Link>
 
-        {/* Desktop Search Section (Hidden on Home Hero) */}
+        {/* Desktop Search — visible on discovery/inner pages */}
         {!isHome && (
-          <div className="hidden lg:flex flex-1 items-center justify-center max-w-2xl mx-8 gap-3">
+          <div className="hidden lg:flex flex-1 items-center gap-2 max-w-xl">
             <div className="flex-1">
               <SmartSearch />
             </div>
-            <button
-              onClick={() => setIsFilterOpen(true)}
-              className="h-11 px-5 rounded-xl border border-black/[0.06] bg-white text-[#1A1F36] hover:bg-gray-50 flex items-center gap-2 text-[13px] font-bold transition-all shadow-sm"
-            >
-              <SlidersHorizontal size={16} className="text-[#FF6A00]" />
-              <span>Filter</span>
-            </button>
           </div>
         )}
 
-        {/* Navigation & Auth */}
-        <div className="ml-auto flex items-center gap-3 md:gap-8 flex-shrink-0">
-          <div className="hidden md:flex items-center gap-8">
-            <Link href={currentArea ? `/${currentCity}/${currentArea}` : `/${currentCity}`} className={`text-[15px] font-black uppercase tracking-widest ${linkColor} hover:text-[#FF6A00] transition-colors`}>Marketplace</Link>
+        {/* Right side nav */}
+        <div className={`ml-auto flex items-center gap-1 md:gap-2 ${isHome ? "" : "flex-shrink-0"}`}>
+
+          {/* Nav links — desktop */}
+          <div className="hidden md:flex items-center gap-1 mr-2">
+            <Link
+              href={currentArea ? `/${currentCity}/${currentArea}` : `/${currentCity}`}
+              className={`h-8 px-3 rounded-lg flex items-center gap-1.5 text-[13px] font-medium transition-all duration-150 ${textMuted} hover:bg-black/[0.04] hover:${isDark ? "text-white" : "text-[#0A0A0F]"}`}
+            >
+              <LayoutGrid size={13} />
+              Marketplace
+            </Link>
           </div>
 
+          {/* Auth section */}
           {user ? (
-            <Link href="/dashboard" className={`hidden lg:flex items-center gap-3 hover:opacity-80 transition-all p-1.5 pr-4 md:pr-6 ${isDarkTheme ? "bg-white/10 border-white/10" : "bg-[#1A1F36]/[0.03] border-[#1A1F36]/[0.06]"} border rounded-full relative`}>
+            <Link
+              href="/dashboard"
+              className={`hidden lg:flex items-center gap-2 h-8 px-3 rounded-lg transition-all duration-150 ${isDark ? "hover:bg-white/10" : "hover:bg-black/[0.04]"}`}
+            >
               {user.photoURL ? (
-                <div className=" w-8 h-8 md:w-9 md:h-9 rounded-full overflow-hidden border border-black/10 relative">
+                <div className="w-6 h-6 rounded-full overflow-hidden border border-black/10 relative flex-shrink-0">
                   <Image src={user.photoURL} alt="Profile" fill className="object-cover" />
                 </div>
               ) : (
-                <div className="hidden lg:block w-8 h-8 md:w-9 md:h-9 rounded-full bg-[#1A1F36] text-white flex items-center justify-center text-[12px] font-bold uppercase">
+                <div className="w-6 h-6 rounded-full bg-[#FF6A00] text-white flex items-center justify-center text-[10px] font-bold uppercase flex-shrink-0">
                   {user.email?.charAt(0)}
                 </div>
               )}
-              <span className={`hidden sm:block text-[14px] font-black uppercase tracking-wide ${textColor}`}>
-                {user.displayName?.split(' ')[0] || "Account"}
+              <span className={`text-[13px] font-medium ${textPrimary}`}>
+                {user.displayName?.split(" ")[0] || "Account"}
               </span>
+              <ChevronDown size={12} className={`${textMuted}`} />
             </Link>
           ) : (
-            <div className="hidden sm:flex items-center gap-6">
+            <div className="hidden md:flex items-center gap-2">
               <button
                 onClick={() => dispatch(loginWithGoogle())}
-                className={`text-[14px] font-black uppercase tracking-widest ${linkColor} hover:text-[#FF6A00] transition-colors`}
+                className={`h-8 px-3 rounded-lg text-[13px] font-medium transition-all duration-150 ${textMuted} hover:${isDark ? "text-white bg-white/10" : "text-[#0A0A0F] bg-black/[0.04]"}`}
               >
                 Sign in
               </button>
-              <Button
-                variant={isDarkTheme ? "primary" : "dark"}
-                size="md"
-                className="h-11 px-8 rounded-xl text-[12px] font-black uppercase tracking-widest shadow-lg"
-                onClick={() => router.push('/create')}
+              <button
+                onClick={() => router.push("/create")}
+                className="h-8 px-3.5 rounded-lg bg-[#0A0A0F] text-white text-[13px] font-semibold hover:bg-[#1a1a24] transition-all duration-150 shadow-sm"
               >
                 List shop
-              </Button>
+              </button>
             </div>
           )}
 
-          {/* Mobile Menu Toggle */}
+          {/* Mobile toggle */}
           <button
-            className={`lg:hidden p-2 rounded-xl transition-colors ${isDarkTheme ? "text-white hover:bg-white/10" : "text-[#1A1F36] hover:bg-black/5"}`}
+            className={`lg:hidden w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-150 ${isDark ? "text-white hover:bg-white/10" : "text-[#0A0A0F] hover:bg-black/[0.05]"}`}
             onClick={() => setIsMenuOpen(!isMenuOpen)}
           >
-            {isMenuOpen ? <X size={24} /> : <MenuIcon size={24} />}
+            {isMenuOpen ? <X size={18} /> : <MenuIcon size={18} />}
           </button>
         </div>
+        </div>
 
-        {/* Mobile Menu Overlay */}
+        {/* Mobile slide-in menu */}
         {isMenuOpen && (
-          <div className={`fixed inset-0 top-[71px] z-[200] ${isDarkTheme ? "bg-[#020617]" : "bg-white"} p-6 flex flex-col lg:hidden animate-in fade-in slide-in-from-right-4 duration-500`}>
-            <div className="flex flex-col gap-1 pt-6">
+          <div
+            className={`fixed inset-0 top-[60px] z-[200] ${isDark ? "bg-[#0A0A0F]" : "bg-white"} p-5 flex flex-col lg:hidden animate-in fade-in slide-in-from-top-2 duration-200`}
+          >
+            {/* Mobile Search */}
+            <div className="mb-5">
+              <SmartSearch />
+            </div>
+
+            <div className="flex flex-col gap-0.5">
               <Link
                 href={currentArea ? `/${currentCity}/${currentArea}` : `/${currentCity}`}
                 onClick={() => setIsMenuOpen(false)}
-                className={`py-4 px-2 text-[20px] font-bold tracking-tight ${textColor} border-b ${isDarkTheme ? "border-white/5" : "border-black/5"}`}
+                className={`flex items-center gap-3 py-3 px-3 rounded-lg text-[15px] font-semibold ${isDark ? "text-white/80 hover:bg-white/5 hover:text-white" : "text-[#0A0A0F]/70 hover:bg-black/[0.04] hover:text-[#0A0A0F]"} transition-all`}
               >
+                <LayoutGrid size={17} />
                 Marketplace
               </Link>
-
               <Link
                 href="/create"
                 onClick={() => setIsMenuOpen(false)}
-                className={`py-4 px-2 text-[20px] font-bold tracking-tight ${textColor} border-b ${isDarkTheme ? "border-white/5" : "border-black/5"}`}
+                className={`flex items-center gap-3 py-3 px-3 rounded-lg text-[15px] font-semibold ${isDark ? "text-white/80 hover:bg-white/5 hover:text-white" : "text-[#0A0A0F]/70 hover:bg-black/[0.04] hover:text-[#0A0A0F]"} transition-all`}
               >
+                <Store size={17} />
                 List Your Business
               </Link>
-
             </div>
 
-            <div className="mt-auto pb-8 flex flex-col gap-4">
+            <div className="mt-auto pt-5 border-t border-black/[0.06] flex flex-col gap-2">
               {!user ? (
-                <Button
+                <button
                   onClick={() => { dispatch(loginWithGoogle()); setIsMenuOpen(false); }}
-                  variant="primary"
-                  className="w-full h-14 text-[14px] font-black uppercase tracking-widest rounded-xl shadow-lg"
+                  className="w-full h-11 rounded-lg bg-[#FF6A00] text-white text-[14px] font-semibold flex items-center justify-center gap-2 hover:bg-[#E65F00] transition-all"
                 >
+                  <LogIn size={16} />
                   Sign In with Google
-                </Button>
+                </button>
               ) : (
                 <>
                   <Link
                     href="/dashboard"
                     onClick={() => setIsMenuOpen(false)}
-                    className={`w-full h-14 flex items-center justify-center ${isDarkTheme ? "bg-white text-black" : "bg-[#1A1F36] text-white"} rounded-xl text-[14px] font-black uppercase tracking-widest shadow-xl`}
+                    className={`w-full h-11 flex items-center justify-center rounded-lg ${isDark ? "bg-white text-[#0A0A0F]" : "bg-[#0A0A0F] text-white"} text-[14px] font-semibold`}
                   >
                     My Dashboard
                   </Link>
                   <button
                     onClick={() => { dispatch(logout()); setIsMenuOpen(false); }}
-                    className={`w-full h-12 ${isDarkTheme ? "text-white/40" : "text-black/40"} text-[12px] font-black uppercase tracking-widest flex items-center justify-center gap-2 mt-2`}
+                    className={`w-full h-10 ${isDark ? "text-white/35" : "text-[#0A0A0F]/30"} text-[12px] font-medium flex items-center justify-center gap-2`}
                   >
-                    <LogOut size={16} />
-                    Sign Out Account
+                    <LogOut size={14} />
+                    Sign Out
                   </button>
                 </>
               )}

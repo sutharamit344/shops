@@ -7,6 +7,9 @@ export async function GET() {
     return NextResponse.json(clusters);
   } catch (error) {
     console.error("API Error [Clusters]:", error);
-    return NextResponse.json({ error: "Failed to fetch clusters" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to fetch clusters" },
+      { status: 500 },
+    );
   }
 }

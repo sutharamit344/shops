@@ -26,7 +26,9 @@ if (typeof window === "undefined") {
       unstable_cache = nextCache.unstable_cache;
     }
   } catch (e) {
-    console.warn("unstable_cache not found in next/cache, falling back to direct call.");
+    console.warn(
+      "unstable_cache not found in next/cache, falling back to direct call.",
+    );
   }
 }
 
@@ -516,7 +518,11 @@ export async function getShopsByZoneInArea(citySlug, areaSlug, zoneSlug) {
 /**
  * Gets all approved shops by city, area and category.
  */
-export async function getShopsByCityAreaAndCategory(citySlug, areaSlug, categorySlug) {
+export async function getShopsByCityAreaAndCategory(
+  citySlug,
+  areaSlug,
+  categorySlug,
+) {
   try {
     const city = await resolveParameter(citySlug, "city");
     const area = await resolveParameter(areaSlug, "area");
@@ -884,10 +890,9 @@ export async function updateCategory(id, newName) {
 
     // 1. Update the category document
     const updatePayload = {
-      updatedAt: serverTimestamp()
+      updatedAt: serverTimestamp(),
     };
     if (newName) updatePayload.name = newName;
-
 
     await updateDoc(docRef, updatePayload);
 
@@ -895,27 +900,27 @@ export async function updateCategory(id, newName) {
     if (newName && newName !== oldName) {
       const shopsQ = query(
         collection(db, COLLECTION_NAME),
-        where("category", "==", oldName)
+        where("category", "==", oldName),
       );
       const shopsSnap = await getDocs(shopsQ);
-      const shopPromises = shopsSnap.docs.map(d => 
-        updateDoc(doc(db, COLLECTION_NAME, d.id), { 
+      const shopPromises = shopsSnap.docs.map((d) =>
+        updateDoc(doc(db, COLLECTION_NAME, d.id), {
           category: newName,
-          updatedAt: serverTimestamp()
-        })
+          updatedAt: serverTimestamp(),
+        }),
       );
 
       // 3. Cascade to clusters
       const clustersQ = query(
         collection(db, "clusters"),
-        where("category", "==", oldName)
+        where("category", "==", oldName),
       );
       const clustersSnap = await getDocs(clustersQ);
-      const clusterPromises = clustersSnap.docs.map(d => 
-        updateDoc(doc(db, "clusters", d.id), { 
+      const clusterPromises = clustersSnap.docs.map((d) =>
+        updateDoc(doc(db, "clusters", d.id), {
           category: newName,
-          updatedAt: serverTimestamp()
-        })
+          updatedAt: serverTimestamp(),
+        }),
       );
 
       await Promise.all([...shopPromises, ...clusterPromises]);
@@ -932,9 +937,12 @@ export async function updateCategory(id, newName) {
  */
 export async function getSubCategories() {
   try {
-    const q = query(collection(db, "subcategories"), orderBy("createdAt", "desc"));
+    const q = query(
+      collection(db, "subcategories"),
+      orderBy("createdAt", "desc"),
+    );
     const snap = await getDocs(q);
-    return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
   } catch (error) {
     console.error("Error fetching subcategories:", error);
     return [];
@@ -947,7 +955,7 @@ export async function addSubCategory(name, parentCategory) {
       name,
       parentCategory,
 
-      createdAt: serverTimestamp()
+      createdAt: serverTimestamp(),
     });
     return { success: true, id: docRef.id };
   } catch (error) {
@@ -959,11 +967,10 @@ export async function addSubCategory(name, parentCategory) {
 export async function updateSubCategory(id, name, parentCategory) {
   try {
     const updatePayload = {
-      updatedAt: serverTimestamp()
+      updatedAt: serverTimestamp(),
     };
     if (name) updatePayload.name = name;
     if (parentCategory) updatePayload.parentCategory = parentCategory;
-
 
     await updateDoc(doc(db, "subcategories", id), updatePayload);
     return { success: true };
@@ -1042,7 +1049,15 @@ export async function getPendingClusters() {
 /**
  * Proposes a new cluster.
  */
-export async function proposeCluster(name, category, area = "", city = "", pincode = "", lat = null, lng = null) {
+export async function proposeCluster(
+  name,
+  category,
+  area = "",
+  city = "",
+  pincode = "",
+  lat = null,
+  lng = null,
+) {
   try {
     const q = query(
       collection(db, "clusters"),
@@ -1050,7 +1065,7 @@ export async function proposeCluster(name, category, area = "", city = "", pinco
       where("category", "==", category),
       where("area", "==", area),
       where("city", "==", city),
-      where("pincode", "==", pincode)
+      where("pincode", "==", pincode),
     );
     const snap = await getDocs(q);
     if (!snap.empty) return { success: true, id: snap.docs[0].id };
@@ -1417,16 +1432,19 @@ export async function getEntityLogs(entityId, limitCount = 5) {
   }
 }
 
-
 /**
  * BLOG SYSTEM
  */
 
 export async function getBlogs(limitCount = 50) {
   try {
-    const q = query(collection(db, "blogs"), orderBy("createdAt", "desc"), limit(limitCount));
+    const q = query(
+      collection(db, "blogs"),
+      orderBy("createdAt", "desc"),
+      limit(limitCount),
+    );
     const snap = await getDocs(q);
-    return snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    return snap.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
   } catch (error) {
     console.error("Error fetching blogs:", error);
     return [];
@@ -1435,7 +1453,11 @@ export async function getBlogs(limitCount = 50) {
 
 export async function getBlogBySlug(slug) {
   try {
-    const q = query(collection(db, "blogs"), where("slug", "==", slug), limit(1));
+    const q = query(
+      collection(db, "blogs"),
+      where("slug", "==", slug),
+      limit(1),
+    );
     const snap = await getDocs(q);
     if (snap.empty) return null;
     return { id: snap.docs[0].id, ...snap.docs[0].data() };

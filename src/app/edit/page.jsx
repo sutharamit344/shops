@@ -1,16 +1,17 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
 import { getShopById, updateShop } from "@/lib/db";
 import ShopForm from "@/components/Create/ShopForm";
 import Navbar from "@/components/Navbar";
-import { CheckCircle2, AlertCircle, ArrowLeft, Store, Loader2 } from "lucide-react";
+import { CircleCheckBig, CircleAlert, ArrowLeft, Store, Loader2, ShieldCheck, Sparkles } from "lucide-react";
 import Link from "next/link";
 import Button from "@/components/UI/Button";
+import Card from "@/components/UI/Card";
 
-const EditShopPage = () => {
+const EditShopContent = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const id = searchParams.get("id");
@@ -29,18 +30,17 @@ const EditShopPage = () => {
       try {
         const data = await getShopById(id);
         if (data) {
-          // Ownership verification
           if (user && data.ownerId !== user.uid) {
-            setError("Unauthorized: You do not own this shop.");
+            setError("Unauthorized: Access denied for this business.");
             return;
           }
           setInitialData(data);
         } else {
-          setError("Shop not found.");
+          setError("Business not found.");
         }
       } catch (err) {
         console.error("Error fetching shop:", err);
-        setError("Failed to load shop configuration.");
+        setError("Failed to load business configuration.");
       } finally {
         setLoading(false);
       }
@@ -55,18 +55,18 @@ const EditShopPage = () => {
     try {
       const result = await updateShop(id, {
         ...finalData,
-        status: initialData.status, // Preserve existing status (approved/pending/rejected)
+        status: initialData.status,
       });
 
       if (result.success) {
         setSuccess(true);
         setTimeout(() => router.push("/dashboard"), 3000);
       } else {
-        throw new Error("Failed to update database record.");
+        throw new Error("Failed to update business parameters.");
       }
     } catch (err) {
       console.error(err);
-      setError("Failed to save changes. Please check your connection.");
+      setError("Sync failed. Please verify network connectivity.");
     } finally {
       setSaving(false);
     }
@@ -74,15 +74,13 @@ const EditShopPage = () => {
 
   if (authLoading || (loading && !error)) {
     return (
-      <div className="min-h-screen bg-[#FAFAF8]">
+      <div className="min-h-screen bg-[#F7F7F5]">
         <Navbar />
         <main className="max-w-2xl mx-auto px-4 py-32 text-center">
-          <div className="bg-white rounded-2xl p-12 shadow-sm border border-black/[0.06] flex flex-col items-center">
-            <div className="w-16 h-16 bg-[#FF6A00]/10 rounded-2xl flex items-center justify-center mb-6 animate-pulse">
-              <Loader2 size={32} className="text-[#FF6A00] animate-spin" />
-            </div>
-            <h1 className="text-xl font-bold text-[#0F0F0F] mb-1">Loading Editor</h1>
-            <p className="text-[13px] text-[#666]">Fetching your shop details...</p>
+          <div className="flex flex-col items-center">
+            <div className="w-12 h-12 border-2 border-[#FF6A00] border-t-transparent rounded-full animate-spin mb-6"></div>
+            <h1 className="text-[18px] font-bold text-[#0A0A0F] mb-1 tracking-tight">Initializing Business Editor</h1>
+            <p className="text-[12px] font-bold text-[#0A0A0F]/20 uppercase tracking-[0.2em]">Fetching Configuration...</p>
           </div>
         </main>
       </div>
@@ -91,23 +89,21 @@ const EditShopPage = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-[#FAFAF8]">
+      <div className="min-h-screen bg-[#F7F7F5]">
         <Navbar />
-        <main className="max-w-2xl mx-auto px-4 py-32 text-center">
-          <div className="bg-white rounded-2xl p-12 shadow-sm border border-black/[0.06]">
-            <div className="w-16 h-16 bg-red-50 rounded-2xl flex items-center justify-center mx-auto mb-6">
-              <AlertCircle size={32} className="text-red-500" />
+        <main className="max-w-xl mx-auto px-4 py-32 text-center">
+          <Card className="p-12 shadow-2xl">
+            <div className="w-16 h-16 bg-red-500/10 rounded-2xl flex items-center justify-center mx-auto mb-6">
+              <CircleAlert size={32} className="text-red-500" />
             </div>
-            <h1 className="text-2xl font-bold text-[#0F0F0F] mb-3">{error}</h1>
-            <p className="text-[14px] text-[#666] mb-8">
-              We encountered an issue while trying to load your shop settings.
+            <h1 className="text-[24px] font-bold text-[#0A0A0F] mb-3 tracking-tight">{error}</h1>
+            <p className="text-[14px] text-[#0A0A0F]/45 mb-10 font-medium">
+              We encountered a permission or availability issue while requesting this resource.
             </p>
             <Link href="/dashboard">
-              <button className="px-6 py-3 bg-[#0F0F0F] text-white text-[13px] font-semibold rounded-xl hover:bg-[#333] transition-all">
-                Return to Dashboard
-              </button>
+              <Button variant="dark" size="lg" icon={ArrowLeft}>Return to Dashboard</Button>
             </Link>
-          </div>
+          </Card>
         </main>
       </div>
     );
@@ -115,23 +111,21 @@ const EditShopPage = () => {
 
   if (success) {
     return (
-      <div className="min-h-screen bg-[#FAFAF8]">
+      <div className="min-h-screen bg-[#F7F7F5]">
         <Navbar />
-        <main className="max-w-2xl mx-auto px-4 py-32 text-center">
-          <div className="bg-white rounded-2xl p-12 shadow-sm border border-black/[0.06]">
-            <div className="w-20 h-20 bg-[#25D366]/10 rounded-2xl flex items-center justify-center mx-auto mb-6">
-              <CheckCircle2 size={40} className="text-[#25D366]" />
-            </div>
-            <h1 className="text-3xl md:text-4xl font-bold text-[#0F0F0F] mb-3 tracking-tight">
-              Changes Saved!
-            </h1>
-            <p className="text-[14px] text-[#666] mb-6 max-w-md mx-auto">
-              Your shop information has been updated successfully.
-            </p>
-            <div className="flex items-center justify-center gap-2 text-[11px] text-[#999]">
-              <div className="w-5 h-5 rounded-full border-2 border-[#FF6A00] border-t-transparent animate-spin"></div>
-              <span>Redirecting to dashboard...</span>
-            </div>
+        <main className="max-w-xl mx-auto px-4 py-32 text-center">
+          <div className="w-16 h-16 bg-emerald-500/10 rounded-2xl flex items-center justify-center mx-auto mb-8">
+            <CircleCheckBig size={32} className="text-emerald-500" />
+          </div>
+          <h1 className="text-[28px] md:text-[36px] font-bold text-[#0A0A0F] mb-4 tracking-tight">
+            Business Synchronized
+          </h1>
+          <p className="text-[15px] text-[#0A0A0F]/45 mb-10 max-w-sm mx-auto font-medium">
+            Your business configuration has been successfully updated across the distributed network.
+          </p>
+          <div className="inline-flex items-center gap-3 py-2 px-4 bg-white rounded-lg border border-black/[0.05] shadow-sm">
+            <div className="w-3.5 h-3.5 border-2 border-[#FF6A00] border-t-transparent rounded-full animate-spin"></div>
+            <span className="text-[11px] font-bold text-[#0A0A0F]/40 uppercase tracking-widest">Re-routing Console...</span>
           </div>
         </main>
       </div>
@@ -139,23 +133,24 @@ const EditShopPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[#FAFAF8]">
+    <div className="min-h-screen bg-[#F7F7F5]">
       <Navbar />
-      <main className="max-w-4xl mx-auto px-4 pt-24 md:pt-32 pb-20">
-        <div className="text-center mb-10">
-          <div className="inline-flex items-center gap-2 px-3 py-1 bg-[#FF6A00]/10 rounded-full mb-4">
-            <Store size={14} className="text-[#FF6A00]" />
-            <span className="text-[10px] font-semibold text-[#FF6A00] uppercase tracking-wider">Management Mode</span>
+      <div className="absolute inset-0 dot-grid opacity-[0.05] pointer-events-none" />
+      <main className="max-w-4xl mx-auto px-4 pt-28 pb-32 relative z-10">
+        <div className="text-center mb-12 animate-in fade-in duration-700">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-[#FF6A00]/5 border border-[#FF6A00]/10 mb-4">
+            <ShieldCheck size={12} className="text-[#FF6A00]" />
+            <span className="text-[10px] font-bold text-[#FF6A00] uppercase tracking-[0.2em]">Business Management</span>
           </div>
-          <h1 className="text-3xl md:text-4xl font-bold text-[#0F0F0F] mb-2 tracking-tight">
-            Edit {initialData?.name}
+          <h1 className="text-[32px] md:text-[44px] font-bold text-[#0A0A0F] mb-3 tracking-tight leading-none">
+            Configure {initialData?.name}
           </h1>
-          <p className="text-[14px] text-[#666] max-w-md mx-auto">
-            Update your shop details below. Changes will be reflected immediately after saving.
+          <p className="text-[14px] md:text-[15px] text-[#0A0A0F]/45 max-w-md mx-auto font-medium">
+            Modify your professional business parameters and update your digital storefront.
           </p>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-sm border border-black/[0.06] overflow-hidden p-6">
+        <Card className="p-0 border-none shadow-2xl overflow-visible">
           <ShopForm
             initialData={initialData}
             onSubmit={handleUpdate}
@@ -163,23 +158,31 @@ const EditShopPage = () => {
             isEdit={true}
             error={error}
           />
-        </div>
+        </Card>
 
-        {/* Help Section */}
-        <div className="mt-8 text-center">
-          <p className="text-[11px] text-[#999]">
-            Need help? Check out our{' '}
-            <a href="/guide" className="text-[#FF6A00] hover:underline font-semibold">
-              management guide
-            </a>{' '}
-            or{' '}
-            <a href="/contact" className="text-[#FF6A00] hover:underline font-semibold">
-              contact support
-            </a>
-          </p>
+        {/* Support Section */}
+        <div className="mt-16 text-center">
+           <div className="flex items-center justify-center gap-6">
+              <div className="flex items-center gap-2 text-[#0A0A0F]/20">
+                 <Sparkles size={14} />
+                 <span className="text-[11px] font-bold uppercase tracking-widest">Live Updates</span>
+              </div>
+           </div>
         </div>
       </main>
     </div>
+  );
+};
+
+const EditShopPage = () => {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-[#F7F7F5] flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-[#FF6A00] border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    }>
+      <EditShopContent />
+    </Suspense>
   );
 };
 

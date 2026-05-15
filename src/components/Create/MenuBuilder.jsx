@@ -4,7 +4,7 @@ import React from "react";
 import Button from "@/components/UI/Button";
 import ImageUpload from "@/components/UI/ImageUpload";
 import { useModal } from "@/hooks/useModal";
-import { Plus, Trash2, LayoutGrid, PlusCircle } from "lucide-react";
+import { Plus, Trash2, LayoutGrid, CirclePlus } from "lucide-react";
 
 const UNIT_OPTIONS = [
   { group: "Common", units: ["pc", "unit", "pkg", "set"] },
@@ -86,7 +86,7 @@ const MenuBuilder = ({ menuData, onChange, businessType = "mixed" }) => {
           {/* Category Header */}
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
             <div className="flex items-center gap-3 flex-1">
-              <div className="p-2.5 bg-primary/5 text-primary rounded-xl">
+              <div className="p-2.5 bg-primary/5 text-primary rounded-lg">
                 <LayoutGrid size={22} />
               </div>
               <div className="flex-1">
@@ -101,7 +101,7 @@ const MenuBuilder = ({ menuData, onChange, businessType = "mixed" }) => {
             </div>
 
             <div className="flex items-center gap-4">
-              <div className="flex items-center gap-3 px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl">
+              <div className="flex items-center gap-3 px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg">
                 <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none">Default Unit</span>
                 <select 
                   value={section.defaultUnit || ""}
@@ -146,7 +146,7 @@ const MenuBuilder = ({ menuData, onChange, businessType = "mixed" }) => {
                         placeholder={isService ? "e.g. Haircut" : "e.g. Cheese Burger"}
                         value={item.name}
                         onChange={(e) => updateItem(catIndex, itemIndex, "name", e.target.value)}
-                        className="w-full bg-gray-50/30 p-3 rounded-xl border border-gray-200 focus:border-primary font-bold text-sm outline-none transition-all"
+                        className="w-full bg-gray-50/30 p-3 rounded-lg border border-gray-200 focus:border-primary font-bold text-sm outline-none transition-all"
                       />
                     </div>
                     <div className="md:col-span-3 space-y-1">
@@ -156,7 +156,7 @@ const MenuBuilder = ({ menuData, onChange, businessType = "mixed" }) => {
                         placeholder="0"
                         value={item.price}
                         onChange={(e) => updateItem(catIndex, itemIndex, "price", e.target.value)}
-                        className="w-full bg-gray-50/30 p-3 rounded-xl border border-gray-200 focus:border-primary font-bold text-sm outline-none transition-all"
+                        className="w-full bg-gray-50/30 p-3 rounded-lg border border-gray-200 focus:border-primary font-bold text-sm outline-none transition-all"
                       />
                     </div>
                     <div className="md:col-span-3 space-y-1">
@@ -164,7 +164,7 @@ const MenuBuilder = ({ menuData, onChange, businessType = "mixed" }) => {
                       <select 
                         value={item.unit || ""}
                         onChange={(e) => updateItem(catIndex, itemIndex, "unit", e.target.value)}
-                        className="w-full bg-gray-50/30 p-3 rounded-xl border border-gray-200 focus:border-primary font-bold text-sm outline-none cursor-pointer appearance-none"
+                        className="w-full bg-gray-50/30 p-3 rounded-lg border border-gray-200 focus:border-primary font-bold text-sm outline-none cursor-pointer appearance-none"
                       >
                         {UNIT_OPTIONS.map(group => (
                           <optgroup key={group.group} label={group.group}>
@@ -185,7 +185,7 @@ const MenuBuilder = ({ menuData, onChange, businessType = "mixed" }) => {
                       value={item.description || ""}
                       onChange={(e) => updateItem(catIndex, itemIndex, "description", e.target.value)}
                       rows={2}
-                      className="w-full bg-gray-50/30 p-3 rounded-xl border border-gray-200 focus:border-primary font-medium text-sm outline-none transition-all resize-none"
+                      className="w-full bg-gray-50/30 p-3 rounded-lg border border-gray-200 focus:border-primary font-medium text-sm outline-none transition-all resize-none"
                     />
                   </div>
                 </div>
@@ -210,7 +210,7 @@ const MenuBuilder = ({ menuData, onChange, businessType = "mixed" }) => {
               onClick={() => addItem(catIndex)}
               className="w-full py-4 border border-dashed border-gray-200 !rounded-2xl text-gray-400 hover:text-primary hover:border-primary/40 hover:bg-primary/5 transition-all flex items-center justify-center gap-2 font-black text-[10px] uppercase tracking-widest shadow-none"
             >
-              <PlusCircle size={18} /> Add {isService ? "Service" : "Item"}
+              <CirclePlus size={18} /> Add {isService ? "Service" : "Item"}
             </Button>
           </div>
         </div>
