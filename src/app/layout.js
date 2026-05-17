@@ -32,6 +32,11 @@ export const metadata = {
     type: "website",
   },
   manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    title: BRAND,
+    statusBarStyle: "black-translucent",
+  },
   icons: {
     icon: [
       { url: "/favicon.ico?v=3", sizes: "any" },

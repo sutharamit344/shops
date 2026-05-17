@@ -36,6 +36,7 @@ import {
   LayoutDashboard,
   Plus,
   Upload,
+  Download,
   X,
   Info,
   Search,
@@ -44,7 +45,8 @@ import {
   RefreshCw,
   Trash2,
   ThumbsUp as ThumbsUpIcon,
-  User as UserIcon
+  User as UserIcon,
+  Loader2
 } from "lucide-react";
 import Link from "next/link";
 import ShopHistoryDialog from "@/components/Shop/HistoryDialog";
@@ -82,6 +84,7 @@ function ShopDashboardContent() {
   const [itemPrice, setItemPrice] = useState("");
   const [itemDescription, setItemDescription] = useState("");
   const [itemImage, setItemImage] = useState("");
+  const [itemFeatured, setItemFeatured] = useState(false);
   const [collapsedCategories, setCollapsedCategories] = useState(new Set());
   const [searchQuery, setSearchQuery] = useState("");
   const searchDebounceRef = useRef(null);
@@ -110,6 +113,8 @@ function ShopDashboardContent() {
 
   const qrRef = useRef(null);
   const [downloadingQR, setDownloadingQR] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
+  const [isImporting, setIsImporting] = useState(false);
 
   const handleDownloadQR = async () => {
     if (!qrRef.current) return;
@@ -287,7 +292,8 @@ function ShopDashboardContent() {
       name: itemName.trim(),
       price: itemPrice ? parseFloat(itemPrice) : "",
       description: itemDescription.trim(),
-      image: itemImage
+      image: itemImage,
+      featured: itemFeatured
     });
     handleUpdateMenu(newMenu);
     resetItemForm();
@@ -302,7 +308,8 @@ function ShopDashboardContent() {
       name: itemName.trim(),
       price: itemPrice ? parseFloat(itemPrice) : "",
       description: itemDescription.trim(),
-      image: itemImage
+      image: itemImage,
+      featured: itemFeatured
     };
     handleUpdateMenu(newMenu);
     resetItemForm();
@@ -314,6 +321,7 @@ function ShopDashboardContent() {
     setItemPrice("");
     setItemDescription("");
     setItemImage("");
+    setItemFeatured(false);
   };
 
   const handleDeleteItem = () => {
@@ -382,6 +390,147 @@ function ShopDashboardContent() {
 
   const handleDeleteHoliday = (idx) => {
     setHolidays(holidays.filter((_, i) => i !== idx));
+  };
+
+  const handleExportCatalog = async () => {
+    setIsExporting(true);
+    try {
+      const XLSX = await import("xlsx");
+      const menu = shop?.menu || [];
+      const exportData = [];
+
+      menu.forEach((section) => {
+        const catName = section.category || section.name || "Catalog";
+        if (section.items && Array.isArray(section.items)) {
+          section.items.forEach((item) => {
+            exportData.push({
+              "Section Category": catName,
+              "Item Name": item.name || "",
+              "Description": item.description || "",
+              "Price": item.price || "",
+              "Image URL": item.image || "",
+              "Is Popular": item.featured || item.popular ? "Yes" : "No"
+            });
+          });
+        }
+      });
+
+      if (exportData.length === 0) {
+        exportData.push({
+          "Section Category": "Example Section",
+          "Item Name": "Example Item",
+          "Description": "Premium quality product",
+          "Price": 500,
+          "Image URL": "",
+          "Is Popular": "Yes"
+        });
+      }
+
+      const ws = XLSX.utils.json_to_sheet(exportData);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Catalog");
+      XLSX.writeFile(wb, `${slugify(shop?.name || "shop")}_catalog.xlsx`);
+      showAlert({
+        title: "Export Successful",
+        message: "Catalog exported successfully as an Excel spreadsheet.",
+        type: "success"
+      });
+    } catch (err) {
+      console.error("Export error:", err);
+      showAlert({
+        title: "Export Failed",
+        message: "Failed to export catalog. Please verify xlsx dependency.",
+        type: "error"
+      });
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  const handleImportCatalog = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsImporting(true);
+    try {
+      const XLSX = await import("xlsx");
+      const reader = new FileReader();
+
+      reader.onload = async (event) => {
+        try {
+          const data = new Uint8Array(event.target.result);
+          const workbook = XLSX.read(data, { type: "array" });
+          const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+          const jsonData = XLSX.utils.sheet_to_json(worksheet);
+
+          if (!jsonData || jsonData.length === 0) {
+            showAlert({
+              title: "Import Failed",
+              message: "No items found in the uploaded spreadsheet.",
+              type: "error"
+            });
+            return;
+          }
+
+          const sectionsMap = {};
+
+          jsonData.forEach((row) => {
+            const catName = row["Section Category"]?.toString().trim() || row["Category"]?.toString().trim() || row["section"]?.toString().trim() || "Catalog";
+            const itemName = row["Item Name"]?.toString().trim() || row["Name"]?.toString().trim() || row["name"]?.toString().trim() || "";
+            const description = row["Description"]?.toString().trim() || row["description"]?.toString().trim() || "";
+            const price = parseFloat(row["Price"] || row["price"] || 0) || 0;
+            const image = row["Image URL"]?.toString().trim() || row["image"]?.toString().trim() || "";
+            const isPopStr = (row["Is Popular"] || row["popular"] || row["featured"] || "").toString().toLowerCase();
+            const featured = isPopStr === "yes" || isPopStr === "true" || isPopStr === "1";
+
+            if (itemName) {
+              if (!sectionsMap[catName]) sectionsMap[catName] = [];
+              sectionsMap[catName].push({
+                name: itemName,
+                description,
+                price: price || "",
+                image,
+                featured,
+                popular: featured
+              });
+            }
+          });
+
+          const newMenu = Object.entries(sectionsMap).map(([name, items]) => ({
+            name,
+            category: name,
+            items
+          }));
+
+          await handleUpdateMenu(newMenu);
+          showAlert({
+            title: "Import Successful",
+            message: `Successfully imported ${jsonData.length} items across ${newMenu.length} sections!`,
+            type: "success"
+          });
+        } catch (error) {
+          console.error("Import error:", error);
+          showAlert({
+            title: "Import Failed",
+            message: "Failed to parse file. Please ensure correct template structure.",
+            type: "error"
+          });
+        } finally {
+          if (e.target) e.target.value = "";
+          setIsImporting(false);
+        }
+      };
+      reader.readAsArrayBuffer(file);
+    } catch (err) {
+      console.error("Import error:", err);
+      showAlert({
+        title: "Import Failed",
+        message: "Failed to import catalog. Please verify xlsx dependency.",
+        type: "error"
+      });
+      if (e.target) e.target.value = "";
+      setIsImporting(false);
+    }
   };
 
 
@@ -712,7 +861,7 @@ function ShopDashboardContent() {
                 <h2 className="text-[16px] font-bold text-[#0A0A0F]">Catalog Management</h2>
                 <p className="text-[11px] text-[#0A0A0F]/45">Manage your products and services</p>
               </div>
-              <div className="flex items-center gap-3">
+              <div className="flex flex-wrap items-center gap-2 sm:gap-3">
                 <div className="relative">
                   <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#0A0A0F]/30" />
                   <input
@@ -724,8 +873,45 @@ function ShopDashboardContent() {
                   />
                 </div>
                 <button
+                  onClick={handleExportCatalog}
+                  disabled={isExporting}
+                  className={`px-3 py-2 bg-white border border-black/[0.08] text-[#0A0A0F] text-[11px] font-semibold rounded-lg flex items-center gap-1.5 hover:bg-black/[0.02] hover:border-black/[0.15] active:scale-95 transition-all shadow-sm whitespace-nowrap ${isExporting ? "opacity-50 cursor-not-allowed" : ""}`}
+                  title="Download Catalog as Excel Spreadsheet"
+                >
+                  {isExporting ? (
+                    <>
+                      <Loader2 size={14} className="animate-spin text-[#FF6A00]" /> Exporting...
+                    </>
+                  ) : (
+                    <>
+                      <Download size={14} className="text-[#0A0A0F]/70" /> Export Catalog
+                    </>
+                  )}
+                </button>
+                <label
+                  className={`cursor-pointer px-3 py-2 bg-white border border-black/[0.08] text-[#0A0A0F] text-[11px] font-semibold rounded-lg flex items-center gap-1.5 hover:bg-black/[0.02] hover:border-black/[0.15] active:scale-95 transition-all shadow-sm whitespace-nowrap mb-0 ${isImporting ? "opacity-50 cursor-not-allowed" : ""}`}
+                  title="Upload Excel or CSV Catalog"
+                >
+                  {isImporting ? (
+                    <>
+                      <Loader2 size={14} className="animate-spin text-[#FF6A00]" /> Importing...
+                    </>
+                  ) : (
+                    <>
+                      <Upload size={14} className="text-[#0A0A0F]/70" /> Import Catalog
+                      <input
+                        type="file"
+                        accept=".xlsx,.xls,.csv"
+                        onChange={handleImportCatalog}
+                        disabled={isImporting}
+                        className="hidden"
+                      />
+                    </>
+                  )}
+                </label>
+                <button
                   onClick={() => setShowCategoryModal(true)}
-                  className="px-4 py-2 bg-[#0F0F0F] text-white text-[11px] font-semibold rounded-lg flex items-center gap-1 hover:bg-black/90 active:scale-95 transition-all whitespace-nowrap"
+                  className="px-4 py-2 bg-[#0F0F0F] text-white text-[11px] font-semibold rounded-lg flex items-center gap-1 hover:bg-black/90 active:scale-95 transition-all whitespace-nowrap shadow-md"
                 >
                   <Plus size={14} /> Add Category
                 </button>
@@ -778,6 +964,7 @@ function ShopDashboardContent() {
                                   onClick={() => {
                                     setActiveCategoryIdx(idx);
                                     resetItemForm();
+                                    setItemFeatured(false);
                                     setShowItemModal(true);
                                   }}
                                   className="px-3 py-1.5 bg-[#0F0F0F] text-white text-[9px] font-semibold rounded-lg hover:bg-black/90 active:scale-95 transition-all"
@@ -812,7 +999,25 @@ function ShopDashboardContent() {
                                         : <p className="text-[11px] font-medium text-[#0A0A0F]/30">On Request</p>
                                       }
                                     </div>
-                                    <div className="flex gap-1">
+                                    <div className="flex gap-1 items-center">
+                                      <label className="flex items-center gap-1.5 cursor-pointer mr-2" title="Toggle Featured Status">
+                                        <input
+                                          type="checkbox"
+                                          checked={!!item.featured}
+                                          onChange={(e) => {
+                                            const originalCatIdx = (shop.menu || []).findIndex(c => c.name === category.name);
+                                            const originalItemIdx = (shop.menu[originalCatIdx].items || []).findIndex(it => it.name === item.name);
+                                            const newMenu = [...(shop.menu || [])];
+                                            newMenu[originalCatIdx].items[originalItemIdx] = {
+                                              ...newMenu[originalCatIdx].items[originalItemIdx],
+                                              featured: e.target.checked
+                                            };
+                                            handleUpdateMenu(newMenu);
+                                          }}
+                                          className="w-4 h-4 rounded border-black/[0.06] text-[#FF6A00] focus:ring-[#FF6A00]"
+                                        />
+                                        <span className="text-[11px] font-semibold text-[#0A0A0F]/60 select-none hidden sm:inline">Featured</span>
+                                      </label>
                                       <button
                                         onClick={() => {
                                           // Find the REAL index in the original shop.menu
@@ -825,6 +1030,7 @@ function ShopDashboardContent() {
                                           setItemPrice(item.price.toString());
                                           setItemDescription(item.description || "");
                                           setItemImage(item.image || "");
+                                          setItemFeatured(!!item.featured);
                                           setShowEditItemModal(true);
                                         }}
                                         className="p-2 hover:bg-black/[0.04] active:bg-black/[0.08] rounded-lg text-[#0A0A0F]/45 transition-all"
@@ -1241,6 +1447,18 @@ function ShopDashboardContent() {
             onChange={(e) => setItemDescription(e.target.value)}
             rows={2}
           />
+          <label className="flex items-center gap-2 p-3 bg-black/[0.02] border border-black/[0.05] rounded-xl cursor-pointer hover:bg-black/[0.04] transition-all">
+            <input
+              type="checkbox"
+              checked={itemFeatured}
+              onChange={(e) => setItemFeatured(e.target.checked)}
+              className="w-4 h-4 rounded border-black/[0.06] text-[#FF6A00] focus:ring-[#FF6A00]"
+            />
+            <div>
+              <span className="text-[13px] font-bold text-[#0A0A0F] block">Featured Item</span>
+              <span className="text-[11px] text-[#0A0A0F]/45 block">Highlight this item at the top of your shop catalog.</span>
+            </div>
+          </label>
           <div className="flex justify-end pt-2">
             <Button onClick={handleAddItem} disabled={!itemName.trim()}>
               Add to Catalog
@@ -1291,6 +1509,18 @@ function ShopDashboardContent() {
             onChange={(e) => setItemDescription(e.target.value)}
             rows={2}
           />
+          <label className="flex items-center gap-2 p-3 bg-black/[0.02] border border-black/[0.05] rounded-xl cursor-pointer hover:bg-black/[0.04] transition-all">
+            <input
+              type="checkbox"
+              checked={itemFeatured}
+              onChange={(e) => setItemFeatured(e.target.checked)}
+              className="w-4 h-4 rounded border-black/[0.06] text-[#FF6A00] focus:ring-[#FF6A00]"
+            />
+            <div>
+              <span className="text-[13px] font-bold text-[#0A0A0F] block">Featured Item</span>
+              <span className="text-[11px] text-[#0A0A0F]/45 block">Highlight this item at the top of your shop catalog.</span>
+            </div>
+          </label>
           <div className="flex justify-end pt-2">
             <Button onClick={handleEditItem} disabled={!itemName.trim()}>
               Update Item

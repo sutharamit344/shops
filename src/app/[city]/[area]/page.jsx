@@ -33,7 +33,60 @@ export default async function CityDiscoveryPage({ params }) {
 
   if (!parsed) return notFound();
 
+  const locationName = parsed.location || city.replace(/-/g, " ");
+  const formattedLocation = locationName.charAt(0).toUpperCase() + locationName.slice(1);
+  const labelName = parsed.category || area.replace(/-/g, " ");
+  const formattedLabel = labelName.charAt(0).toUpperCase() + labelName.slice(1);
+
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": `${formattedLabel} in ${formattedLocation}`,
+    "description": `Find top-rated ${formattedLabel} in ${formattedLocation}. Verified contact details and locations on ${BRAND}.`,
+    "url": `${DOMAIN}/${city}/${area}`,
+    "isPartOf": {
+      "@type": "WebSite",
+      "name": BRAND,
+      "url": DOMAIN
+    }
+  };
+
+  const breadcrumbLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {
+        "@type": "ListItem",
+        "position": 1,
+        "name": "Home",
+        "item": `${DOMAIN}`
+      },
+      {
+        "@type": "ListItem",
+        "position": 2,
+        "name": formattedLocation,
+        "item": `${DOMAIN}/${city}`
+      },
+      {
+        "@type": "ListItem",
+        "position": 3,
+        "name": formattedLabel,
+        "item": `${DOMAIN}/${city}/${area}`
+      }
+    ]
+  };
+
   return (
-    <DiscoveryClient slug={`${city}/${area}`} parsed={parsed} />
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }}
+      />
+      <DiscoveryClient slug={`${city}/${area}`} parsed={parsed} />
+    </>
   );
 }

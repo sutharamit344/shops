@@ -4,8 +4,8 @@
   "description": "Find shops, services, and businesses near you",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#FDFBF7",
-  "theme_color": "#0F172A",
+  "background_color": "#0A0A0F",
+  "theme_color": "#0A0A0F",
   "icons": [
     {
       "src": "/android-chrome-192x192.png",

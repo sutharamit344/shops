@@ -255,16 +255,16 @@ const ShopCard = ({ shop, variant = "grid", showActions = false, index = 0 }) =>
               )}
             </div>
 
-            <div className="flex flex-col items-end gap-1.5">
-              <div className="absolute top-3.5 right-3.5 z-20">
+            <div className="flex flex-col items-end gap-1.5 max-w-[65%]">
+              <div className="flex items-center gap-1.5 flex-wrap justify-end">
                 <OpenNowBadge shop={shop} size="sm" />
+                <span
+                  onClick={(e) => handleCategoryClick(e, shop.category)}
+                  className="text-[10px] font-bold uppercase tracking-wider text-[#FF6A00] bg-[#FF6A00]/5 px-2 py-0.5 rounded-md border border-[#FF6A00]/10 hover:bg-[#FF6A00] hover:text-white transition-all cursor-pointer truncate max-w-full"
+                >
+                  {shop.category}
+                </span>
               </div>
-              <span
-                onClick={(e) => handleCategoryClick(e, shop.category)}
-                className="text-[10px] font-bold uppercase tracking-wider text-[#FF6A00] bg-[#FF6A00]/5 px-2 py-0.5 rounded-md border border-[#FF6A00]/10 hover:bg-[#FF6A00] hover:text-white transition-all cursor-pointer"
-              >
-                {shop.category}
-              </span>
             </div>
           </div>
 

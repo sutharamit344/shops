@@ -342,6 +342,7 @@ const DiscoveryClient = ({ slug, parsed: initialParsed }) => {
   };
 
   const [viewMode, setViewMode] = useState("grid");
+  const [isSearchFocused, setIsSearchFocused] = useState(false);
 
   return (
     <div className="min-h-screen bg-[#F7F7F5]">
@@ -349,26 +350,28 @@ const DiscoveryClient = ({ slug, parsed: initialParsed }) => {
 
       <main className="pt-[60px] pb-12">
         {/* Mobile Sticky Sub-header */}
-        <div className="sticky top-[60px] z-40 bg-[#F7F7F5]/90 backdrop-blur-lg border-b border-black/[0.05] px-4 py-2 mb-4 lg:hidden">
+        <div className={`sticky top-[60px] z-40 ${isSearchFocused ? 'bg-white' : 'bg-[#F7F7F5]/90 backdrop-blur-lg'} border-b border-black/[0.05] px-4 py-2 mb-4 lg:hidden`}>
           <div className="flex items-center gap-2">
             <div className="flex-1">
-              <SmartSearch pageTitle={titleText} pageContext={currentActiveLocation} />
+              <SmartSearch pageTitle={titleText} pageContext={currentActiveLocation} onFocusStateChange={setIsSearchFocused} />
             </div>
-            <button
-              onClick={() => setIsFilterOpen(true)}
-              className={`relative h-9 w-9 rounded-lg flex items-center justify-center border transition-all flex-shrink-0 ${
-                activeFilterCount > 0
-                  ? "bg-[#FF6A00] border-[#FF6A00] text-white"
-                  : "bg-white border-black/[0.07] text-[#0A0A0F]/50 hover:border-black/[0.15]"
-              }`}
-            >
-              <SlidersHorizontal size={15} />
-              {activeFilterCount > 0 && (
-                <span className="absolute -top-1 -right-1 w-4 h-4 bg-white text-[#FF6A00] text-[9px] flex items-center justify-center rounded-full border border-[#FF6A00] font-bold">
-                  {activeFilterCount}
-                </span>
-              )}
-            </button>
+            {!isSearchFocused && (
+              <button
+                onClick={() => setIsFilterOpen(true)}
+                className={`relative h-9 w-9 rounded-lg flex items-center justify-center border transition-all flex-shrink-0 ${
+                  activeFilterCount > 0
+                    ? "bg-[#FF6A00] border-[#FF6A00] text-white"
+                    : "bg-white border-black/[0.07] text-[#0A0A0F]/50 hover:border-black/[0.15]"
+                }`}
+              >
+                <SlidersHorizontal size={15} />
+                {activeFilterCount > 0 && (
+                  <span className="absolute -top-1 -right-1 w-4 h-4 bg-white text-[#FF6A00] text-[9px] flex items-center justify-center rounded-full border border-[#FF6A00] font-bold">
+                    {activeFilterCount}
+                  </span>
+                )}
+              </button>
+            )}
           </div>
         </div>
 

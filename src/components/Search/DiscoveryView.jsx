@@ -137,11 +137,10 @@ const DiscoveryView = ({ title, subtitle, onSubtitleClick, onRefresh, isDetectin
                   <button
                     key={option.id}
                     onClick={() => dispatch(setSortBy(option.id))}
-                    className={`flex items-center justify-between px-3 py-2.5 rounded-lg border transition-all text-left ${
-                      sortBy === option.id
-                        ? "border-[#FF6A00]/40 bg-[#FF6A00]/5 text-[#FF6A00]"
-                        : "border-black/[0.05] bg-white text-[#0A0A0F]/60 hover:border-black/[0.1] hover:bg-black/[0.01]"
-                    }`}
+                    className={`flex items-center justify-between px-3 py-2.5 rounded-lg border transition-all text-left ${sortBy === option.id
+                      ? "border-[#FF6A00]/40 bg-[#FF6A00]/5 text-[#FF6A00]"
+                      : "border-black/[0.05] bg-white text-[#0A0A0F]/60 hover:border-black/[0.1] hover:bg-black/[0.01]"
+                      }`}
                   >
                     <div className="flex items-center gap-2.5">
                       <option.icon size={14} className={sortBy === option.id ? "text-[#FF6A00]" : "text-[#0A0A0F]/30"} />
@@ -165,24 +164,21 @@ const DiscoveryView = ({ title, subtitle, onSubtitleClick, onRefresh, isDetectin
                   <button
                     key={tag.id}
                     onClick={() => dispatch(toggleTag(tag.id))}
-                    className={`flex items-center justify-between px-3 py-2.5 rounded-lg border transition-all text-left ${
-                      tags[tag.id]
-                        ? "border-[#FF6A00]/40 bg-[#FF6A00]/5 text-[#FF6A00]"
-                        : "border-black/[0.05] bg-white text-[#0A0A0F]/60 hover:border-black/[0.1] hover:bg-black/[0.01]"
-                    }`}
+                    className={`flex items-center justify-between px-3 py-2.5 rounded-lg border transition-all text-left ${tags[tag.id]
+                      ? "border-[#FF6A00]/40 bg-[#FF6A00]/5 text-[#FF6A00]"
+                      : "border-black/[0.05] bg-white text-[#0A0A0F]/60 hover:border-black/[0.1] hover:bg-black/[0.01]"
+                      }`}
                   >
                     <div className="flex items-center gap-2.5">
                       <tag.icon size={14} className={tags[tag.id] ? "text-[#FF6A00]" : "text-[#0A0A0F]/30"} />
                       <span className={`text-[13px] font-medium ${tags[tag.id] ? "text-[#FF6A00]" : ""}`}>{tag.label}</span>
                     </div>
-                    
+
                     {/* Compact Switch */}
-                    <div className={`w-8 h-4 rounded-full transition-all relative ${
-                      tags[tag.id] ? "bg-[#FF6A00]" : "bg-black/[0.1]"
-                    }`}>
-                      <div className={`absolute top-0.5 w-3 h-3 rounded-full bg-white shadow-sm transition-all ${
-                        tags[tag.id] ? "left-4.5" : "left-0.5"
-                      }`} />
+                    <div className={`w-8 h-4 rounded-full transition-all relative ${tags[tag.id] ? "bg-[#FF6A00]" : "bg-black/[0.1]"
+                      }`}>
+                      <div className={`absolute top-0.5 w-3 h-3 rounded-full bg-white shadow-sm transition-all ${tags[tag.id] ? "left-4.5" : "left-0.5"
+                        }`} />
                     </div>
                   </button>
                 ))}
@@ -198,11 +194,10 @@ const DiscoveryView = ({ title, subtitle, onSubtitleClick, onRefresh, isDetectin
         <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-3 border-b border-black/[0.05]">
           <button
             onClick={() => handleCategoryChipClick("")}
-            className={`flex-shrink-0 h-7 px-3 rounded-md text-[12px] font-medium transition-all ${
-              !activeCategory
-                ? "bg-[#0A0A0F] text-white shadow-sm"
-                : "bg-transparent text-[#0A0A0F]/50 hover:bg-black/[0.05] hover:text-[#0A0A0F]"
-            }`}
+            className={`flex-shrink-0 h-7 px-3 rounded-md text-[12px] font-medium transition-all ${!activeCategory
+              ? "bg-[#0A0A0F] text-white shadow-sm"
+              : "bg-transparent text-[#0A0A0F]/50 hover:bg-black/[0.05] hover:text-[#0A0A0F]"
+              }`}
           >
             All
           </button>
@@ -221,18 +216,16 @@ const DiscoveryView = ({ title, subtitle, onSubtitleClick, onRefresh, isDetectin
                 <button
                   key={cat.id}
                   onClick={() => handleCategoryChipClick(cat.name)}
-                  className={`flex-shrink-0 h-7 px-3 rounded-md text-[12px] font-medium transition-all whitespace-nowrap flex items-center gap-1.5 ${
-                    isSelected
-                      ? "bg-[#0A0A0F] text-white shadow-sm"
-                      : "bg-transparent text-[#0A0A0F]/50 hover:bg-black/[0.05] hover:text-[#0A0A0F]"
-                  }`}
+                  className={`flex-shrink-0 h-7 px-3 rounded-md text-[12px] font-medium transition-all whitespace-nowrap flex items-center gap-1.5 ${isSelected
+                    ? "bg-[#0A0A0F] text-white shadow-sm"
+                    : "bg-transparent text-[#0A0A0F]/50 hover:bg-black/[0.05] hover:text-[#0A0A0F]"
+                    }`}
                 >
                   <span className="text-[13px] leading-none">{getEmojiByName(cat.name)}</span>
                   <span>{cat.name}</span>
                   {count > 0 && (
-                    <span className={`text-[10px] px-1 py-0.5 rounded font-semibold ${
-                      isSelected ? "bg-white/20 text-white" : "bg-black/[0.06] text-[#0A0A0F]/40"
-                    }`}>{count}</span>
+                    <span className={`text-[10px] px-1 py-0.5 rounded font-semibold ${isSelected ? "bg-white/20 text-white" : "bg-black/[0.06] text-[#0A0A0F]/40"
+                      }`}>{count}</span>
                   )}
                 </button>
               );
@@ -251,7 +244,7 @@ const DiscoveryView = ({ title, subtitle, onSubtitleClick, onRefresh, isDetectin
 
         {/* Results count row */}
         {!shopsLoading && filteredShops.length > 0 && (
-          <div className="flex items-center justify-between gap-3 py-2">
+          <div className="flex items-center justify-between gap-3">
             <div className="flex items-center gap-2">
               <span className="text-[13px] font-semibold text-[#0A0A0F]/60">
                 <span className="text-[#0A0A0F] font-bold">

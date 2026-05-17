@@ -32,7 +32,52 @@ export default async function CityHubPage({ params }) {
 
   if (!parsed) return notFound();
 
+  const locationName = parsed.location || city.replace(/-/g, " ");
+  const formattedLocation = locationName.charAt(0).toUpperCase() + locationName.slice(1);
+
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": `Discover shops in ${formattedLocation}`,
+    "description": `Explore the best local shops and services in ${formattedLocation}. Verified businesses on ${BRAND} Marketplace.`,
+    "url": `${DOMAIN}/${city}`,
+    "isPartOf": {
+      "@type": "WebSite",
+      "name": BRAND,
+      "url": DOMAIN
+    }
+  };
+
+  const breadcrumbLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {
+        "@type": "ListItem",
+        "position": 1,
+        "name": "Home",
+        "item": `${DOMAIN}`
+      },
+      {
+        "@type": "ListItem",
+        "position": 2,
+        "name": formattedLocation,
+        "item": `${DOMAIN}/${city}`
+      }
+    ]
+  };
+
   return (
-    <DiscoveryClient slug={city} parsed={parsed} />
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }}
+      />
+      <DiscoveryClient slug={city} parsed={parsed} />
+    </>
   );
 }

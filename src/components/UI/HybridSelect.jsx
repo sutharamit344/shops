@@ -35,7 +35,10 @@ const HybridSelect = ({
         />
         <button
           type="button"
-          onClick={() => onToggleInput(false)}
+          onClick={() => {
+            onToggleInput(false);
+            onChange({ target: { name, value: "" } });
+          }}
           className="absolute right-3 top-[34px] p-1.5 rounded-lg bg-gray-50 text-gray-400 hover:text-[#FF6A00] hover:bg-[#FF6A00]/10 transition-all border border-transparent hover:border-[#FF6A00]/20 z-10"
           title="Back to dropdown"
         >
@@ -52,6 +55,7 @@ const HybridSelect = ({
       value={value}
       onChange={(e) => {
         if (e.target.value === "CUSTOM" || e.target.value === "OTHER_PROPOSE") {
+          onChange(e);
           onToggleInput(true);
         } else {
           onChange(e);

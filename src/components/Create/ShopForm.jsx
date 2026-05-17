@@ -396,9 +396,15 @@ const ShopForm = ({ initialData, onSubmit, isEdit = false, isLoading = false, er
   };
 
   const nextStep = () => {
-    if (currentStep === 1 && (!formData.name || !formData.category)) {
-      setLocalError("Shop name and category are required.");
-      return;
+    if (currentStep === 1) {
+      if (!formData.name || !formData.category) {
+        setLocalError("Shop name and category are required.");
+        return;
+      }
+      if (formData.category === "OTHER_PROPOSE" && !proposedCategory.trim()) {
+        setLocalError("Please enter your proposed market category.");
+        return;
+      }
     }
     if (currentStep === 2) {
       if (!formData.city || !formData.phone || !formData.ownerEmail) {

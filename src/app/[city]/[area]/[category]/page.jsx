@@ -32,7 +32,66 @@ export default async function DeepDiscoveryPage({ params }) {
 
   if (!parsed) return notFound();
 
+  const locationName = parsed.location || `${area.replace(/-/g, " ")}, ${city.replace(/-/g, " ")}`;
+  const formattedLocation = locationName.charAt(0).toUpperCase() + locationName.slice(1);
+  const catLabel = parsed.category || category.replace(/-/g, " ");
+  const formattedCat = catLabel.charAt(0).toUpperCase() + catLabel.slice(1);
+
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": `${formattedCat} in ${formattedLocation}`,
+    "description": `Discover best ${formattedCat} in ${formattedLocation}, ${city}. Ratings, locations, and contact info on ${BRAND}.`,
+    "url": `${DOMAIN}/${city}/${area}/${category}`,
+    "isPartOf": {
+      "@type": "WebSite",
+      "name": BRAND,
+      "url": DOMAIN
+    }
+  };
+
+  const breadcrumbLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {
+        "@type": "ListItem",
+        "position": 1,
+        "name": "Home",
+        "item": `${DOMAIN}`
+      },
+      {
+        "@type": "ListItem",
+        "position": 2,
+        "name": city.replace(/-/g, " ").charAt(0).toUpperCase() + city.replace(/-/g, " ").slice(1),
+        "item": `${DOMAIN}/${city}`
+      },
+      {
+        "@type": "ListItem",
+        "position": 3,
+        "name": area.replace(/-/g, " ").charAt(0).toUpperCase() + area.replace(/-/g, " ").slice(1),
+        "item": `${DOMAIN}/${city}/${area}`
+      },
+      {
+        "@type": "ListItem",
+        "position": 4,
+        "name": formattedCat,
+        "item": `${DOMAIN}/${city}/${area}/${category}`
+      }
+    ]
+  };
+
   return (
-    <DiscoveryClient slug={`${city}/${area}/${category}`} parsed={parsed} />
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }}
+      />
+      <DiscoveryClient slug={`${city}/${area}/${category}`} parsed={parsed} />
+    </>
   );
 }
