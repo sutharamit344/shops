@@ -33,6 +33,31 @@ const ImageUpload = ({
       return;
     }
 
+    if (multiple && onUpload) {
+      setUploading(true);
+      try {
+        const uploadedUrls = [];
+        for (const file of files) {
+          const fileName = `${Date.now()}_${file.name.replace(/[^a-z0-9.]/gi, '_').toLowerCase()}`;
+          const path = `uploads/${folder}/${fileName}`;
+          const url = await uploadImage(file, path);
+          uploadedUrls.push(url);
+        }
+        onUpload(uploadedUrls);
+      } catch (error) {
+        console.error(error);
+        showAlert({
+          title: "Upload Failed",
+          message: "We encountered an issue while uploading your images. Please try again.",
+          type: "error"
+        });
+      } finally {
+        setUploading(false);
+        e.target.value = "";
+      }
+      return;
+    }
+
     const file = files[0];
     const reader = new FileReader();
     reader.onloadend = () => setPreview(reader.result);

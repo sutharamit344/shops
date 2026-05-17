@@ -160,68 +160,68 @@ const Navbar = () => {
             {isMenuOpen ? <X size={18} /> : <MenuIcon size={18} />}
           </button>
         </div>
-        </div>
+      </div>
+    </nav>
 
-        {/* Mobile slide-in menu */}
-        {isMenuOpen && (
-          <div
-            className={`fixed inset-0 top-[60px] z-[200] ${isDark ? "bg-[#0A0A0F]" : "bg-white"} p-5 flex flex-col lg:hidden animate-in fade-in slide-in-from-top-2 duration-200`}
-          >
-            {/* Mobile Search */}
-            <div className="mb-5">
-              <SmartSearch />
-            </div>
-
-            <div className="flex flex-col gap-0.5">
-              <Link
-                href={currentArea ? `/${currentCity}/${currentArea}` : `/${currentCity}`}
-                onClick={() => setIsMenuOpen(false)}
-                className={`flex items-center gap-3 py-3 px-3 rounded-lg text-[15px] font-semibold ${isDark ? "text-white/80 hover:bg-white/5 hover:text-white" : "text-[#0A0A0F]/70 hover:bg-black/[0.04] hover:text-[#0A0A0F]"} transition-all`}
-              >
-                <LayoutGrid size={17} />
-                Marketplace
-              </Link>
-              <Link
-                href="/create"
-                onClick={() => setIsMenuOpen(false)}
-                className={`flex items-center gap-3 py-3 px-3 rounded-lg text-[15px] font-semibold ${isDark ? "text-white/80 hover:bg-white/5 hover:text-white" : "text-[#0A0A0F]/70 hover:bg-black/[0.04] hover:text-[#0A0A0F]"} transition-all`}
-              >
-                <Store size={17} />
-                List Your Business
-              </Link>
-            </div>
-
-            <div className="mt-auto pt-5 border-t border-black/[0.06] flex flex-col gap-2">
-              {!user ? (
-                <button
-                  onClick={() => { dispatch(loginWithGoogle()); setIsMenuOpen(false); }}
-                  className="w-full h-11 rounded-lg bg-[#FF6A00] text-white text-[14px] font-semibold flex items-center justify-center gap-2 hover:bg-[#E65F00] transition-all"
-                >
-                  <LogIn size={16} />
-                  Sign In with Google
-                </button>
-              ) : (
-                <>
-                  <Link
-                    href="/dashboard"
-                    onClick={() => setIsMenuOpen(false)}
-                    className={`w-full h-11 flex items-center justify-center rounded-lg ${isDark ? "bg-white text-[#0A0A0F]" : "bg-[#0A0A0F] text-white"} text-[14px] font-semibold`}
-                  >
-                    My Dashboard
-                  </Link>
-                  <button
-                    onClick={() => { dispatch(logout()); setIsMenuOpen(false); }}
-                    className={`w-full h-10 ${isDark ? "text-white/35" : "text-[#0A0A0F]/30"} text-[12px] font-medium flex items-center justify-center gap-2`}
-                  >
-                    <LogOut size={14} />
-                    Sign Out
-                  </button>
-                </>
-              )}
-            </div>
+      {/* Mobile slide-in menu */}
+      {isMenuOpen && (
+        <div
+          className={`fixed inset-x-0 bottom-0 top-[60px] z-[200] ${isDark ? "bg-[#0A0A0F]" : "bg-white"} p-5 flex flex-col lg:hidden animate-in fade-in slide-in-from-top-2 duration-200 overflow-y-auto`}
+        >
+          {/* Mobile Search */}
+          <div className="mb-5">
+            <SmartSearch />
           </div>
-        )}
-      </nav>
+
+          <div className="flex flex-col gap-0.5">
+            <Link
+              href={currentArea ? `/${currentCity}/${currentArea}` : `/${currentCity}`}
+              onClick={() => setIsMenuOpen(false)}
+              className={`flex items-center gap-3 py-3 px-3 rounded-lg text-[15px] font-semibold ${isDark ? "text-white/80 hover:bg-white/5 hover:text-white" : "text-[#0A0A0F]/70 hover:bg-black/[0.04] hover:text-[#0A0A0F]"} transition-all`}
+            >
+              <LayoutGrid size={17} />
+              Marketplace
+            </Link>
+            <Link
+              href="/create"
+              onClick={() => setIsMenuOpen(false)}
+              className={`flex items-center gap-3 py-3 px-3 rounded-lg text-[15px] font-semibold ${isDark ? "text-white/80 hover:bg-white/5 hover:text-white" : "text-[#0A0A0F]/70 hover:bg-black/[0.04] hover:text-[#0A0A0F]"} transition-all`}
+            >
+              <Store size={17} />
+              List Your Business
+            </Link>
+          </div>
+
+          <div className="mt-auto pt-5 border-t border-black/[0.06] flex flex-col gap-2">
+            {!user ? (
+              <button
+                onClick={() => { dispatch(loginWithGoogle()); setIsMenuOpen(false); }}
+                className="w-full h-11 rounded-lg bg-[#FF6A00] text-white text-[14px] font-semibold flex items-center justify-center gap-2 hover:bg-[#E65F00] transition-all"
+              >
+                <LogIn size={16} />
+                Sign In with Google
+              </button>
+            ) : (
+              <>
+                <Link
+                  href="/dashboard"
+                  onClick={() => setIsMenuOpen(false)}
+                  className={`w-full h-11 flex items-center justify-center rounded-lg ${isDark ? "bg-white text-[#0A0A0F]" : "bg-[#0A0A0F] text-white"} text-[14px] font-semibold`}
+                >
+                  My Dashboard
+                </Link>
+                <button
+                  onClick={() => { dispatch(logout()); setIsMenuOpen(false); }}
+                  className={`w-full h-10 ${isDark ? "text-white/35" : "text-[#0A0A0F]/30"} text-[12px] font-medium flex items-center justify-center gap-2`}
+                >
+                  <LogOut size={14} />
+                  Sign Out
+                </button>
+              </>
+            )}
+          </div>
+        </div>
+      )}
 
       <FilterModal isOpen={isFilterOpen} onClose={() => setIsFilterOpen(false)} />
     </>

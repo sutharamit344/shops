@@ -279,16 +279,12 @@ const FullCatalogClient = ({ shop, masterCategories = [] }) => {
                   <span className="text-[11px] font-medium text-zinc-400">No image available</span>
                 </div>
               )}
-              {selectedItem.popular && (
-                <div className="absolute top-2.5 left-2.5 bg-[#FF6A00] text-white text-[9px] font-black px-2 py-0.5 rounded uppercase tracking-wider shadow">
-                  Popular Offering
-                </div>
-              )}
-              {selectedItem.featured && (
-                <div className="absolute top-2.5 right-2.5 bg-amber-500 text-white text-[9px] font-black px-2 py-0.5 rounded uppercase tracking-wider shadow">
-                  Featured
-                </div>
-              )}
+              {/* Overlay Badges Attached Flush to Corner */}
+              <div className="absolute top-0 left-0 z-10 flex items-center shadow-md rounded-br-xl overflow-hidden border-b border-r border-black/[0.1]">
+                {selectedItem.featured && (
+                  <span className="text-[10px] font-black bg-[#FF6A00] text-white px-3 py-1 uppercase tracking-wider flex items-center gap-1">Featured</span>
+                )}
+              </div>
             </div>
 
             <div className="space-y-3">
@@ -471,13 +467,11 @@ const ProductCard = ({ item, onView, viewType = "image", viewMode = "vertical", 
               <ShoppingBag size={viewType === 'mini' ? 18 : 24} className="text-zinc-300" />
             </div>
           )}
-          {/* Overlay Badges */}
-          <div className="absolute top-2 left-2 flex items-center gap-1 z-10">
-            {item.featured ? (
-              <span className="text-[9px] font-bold bg-amber-500/90 backdrop-blur-md border border-amber-600/20 text-white px-2 py-0.5 rounded-md uppercase tracking-wider shadow-xs">Featured</span>
-            ) : item.popular ? (
-              <span className="text-[9px] font-bold bg-white/90 backdrop-blur-md border border-black/[0.08] text-[#FF6A00] px-2 py-0.5 rounded-md uppercase tracking-wider shadow-xs">Popular</span>
-            ) : null}
+          {/* Overlay Badges Attached Flush to Corner */}
+          <div className="absolute top-0 left-0 z-10 flex items-center">
+            {item.featured && (
+              <span className="text-[9px] font-black bg-[#FF6A00] text-white px-2.5 py-1 rounded-br-xl uppercase tracking-wider shadow-md border-b border-r border-[#FF6A00]/20 flex items-center gap-1">Featured</span>
+            )}
           </div>
         </div>
       )}

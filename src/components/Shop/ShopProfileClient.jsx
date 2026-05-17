@@ -16,7 +16,12 @@ import {
   Eye,
   Minus,
   Trash2,
-  Cross
+  Cross,
+  Instagram,
+  Facebook,
+  Youtube,
+  Twitter,
+  Linkedin
 } from "lucide-react";
 import Dialog from "../UI/Dialog";
 import Link from "next/link";
@@ -31,9 +36,41 @@ import OpenNowBadge from "../UI/OpenNowBadge";
 
 const ShopProfileClient = ({ shop, masterCategories = [] }) => {
   const router = useRouter();
+
+  const getFullAddress = (s) => {
+    if (!s) return "";
+    const cand = [
+      s.shopNo,
+      s.building,
+      s.zone,
+      s.village,
+      s.address,
+      s.area,
+      s.city,
+      s.state,
+      s.pincode
+    ].filter(Boolean).map(x => String(x).trim()).filter(Boolean);
+
+    const res = [];
+    cand.forEach(item => {
+      if (res.some(existing => existing.toLowerCase().includes(item.toLowerCase()))) {
+        return;
+      }
+      const subsetIdx = res.findIndex(existing => item.toLowerCase().includes(existing.toLowerCase()));
+      if (subsetIdx !== -1) {
+        res[subsetIdx] = item;
+      } else {
+        res.push(item);
+      }
+    });
+
+    return res.join(", ") || [s.area, s.city].filter(Boolean).join(", ");
+  };
+
   const [activeTab, setActiveTab] = useState("products");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedItem, setSelectedItem] = useState(null);
+  const [selectedGalleryIndex, setSelectedGalleryIndex] = useState(null);
   const [showShareTooltip, setShowShareTooltip] = useState(false);
   const [reviews, setReviews] = useState([]);
   const [loadingReviews, setLoadingReviews] = useState(false);
@@ -413,16 +450,50 @@ const ShopProfileClient = ({ shop, masterCategories = [] }) => {
                   </p>
                 </div>
 
+                {/* Social Links */}
+                {shop.socialLinks && shop.socialLinks.length > 0 && (
+                  <div className="pt-4 border-t border-black/[0.05]">
+                    <p className="text-[10px] font-bold text-[#0A0A0F]/30 uppercase tracking-[0.1em] mb-3">Social & Web</p>
+                    <div className="flex items-center gap-2 flex-wrap mb-4">
+                      {shop.socialLinks.map((link, index) => {
+                        if (!link.url) return null;
+                        const platforms = {
+                          instagram: { icon: Instagram, color: "text-pink-500 hover:bg-pink-50 border-pink-100 dark:border-pink-900/30 dark:hover:bg-pink-500/10" },
+                          facebook: { icon: Facebook, color: "text-blue-600 hover:bg-blue-50 border-blue-100 dark:border-blue-900/30 dark:hover:bg-blue-500/10" },
+                          youtube: { icon: Youtube, color: "text-red-500 hover:bg-red-50 border-red-100 dark:border-red-900/30 dark:hover:bg-red-500/10" },
+                          twitter: { icon: Twitter, color: "text-zinc-800 dark:text-zinc-200 hover:bg-zinc-100 border-zinc-200 dark:border-zinc-700 dark:hover:bg-zinc-800" },
+                          linkedin: { icon: Linkedin, color: "text-blue-500 hover:bg-blue-50 border-blue-100 dark:border-blue-900/30 dark:hover:bg-blue-500/10" },
+                          website: { icon: Globe, color: "text-emerald-500 hover:bg-emerald-50 border-emerald-100 dark:border-emerald-900/30 dark:hover:bg-emerald-500/10" },
+                        };
+                        const config = platforms[link.platform] || platforms.website;
+                        const Icon = config.icon;
+                        return (
+                          <a
+                            key={index}
+                            href={link.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className={`w-9 h-9 rounded-lg border flex items-center justify-center transition-all shadow-sm bg-white dark:bg-zinc-900 ${config.color}`}
+                            title={link.platform ? link.platform.charAt(0).toUpperCase() + link.platform.slice(1) : "Website"}
+                          >
+                            <Icon size={16} />
+                          </a>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
                 {/* Contact List */}
                 <div className="pt-4 border-t border-black/[0.05] space-y-3">
-                  <div className="flex items-center justify-between group cursor-pointer" onClick={() => window.open(`https://maps.google.com/?q=${encodeURIComponent(shop.address || `${shop.name}, ${shop.city}`)}`)}>
+                  <div className="flex items-center justify-between group cursor-pointer" onClick={() => window.open(`https://maps.google.com/?q=${encodeURIComponent(getFullAddress(shop))}`)}>
                     <div className="flex items-center gap-3 min-w-0">
                       <div className="w-8 h-8 rounded-lg bg-black/[0.03] border border-black/[0.05] flex items-center justify-center text-[#0A0A0F]/30 group-hover:text-[#FF6A00] transition-colors flex-shrink-0">
                         <Navigation size={14} />
                       </div>
                       <div className="min-w-0">
                         <p className="text-[10px] font-bold text-[#0A0A0F]/30 uppercase tracking-[0.1em] mb-0.5">Address</p>
-                        <p className="text-[12px] font-semibold text-[#0A0A0F]/70 truncate">{shop.address || `${shop.area}, ${shop.city}`}</p>
+                        <p className="text-[12px] font-semibold text-[#0A0A0F]/70 leading-snug pr-2">{getFullAddress(shop)}</p>
                       </div>
                     </div>
                     <ChevronRight size={14} className="text-[#0A0A0F]/20 group-hover:translate-x-1 transition-transform flex-shrink-0" />
@@ -440,6 +511,21 @@ const ShopProfileClient = ({ shop, masterCategories = [] }) => {
                     </div>
                     <ChevronRight size={14} className="text-[#0A0A0F]/20 group-hover:translate-x-1 transition-transform flex-shrink-0" />
                   </div>
+
+                  {(shop.ownerEmail || shop.email) && (
+                    <div className="flex items-center justify-between group cursor-pointer" onClick={() => window.location.href = `mailto:${shop.ownerEmail || shop.email}`}>
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="w-8 h-8 rounded-lg bg-black/[0.03] border border-black/[0.05] flex items-center justify-center text-[#0A0A0F]/30 group-hover:text-blue-500 transition-colors flex-shrink-0">
+                          <Mail size={14} />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-[10px] font-bold text-[#0A0A0F]/30 uppercase tracking-[0.1em] mb-0.5">Email</p>
+                          <p className="text-[12px] font-semibold text-[#0A0A0F]/70 truncate">{shop.ownerEmail || shop.email}</p>
+                        </div>
+                      </div>
+                      <ChevronRight size={14} className="text-[#0A0A0F]/20 group-hover:translate-x-1 transition-transform flex-shrink-0" />
+                    </div>
+                  )}
                 </div>
               </Card>
 
@@ -523,26 +609,28 @@ const ShopProfileClient = ({ shop, masterCategories = [] }) => {
                     </div>
                   ) : featuredItems.length > 0 ? (
                     <div className="space-y-6">
-                      <div className="flex items-center justify-between px-1 border-b border-black/[0.05] pb-3">
-                        <div>
-                          <h3 className="text-[18px] font-bold text-[#0A0A0F] tracking-tight flex items-center gap-2">
-                            <StarIcon size={18} className="text-[#FF6A00]" fill="currentColor" />
-                            Featured Offerings
-                          </h3>
-                          <p className="text-[12px] text-[#0A0A0F]/45 font-medium mt-0.5">Handpicked premium products & services</p>
+                      <div className="flex items-center justify-between px-1 border-b border-black/[0.05] pb-3 gap-4">
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap mb-0.5">
+                            <StarIcon size={18} className="text-[#FF6A00] flex-shrink-0" fill="currentColor" />
+                            <h3 className="text-[18px] font-bold text-[#0A0A0F] tracking-tight truncate">
+                              Featured Offerings
+                            </h3>
+                            <span className="text-[11px] font-bold bg-[#FF6A00]/10 text-[#FF6A00] px-2.5 py-0.5 rounded-lg uppercase tracking-wider border border-[#FF6A00]/20">
+                              {featuredItems.length} {featuredItems.length === 1 ? 'Item' : 'Items'}
+                            </span>
+                          </div>
+                          <p className="text-[12px] text-[#0A0A0F]/45 font-medium truncate">Handpicked premium products & services</p>
                         </div>
-                        <span className="text-[11px] font-bold bg-[#FF6A00]/10 text-[#FF6A00] px-2.5 py-1 rounded-lg uppercase tracking-wider">{featuredItems.length} Featured</span>
+                        <Link href={`/shop/${shop.slug}/catalog`} className="h-9 px-4 bg-[#0A0A0F] text-white rounded-xl font-bold text-[12px] flex items-center gap-1.5 shadow-md hover:bg-black/80 active:scale-[0.99] transition-all flex-shrink-0 whitespace-nowrap group">
+                          <span>Full Catalog ({allItems.length})</span>
+                          <ArrowRight size={14} className="group-hover:translate-x-0.5 transition-transform" />
+                        </Link>
                       </div>
                       <div className={`grid ${viewMode === 'grid' ? 'grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-3' : 'grid-cols-1 md:grid-cols-2 gap-2.5 sm:gap-3'}`}>
                         {featuredItems.map((item, idx) => (
                           <ProductCard key={idx} item={item} onOrder={handleWhatsAppOrder} onView={(item) => setSelectedItem(item)} viewType={getCategoryViewType(item.category)} viewMode={viewMode} cartItem={cart.find(i => i.name === item.name)} onUpdateCart={handleUpdateCart} />
                         ))}
-                      </div>
-                      <div className="pt-6 border-t border-black/[0.05]">
-                        <Link href={`/shop/${shop.slug}/catalog`} className="w-full py-3.5 px-4 bg-[#0A0A0F] text-white rounded-xl font-bold text-[14px] flex items-center justify-center gap-2 shadow-lg hover:bg-black/90 active:scale-[0.99] transition-all group">
-                          <span>Explore Full Catalog ({allItems.length} Items)</span>
-                          <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
-                        </Link>
                       </div>
                     </div>
                   ) : menuItems.length > 0 ? (
@@ -582,10 +670,10 @@ const ShopProfileClient = ({ shop, masterCategories = [] }) => {
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                   {shop.gallery && shop.gallery.length > 0 ? (
                     shop.gallery.map((img, idx) => (
-                      <div key={idx} className="aspect-square rounded-lg overflow-hidden border border-black/[0.05] relative group cursor-pointer">
+                      <div key={idx} className="aspect-square rounded-lg overflow-hidden border border-black/[0.05] relative group cursor-pointer" onClick={() => setSelectedGalleryIndex(idx)}>
                         <Image src={img.includes(" ") ? img.replace(/\s/g, "%20") : img} alt="g" fill unoptimized className="object-cover group-hover:scale-110 transition-transform duration-500" />
                         <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                          <ExternalLink size={20} className="text-white" />
+                          <Eye size={20} className="text-white" />
                         </div>
                       </div>
                     ))
@@ -694,8 +782,8 @@ const ShopProfileClient = ({ shop, masterCategories = [] }) => {
                     <div className="w-full h-full bg-[#FAFAF8] flex flex-col items-center justify-center p-8 text-center">
                       <MapPin size={40} className="text-[#FF6A00]/20 mb-4" />
                       <h3 className="text-[14px] font-bold text-[#0A0A0F] mb-1">Visual Location</h3>
-                      <p className="text-[12px] text-[#0A0A0F]/40 font-medium mb-6">{shop.address || `${shop.area}, ${shop.city}`}</p>
-                      <Button variant="outline" size="sm" icon={ExternalLink} onClick={() => window.open(`https://maps.google.com/?q=${encodeURIComponent(shop.address || `${shop.name}, ${shop.city}`)}`)}>
+                      <p className="text-[12px] text-[#0A0A0F]/40 font-medium mb-6">{getFullAddress(shop)}</p>
+                      <Button variant="outline" size="sm" icon={ExternalLink} onClick={() => window.open(`https://maps.google.com/?q=${encodeURIComponent(getFullAddress(shop))}`)}>
                         Open in Google Maps
                       </Button>
                     </div>
@@ -799,6 +887,68 @@ const ShopProfileClient = ({ shop, masterCategories = [] }) => {
         </div>
       </Dialog>
 
+      {/* ── GALLERY IMMERSIVE LIGHTBOX ──────────────────────────────── */}
+      {selectedGalleryIndex !== null && shop.gallery?.[selectedGalleryIndex] && (
+        <div
+          className="fixed inset-0 z-[600] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-300"
+          onClick={() => setSelectedGalleryIndex(null)}
+        >
+          {/* Close Button */}
+          <button
+            onClick={() => setSelectedGalleryIndex(null)}
+            className="absolute top-4 right-4 z-[610] w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-all backdrop-blur-lg"
+            aria-label="Close"
+          >
+            <X size={20} />
+          </button>
+
+          {/* Image Counter */}
+          <div className="absolute top-4 left-4 z-[610] px-4 py-2 rounded-full bg-white/10 text-white text-[12px] font-bold tracking-wider backdrop-blur-lg">
+            {selectedGalleryIndex + 1} / {shop.gallery.length}
+          </div>
+
+          {/* Main Image Container */}
+          <div
+            className="relative w-full max-w-4xl max-h-[85vh] aspect-[4/3] rounded-2xl overflow-hidden shadow-2xl animate-in zoom-in-95 duration-300"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <Image
+              src={shop.gallery[selectedGalleryIndex].includes(" ") ? shop.gallery[selectedGalleryIndex].replace(/\s/g, "%20") : shop.gallery[selectedGalleryIndex]}
+              alt={`Gallery image ${selectedGalleryIndex + 1}`}
+              fill
+              unoptimized
+              className="object-contain"
+            />
+
+            {/* Navigation Buttons */}
+            {shop.gallery.length > 1 && (
+              <>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setSelectedGalleryIndex((selectedGalleryIndex - 1 + shop.gallery.length) % shop.gallery.length);
+                  }}
+                  className="absolute left-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-black/40 hover:bg-black/60 text-white flex items-center justify-center transition-all backdrop-blur-md border border-white/10"
+                  aria-label="Previous"
+                >
+                  <ArrowLeft size={20} />
+                </button>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setSelectedGalleryIndex((selectedGalleryIndex + 1) % shop.gallery.length);
+                  }}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-black/40 hover:bg-black/60 text-white flex items-center justify-center transition-all backdrop-blur-md border border-white/10"
+                  aria-label="Next"
+                >
+                  <ArrowRight size={20} />
+                </button>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+
       <Dialog
         isOpen={!!selectedItem}
         onClose={() => setSelectedItem(null)}
@@ -823,11 +973,12 @@ const ShopProfileClient = ({ shop, masterCategories = [] }) => {
                   <span className="text-[12px] font-medium text-zinc-400">No image available</span>
                 </div>
               )}
-              {selectedItem.popular && (
-                <div className="absolute top-3 left-3 bg-[#FF6A00] text-white text-[10px] font-black px-2.5 py-1 rounded-md uppercase tracking-wider shadow-lg">
-                  Popular Offering
-                </div>
-              )}
+              {/* Overlay Badges Attached Flush to Corner */}
+              <div className="absolute top-0 left-0 z-10 flex items-center shadow-md rounded-br-xl overflow-hidden border-b border-r border-black/[0.1]">
+                {selectedItem.featured && (
+                  <span className="text-[10px] font-black bg-[#FF6A00] text-white px-3 py-1 uppercase tracking-wider flex items-center gap-1">Featured</span>
+                )}
+              </div>
             </div>
 
             <div className="space-y-4">
@@ -1009,13 +1160,11 @@ const ProductCard = ({ item, onOrder, onView, viewType = "image", viewMode = "ve
               <ShoppingBag size={viewType === 'mini' ? 18 : 24} className="text-zinc-300" />
             </div>
           )}
-          {/* Overlay Badges */}
-          <div className="absolute top-2 left-2 flex items-center gap-1 z-10">
-            {item.featured ? (
-              <span className="text-[9px] font-bold bg-amber-500/90 backdrop-blur-md border border-amber-600/20 text-white px-2 py-0.5 rounded-md uppercase tracking-wider shadow-xs">Featured</span>
-            ) : item.popular ? (
-              <span className="text-[9px] font-bold bg-white/90 backdrop-blur-md border border-black/[0.08] text-[#FF6A00] px-2 py-0.5 rounded-md uppercase tracking-wider shadow-xs">Popular</span>
-            ) : null}
+          {/* Overlay Badges Attached Flush to Corner */}
+          <div className="absolute top-0 left-0 z-10 flex items-center">
+            {item.featured && (
+              <span className="text-[9px] font-black bg-[#FF6A00] text-white px-2.5 py-1 rounded-br-xl uppercase tracking-wider shadow-md border-b border-r border-[#FF6A00]/20 flex items-center gap-1">Featured</span>
+            )}
           </div>
         </div>
       )}

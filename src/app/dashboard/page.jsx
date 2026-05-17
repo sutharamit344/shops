@@ -119,9 +119,7 @@ const UserDashboard = () => {
           {/* Header */}
           <div className={`h-[60px] flex items-center px-4 mb-6 ${isSidebarCollapsed ? "justify-center" : "justify-between"}`}>
             <Link href="/" className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-[#FF6A00] flex items-center justify-center shrink-0 shadow-sm">
-                <Store size={16} className="text-white" />
-              </div>
+              <Image src="/brand-logo-v1.png" alt="ShopBajar" width={32} height={32} className="w-8 h-8 object-contain shrink-0" />
               {!isSidebarCollapsed && (
                 <span className="text-[16px] font-bold tracking-tight text-[#0A0A0F]">
                   Shop<span className="text-[#FF6A00]">Bajar</span>

@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { slugify } from "@/lib/slugify";
 import { uploadImage } from "@/lib/storage";
-import { proposeCategory, getCategories, getClusters, proposeCluster, getCountries, getStates, getCities, getAreas } from "@/lib/db";
+import { proposeCategory, proposeCluster } from "@/lib/db";
 import ImageUpload from "@/components/UI/ImageUpload";
 import Input from "@/components/UI/Input";
 import Select from "@/components/UI/Select";
@@ -11,25 +11,69 @@ import HybridSelect from "@/components/UI/HybridSelect";
 import Textarea from "@/components/UI/Textarea";
 import Button from "@/components/UI/Button";
 import Card from "@/components/UI/Card";
-import dynamic from 'next/dynamic';
+import dynamic from "next/dynamic";
+
+// Redux Toolkit Integration
+import { useSelector, useDispatch } from "react-redux";
+import { fetchMasterDirectory } from "@/redux/thunks/masterDataThunks";
+import {
+  selectMasterCategories,
+  selectMasterClusters,
+  selectMasterCountries,
+  selectMasterStates,
+  selectMasterCities,
+  selectMasterAreas,
+} from "@/redux/selectors/masterDataSelectors";
+import { hydrateDraft, updateDraft, clearDraft as clearReduxDraft } from "@/redux/slices/formDraftSlice";
 
 const MapComponent = dynamic(() => import("@/components/UI/MapComponent"), {
   ssr: false,
-  loading: () => <div className="w-full h-[250px] bg-gray-100 animate-pulse rounded-2xl flex items-center justify-center text-gray-400 font-medium">Loading Map...</div>
+  loading: () => (
+    <div className="w-full h-[250px] bg-zinc-100 animate-pulse rounded-2xl flex items-center justify-center text-zinc-400 font-medium dark:bg-zinc-800">
+      Loading Map...
+    </div>
+  ),
 });
 
 // Icons
 import {
-  Save, CircleCheckBig, CircleAlert, Plus, Loader2, Navigation,
-  ChevronRight, ChevronLeft, ShieldCheck, Sparkles, Eye, LinkIcon,
+  Save,
+  CircleCheckBig,
+  CircleAlert,
+  Plus,
+  Loader2,
+  Navigation,
+  ChevronRight,
+  ChevronLeft,
+  ShieldCheck,
+  Sparkles,
+  Eye,
+  LinkIcon,
   MapIcon,
   Search,
   Building2,
   Mail,
-  Globe
+  Globe,
+  Store,
 } from "lucide-react";
 
-const ShopForm = ({ initialData, onSubmit, isEdit = false, isLoading = false, error: externalError }) => {
+const ShopForm = ({
+  initialData,
+  onSubmit,
+  isEdit = false,
+  isLoading = false,
+  error: externalError,
+}) => {
+  const dispatch = useDispatch();
+
+  // Master Data from Redux
+  const masterCategories = useSelector(selectMasterCategories) || [];
+  const masterClusters = useSelector(selectMasterClusters) || [];
+  const masterCountries = useSelector(selectMasterCountries) || [];
+  const masterStates = useSelector(selectMasterStates) || [];
+  const masterCities = useSelector(selectMasterCities) || [];
+  const masterAreas = useSelector(selectMasterAreas) || [];
+
   const [currentStep, setCurrentStep] = useState(1);
   const [localError, setLocalError] = useState(null);
   const [uploadStatus, setUploadStatus] = useState("");
@@ -60,7 +104,7 @@ const ShopForm = ({ initialData, onSubmit, isEdit = false, isLoading = false, er
     clusterType: "",
     pincode: "",
     lat: null,
-    lng: null
+    lng: null,
   });
 
   const STORAGE_KEY = "shop_form_draft";
@@ -69,16 +113,9 @@ const ShopForm = ({ initialData, onSubmit, isEdit = false, isLoading = false, er
   const [logoPreview, setLogoPreview] = useState("");
   const [coverFile, setCoverFile] = useState(null);
   const [coverPreview, setCoverPreview] = useState("");
-  const [dbCategories, setDbCategories] = useState([]);
   const [showNewCategoryInput, setShowNewCategoryInput] = useState(false);
   const [proposedCategory, setProposedCategory] = useState("");
   const [showCustomCluster, setShowCustomCluster] = useState(false);
-  const [dbClusters, setDbClusters] = useState([]);
-  const [dbCountries, setDbCountries] = useState([]);
-  const [dbStates, setDbStates] = useState([]);
-  const [dbCities, setDbCities] = useState([]);
-  const [dbAreas, setDbAreas] = useState([]);
-
   const [proposedCluster, setProposedCluster] = useState("");
   const [draftLoadedAtMount, setDraftLoadedAtMount] = useState(false);
   const [showMoreAddress, setShowMoreAddress] = useState(false);
@@ -87,17 +124,28 @@ const ShopForm = ({ initialData, onSubmit, isEdit = false, isLoading = false, er
 
   const steps = [
     { title: "Basics", desc: "Identity" },
-    { title: "Location", desc: "Contact" }
+    { title: "Location", desc: "Contact" },
   ];
 
-  // Load draft on mount
+  // Fetch Master Directory on Mount
   useEffect(() => {
-    if (!isEdit) {
+    dispatch(fetchMasterDirectory());
+  }, [dispatch]);
+
+  // Load draft or initialData on mount
+  useEffect(() => {
+    if (isEdit && initialData) {
+      setFormData((prev) => ({ ...prev, ...initialData }));
+      dispatch(hydrateDraft(initialData));
+      setLogoPreview(initialData.logo || "");
+      setCoverPreview(initialData.coverImage || "");
+    } else if (!isEdit) {
       const saved = localStorage.getItem(STORAGE_KEY);
       if (saved) {
         try {
           const draft = JSON.parse(saved);
-          setFormData(prev => ({ ...prev, ...draft }));
+          setFormData((prev) => ({ ...prev, ...draft }));
+          dispatch(hydrateDraft(draft));
           setDraftLoadedAtMount(true);
           if (draft.category === "OTHER_PROPOSE") setShowNewCategoryInput(true);
           if (draft.clusterType === "CUSTOM") setShowCustomCluster(true);
@@ -106,132 +154,137 @@ const ShopForm = ({ initialData, onSubmit, isEdit = false, isLoading = false, er
         }
       }
     }
-  }, [isEdit]);
+  }, [isEdit, initialData, dispatch]);
 
-  // Save draft on change
+  // Check for custom category once master data loads
   useEffect(() => {
-    if (!isEdit && formData.name) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(formData));
-    }
-  }, [formData, isEdit]);
-
-  useEffect(() => {
-    const init = async () => {
-      const [cats, clusters, countries, states, cities, areas] = await Promise.all([
-        getCategories(),
-        getClusters(),
-        getCountries(),
-        getStates(),
-        getCities(),
-        getAreas()
-      ]);
-
-      const catNames = cats.map(c => c.name);
-      setDbCategories(catNames);
-      setDbClusters(clusters);
-      setDbCountries(countries);
-      setDbStates(states);
-      setDbCities(cities);
-      setDbAreas(areas);
-
-      if (initialData) {
-        setFormData(prev => ({ ...prev, ...initialData }));
-        setLogoPreview(initialData.logo || "");
-        setCoverPreview(initialData.coverImage || "");
-
-        if (initialData.category && !catNames.includes(initialData.category)) {
-          setFormData(prev => ({ ...prev, category: "OTHER_PROPOSE" }));
-          setProposedCategory(initialData.category);
-          setShowNewCategoryInput(true);
-        }
-
-        const allClusterNames = clusters.map(c => c.name);
-        if (initialData.clusterType && !allClusterNames.includes(initialData.clusterType)) {
-          setShowCustomCluster(true);
-          setProposedCluster(initialData.clusterType);
-        }
+    if (initialData && masterCategories.length > 0) {
+      const allCatNames = masterCategories.map((c) => c.name);
+      if (initialData.category && !allCatNames.includes(initialData.category)) {
+        setFormData((prev) => ({ ...prev, category: "OTHER_PROPOSE" }));
+        setProposedCategory(initialData.category);
+        setShowNewCategoryInput(true);
       }
-    };
-    init();
-  }, [initialData]);
+    }
+  }, [initialData, masterCategories]);
+
+  // Check for custom cluster once master data loads
+  useEffect(() => {
+    if (initialData && masterClusters.length > 0) {
+      const allClusterNames = masterClusters.map((c) => c.name);
+      if (initialData.clusterType && !allClusterNames.includes(initialData.clusterType)) {
+        setShowCustomCluster(true);
+        setProposedCluster(initialData.clusterType);
+      }
+    }
+  }, [initialData, masterClusters]);
 
   // Hierarchical Options
-  const countryOptions = dbCountries.map(c => ({ value: c.name, label: c.name }));
+  const dbCategories = masterCategories.map((c) => c.name);
+  const countryOptions = masterCountries.map((c) => ({ value: c.name, label: c.name }));
 
-  const selectedCountryId = dbCountries.find(c => c.name === formData.country)?.id;
-  const filteredStates = dbStates.filter(s => !selectedCountryId || s.countryId === selectedCountryId);
-  const stateOptions = filteredStates.map(s => ({ value: s.name, label: s.name }));
+  const selectedCountryId = masterCountries.find((c) => c.name === formData.country)?.id;
+  const filteredStates = masterStates.filter(
+    (s) => !selectedCountryId || s.countryId === selectedCountryId
+  );
+  const stateOptions = filteredStates.map((s) => ({ value: s.name, label: s.name }));
 
-  const selectedStateId = dbStates.find(s => s.name === formData.state)?.id;
-  const filteredCities = dbCities.filter(c => !selectedStateId || c.stateId === selectedStateId);
-  const cityOptions = filteredCities.map(c => ({ value: c.name, label: c.name }));
+  const selectedStateId = masterStates.find((s) => s.name === formData.state)?.id;
+  const filteredCities = masterCities.filter(
+    (c) => !selectedStateId || c.stateId === selectedStateId
+  );
+  const cityOptions = filteredCities.map((c) => ({ value: c.name, label: c.name }));
 
-  const selectedCityId = dbCities.find(c => c.name === formData.city)?.id;
-  const filteredAreas = dbAreas.filter(a => !selectedCityId || a.cityId === selectedCityId);
-  const areaOptions = filteredAreas.map(a => ({ value: a.name, label: a.name }));
+  const selectedCityId = masterCities.find((c) => c.name === formData.city)?.id;
+  const filteredAreas = masterAreas.filter(
+    (a) => !selectedCityId || a.cityId === selectedCityId
+  );
+  const areaOptions = filteredAreas.map((a) => ({ value: a.name, label: a.name }));
 
   const handleCountryChange = (e) => {
     const { value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      country: value,
-      state: "",
-      city: "",
-      area: ""
-    }));
+    setFormData((prev) => {
+      const updated = { ...prev, country: value, state: "", city: "", area: "" };
+      if (!isEdit) dispatch(updateDraft(updated));
+      return updated;
+    });
   };
 
   const handleStateChange = (e) => {
     const { value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      state: value,
-      city: "",
-      area: ""
-    }));
+    setFormData((prev) => {
+      const updated = { ...prev, state: value, city: "", area: "" };
+      if (!isEdit) dispatch(updateDraft(updated));
+      return updated;
+    });
   };
 
   const handleCityChange = (e) => {
     const { value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      city: value,
-      area: ""
-    }));
+    setFormData((prev) => {
+      const updated = { ...prev, city: value, area: "" };
+      if (!isEdit) dispatch(updateDraft(updated));
+      return updated;
+    });
   };
 
   const getCountryCode = (countryName) => {
     const codes = {
-      "India": "+91",
+      India: "+91",
       "United Arab Emirates": "+971",
       "Saudi Arabia": "+966",
-      "USA": "+1"
+      USA: "+1",
     };
     return codes[countryName] || "+91";
   };
 
+  const calculateDistance = (lat1, lon1, lat2, lon2) => {
+    if (!lat1 || !lon1 || !lat2 || !lon2) return Infinity;
+    const R = 6371e3; // metres
+    const φ1 = (lat1 * Math.PI) / 180;
+    const φ2 = (lat2 * Math.PI) / 180;
+    const Δφ = ((lat2 - lat1) * Math.PI) / 180;
+    const Δλ = ((lon2 - lon1) * Math.PI) / 180;
+    const a =
+      Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
+      Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+  };
+
   const handleAreaChange = (e) => {
     const { value } = e.target;
-    const selectedArea = dbAreas.find(a => a.name === value);
+    const selectedArea = masterAreas.find((a) => a.name === value);
 
     if (selectedArea) {
-      const parentCity = dbCities.find(c => c.id === selectedArea.cityId);
-      const parentState = parentCity ? dbStates.find(s => s.id === parentCity.stateId) : null;
-      const parentCountry = parentState ? dbCountries.find(c => c.id === parentState.countryId) : null;
+      const parentCity = masterCities.find((c) => c.id === selectedArea.cityId);
+      const parentState = parentCity
+        ? masterStates.find((s) => s.id === parentCity.stateId)
+        : null;
+      const parentCountry = parentState
+        ? masterCountries.find((c) => c.id === parentState.countryId)
+        : null;
 
-      setFormData(prev => ({
-        ...prev,
-        area: value,
-        city: parentCity ? parentCity.name : prev.city,
-        state: parentState ? parentState.name : prev.state,
-        country: parentCountry ? parentCountry.name : prev.country,
-        pincode: selectedArea.pincode || prev.pincode,
-        // If the area has coordinates, update them too
-        lat: selectedArea.lat ? parseFloat(selectedArea.lat) : prev.lat,
-        lng: selectedArea.lng ? parseFloat(selectedArea.lng) : prev.lng
-      }));
+      setFormData((prev) => {
+        const updated = {
+          ...prev,
+          area: value,
+          city: parentCity ? parentCity.name : prev.city,
+          state: parentState ? parentState.name : prev.state,
+          country: parentCountry ? parentCountry.name : prev.country,
+          pincode: selectedArea.pincode || prev.pincode,
+          lat: selectedArea.lat ? parseFloat(selectedArea.lat) : prev.lat,
+          lng: selectedArea.lng ? parseFloat(selectedArea.lng) : prev.lng,
+        };
+        if (!isEdit) dispatch(updateDraft(updated));
+        return updated;
+      });
     } else {
-      setFormData(prev => ({ ...prev, area: value }));
+      setFormData((prev) => {
+        const updated = { ...prev, area: value };
+        if (!isEdit) dispatch(updateDraft(updated));
+        return updated;
+      });
     }
   };
 
@@ -249,68 +302,84 @@ const ShopForm = ({ initialData, onSubmit, isEdit = false, isLoading = false, er
     if (name === "clusterType") {
       setShowCustomCluster(value === "CUSTOM");
     }
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
 
-  const calculateDistance = (lat1, lon1, lat2, lon2) => {
-    if (!lat1 || !lon1 || !lat2 || !lon2) return Infinity;
-    const R = 6371e3; // metres
-    const φ1 = (lat1 * Math.PI) / 180;
-    const φ2 = (lat2 * Math.PI) / 180;
-    const Δφ = ((lat2 - lat1) * Math.PI) / 180;
-    const Δλ = ((lon2 - lon1) * Math.PI) / 180;
-    const a =
-      Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
-      Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    return R * c;
+    setFormData((prev) => {
+      const updated = { ...prev, [name]: value };
+      if (!isEdit) dispatch(updateDraft({ [name]: value }));
+      return updated;
+    });
   };
 
   const handleLocationSelect = async (coords) => {
-    setFormData(prev => ({
-      ...prev,
-      lat: coords.lat,
-      lng: coords.lng
-    }));
+    setFormData((prev) => {
+      const updated = { ...prev, lat: coords.lat, lng: coords.lng };
+      if (!isEdit) dispatch(updateDraft({ lat: coords.lat, lng: coords.lng }));
+      return updated;
+    });
 
     // Reverse Geocoding
     try {
       setIsGeocoding(true);
-      const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${coords.lat}&lon=${coords.lng}`);
+      const res = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${coords.lat}&lon=${coords.lng}`
+      );
       const data = await res.json();
 
       if (data && data.address) {
-        const { road, suburb, neighbourhood, city, town, village, state, country, postcode } = data.address;
+        const {
+          road,
+          suburb,
+          neighbourhood,
+          city,
+          town,
+          village,
+          state,
+          country,
+          postcode,
+        } = data.address;
 
         const geocodedArea = suburb || neighbourhood || road;
         const geocodedCity = city || town || village;
         const geocodedState = state;
         const geocodedCountry = country;
 
-        // Try to find exact matches in our master data to ensure the dropdowns sync correctly
-        let matchedCountry = dbCountries.find(c => c.name.toLowerCase() === geocodedCountry?.toLowerCase())?.name || geocodedCountry;
-        let matchedState = dbStates.find(s => s.name.toLowerCase() === geocodedState?.toLowerCase())?.name || geocodedState;
-        let matchedCity = dbCities.find(c => c.name.toLowerCase() === geocodedCity?.toLowerCase())?.name || geocodedCity;
+        let matchedCountry =
+          masterCountries.find(
+            (c) => c.name.toLowerCase() === geocodedCountry?.toLowerCase()
+          )?.name || geocodedCountry;
+        let matchedState =
+          masterStates.find(
+            (s) => s.name.toLowerCase() === geocodedState?.toLowerCase()
+          )?.name || geocodedState;
+        let matchedCity =
+          masterCities.find(
+            (c) => c.name.toLowerCase() === geocodedCity?.toLowerCase()
+          )?.name || geocodedCity;
         let matchedArea = geocodedArea;
 
-        // FIND NEAREST AREA BASED ON COORDINATES
         let minDistance = Infinity;
 
-        dbAreas.forEach(area => {
+        masterAreas.forEach((area) => {
           if (area.lat && area.lng) {
-            const dist = calculateDistance(coords.lat, coords.lng, parseFloat(area.lat), parseFloat(area.lng));
-            if (dist < minDistance && dist < 5000) { // Within 5km radius
+            const dist = calculateDistance(
+              coords.lat,
+              coords.lng,
+              parseFloat(area.lat),
+              parseFloat(area.lng)
+            );
+            if (dist < minDistance && dist < 5000) {
               minDistance = dist;
               matchedArea = area.name;
 
-              // AUTO-SYNC PARENTS: If we find a nearest area in our DB, use its parent chain
-              const parentCity = dbCities.find(c => c.id === area.cityId);
+              const parentCity = masterCities.find((c) => c.id === area.cityId);
               if (parentCity) {
                 matchedCity = parentCity.name;
-                const parentState = dbStates.find(s => s.id === parentCity.stateId);
+                const parentState = masterStates.find((s) => s.id === parentCity.stateId);
                 if (parentState) {
                   matchedState = parentState.name;
-                  const parentCountry = dbCountries.find(c => c.id === parentState.countryId);
+                  const parentCountry = masterCountries.find(
+                    (c) => c.id === parentState.countryId
+                  );
                   if (parentCountry) {
                     matchedCountry = parentCountry.name;
                   }
@@ -320,28 +389,33 @@ const ShopForm = ({ initialData, onSubmit, isEdit = false, isLoading = false, er
           }
         });
 
-        // Fallback to name matching for parents if no coordinate match found
         if (minDistance === Infinity) {
-          const areaByName = dbAreas.find(a => a.name.toLowerCase() === geocodedArea?.toLowerCase());
+          const areaByName = masterAreas.find(
+            (a) => a.name.toLowerCase() === geocodedArea?.toLowerCase()
+          );
           if (areaByName) {
             matchedArea = areaByName.name;
-            const parentCity = dbCities.find(c => c.id === areaByName.cityId);
+            const parentCity = masterCities.find((c) => c.id === areaByName.cityId);
             if (parentCity) {
               matchedCity = parentCity.name;
-              const parentState = dbStates.find(s => s.id === parentCity.stateId);
+              const parentState = masterStates.find((s) => s.id === parentCity.stateId);
               if (parentState) matchedState = parentState.name;
             }
           }
         }
 
-        // FIND NEAREST CLUSTER
         let minClusterDist = Infinity;
         let matchedCluster = "";
 
-        dbClusters.forEach(cluster => {
+        masterClusters.forEach((cluster) => {
           if (cluster.lat && cluster.lng) {
-            const dist = calculateDistance(coords.lat, coords.lng, parseFloat(cluster.lat), parseFloat(cluster.lng));
-            if (dist < minClusterDist && dist < 3000) { // Within 3km radius
+            const dist = calculateDistance(
+              coords.lat,
+              coords.lng,
+              parseFloat(cluster.lat),
+              parseFloat(cluster.lng)
+            );
+            if (dist < minClusterDist && dist < 3000) {
               minClusterDist = dist;
               matchedCluster = cluster.name;
             }
@@ -350,18 +424,22 @@ const ShopForm = ({ initialData, onSubmit, isEdit = false, isLoading = false, er
 
         if (matchedCluster) setShowCustomCluster(false);
 
-        setFormData(prev => ({
-          ...prev,
-          area: matchedArea || prev.area,
-          city: matchedCity || prev.city,
-          state: matchedState || prev.state,
-          country: matchedCountry || prev.country,
-          clusterType: matchedCluster || prev.clusterType,
-          pincode: postcode || prev.pincode,
-          village: village || "",
-          lat: coords.lat,
-          lng: coords.lng
-        }));
+        setFormData((prev) => {
+          const updated = {
+            ...prev,
+            area: matchedArea || prev.area,
+            city: matchedCity || prev.city,
+            state: matchedState || prev.state,
+            country: matchedCountry || prev.country,
+            clusterType: matchedCluster || prev.clusterType,
+            pincode: postcode || prev.pincode,
+            village: village || "",
+            lat: coords.lat,
+            lng: coords.lng,
+          };
+          if (!isEdit) dispatch(updateDraft(updated));
+          return updated;
+        });
       }
     } catch (err) {
       console.error("Reverse geocoding failed", err);
@@ -376,7 +454,11 @@ const ShopForm = ({ initialData, onSubmit, isEdit = false, isLoading = false, er
 
     try {
       setIsGeocoding(true);
-      const res = await fetch(`https://nominatim.openstreetmap.org/search?format=jsonv2&q=${encodeURIComponent(mapSearchQuery)}&limit=1`);
+      const res = await fetch(
+        `https://nominatim.openstreetmap.org/search?format=jsonv2&q=${encodeURIComponent(
+          mapSearchQuery
+        )}&limit=1`
+      );
       const data = await res.json();
 
       if (data && data[0]) {
@@ -391,6 +473,7 @@ const ShopForm = ({ initialData, onSubmit, isEdit = false, isLoading = false, er
   };
 
   const clearDraft = () => {
+    dispatch(clearReduxDraft());
     localStorage.removeItem(STORAGE_KEY);
     window.location.reload();
   };
@@ -412,14 +495,12 @@ const ShopForm = ({ initialData, onSubmit, isEdit = false, isLoading = false, er
         return;
       }
 
-      // WhatsApp Validation (10 digits)
       const phoneRegex = /^[0-9]{10}$/;
       if (!phoneRegex.test(formData.phone.replace(/\s+/g, ""))) {
         setLocalError("Please enter a valid 10-digit WhatsApp number.");
         return;
       }
 
-      // Email Validation
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(formData.ownerEmail)) {
         setLocalError("Please enter a valid email address.");
@@ -427,29 +508,25 @@ const ShopForm = ({ initialData, onSubmit, isEdit = false, isLoading = false, er
       }
     }
     setLocalError(null);
-    setCurrentStep(prev => Math.min(prev + 1, totalSteps));
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    setCurrentStep((prev) => Math.min(prev + 1, totalSteps));
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const prevStep = () => {
     setLocalError(null);
-    setCurrentStep(prev => Math.max(prev - 1, 1));
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    setCurrentStep((prev) => Math.max(prev - 1, 1));
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const internalSubmit = async (e) => {
     if (e) e.preventDefault();
 
-    // If user hits 'Enter' on Step 1, move to Step 2 instead of submitting
     if (currentStep < totalSteps) {
       nextStep();
       return;
     }
 
-    // On the final step, we only want to submit if the user explicitly clicked the button,
-    // not if they just hit 'Enter' in an input field (which can be accidental).
-    // We check if the event is a 'submit' and has a submitter.
-    if (e && e.type === 'submit' && !e.nativeEvent.submitter) {
+    if (e && e.type === "submit" && !e.nativeEvent.submitter) {
       return;
     }
 
@@ -492,15 +569,22 @@ const ShopForm = ({ initialData, onSubmit, isEdit = false, isLoading = false, er
         if (srcMatch && srcMatch[1]) cleanMapEmbed = srcMatch[1];
       }
 
-      // AUTO-GEOCODING (Free Nominatim) - Skip if already detected via GPS
       let lat = formData.lat;
       let lng = formData.lng;
 
       if (!lat || !lng) {
         try {
           setUploadStatus("Geocoding address...");
-          const addressStr = `${formData.shopNo || ""}, ${formData.building || ""}, ${formData.zone || ""}, ${formData.village || ""}, ${formData.area || ""}, ${formData.city}, ${formData.state}, India`;
-          const geoRes = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(addressStr)}&limit=1`);
+          const addressStr = `${formData.shopNo || ""}, ${formData.building || ""}, ${
+            formData.zone || ""
+          }, ${formData.village || ""}, ${formData.area || ""}, ${formData.city}, ${
+            formData.state
+          }, India`;
+          const geoRes = await fetch(
+            `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
+              addressStr
+            )}&limit=1`
+          );
           const geoData = await geoRes.json();
           if (geoData && geoData[0]) {
             lat = parseFloat(geoData[0].lat);
@@ -522,13 +606,13 @@ const ShopForm = ({ initialData, onSubmit, isEdit = false, isLoading = false, er
         lng,
         slug,
         proposedCategory: formData.category === "OTHER_PROPOSE",
-        proposedCluster: formData.clusterType === "CUSTOM"
+        proposedCluster: formData.clusterType === "CUSTOM",
       });
 
       if (!isEdit) {
+        dispatch(clearReduxDraft());
         localStorage.removeItem(STORAGE_KEY);
       }
-
     } catch (err) {
       console.error(err);
       setLocalError("Failed to process uploads. Please try again.");
@@ -540,44 +624,58 @@ const ShopForm = ({ initialData, onSubmit, isEdit = false, isLoading = false, er
   const displayError = externalError || localError;
 
   return (
-    <div className="w-full p-4 md:p-8">
-      {/* ── DRAFT NOTICE ─────────────────────────────────────── */}
+    <div className={isEdit ? "w-full" : "w-full p-4 md:p-8 bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200/80 dark:border-zinc-800 shadow-sm"}>
+      {/* ── DRAFT NOTICE ── */}
       {draftLoadedAtMount && currentStep === 1 && (
-        <div className="max-w-xl mx-auto mb-8 bg-amber-50 border border-amber-200 rounded-2xl p-4 flex items-center justify-between gap-4 animate-in fade-in slide-in-from-top-2 duration-500">
+        <div className="max-w-3xl mx-auto mb-6 bg-amber-50 border border-amber-200 rounded-2xl p-4 flex items-center justify-between gap-4 animate-in fade-in slide-in-from-top-2 duration-500 dark:bg-amber-500/10 dark:border-amber-500/20">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-amber-100 flex items-center justify-center text-amber-600">
+            <div className="w-8 h-8 rounded-lg bg-amber-100 flex items-center justify-center text-amber-600 shrink-0 dark:bg-amber-500/20 dark:text-amber-400">
               <Sparkles size={16} />
             </div>
-            <p className="text-[13px] font-medium text-amber-900">We found a saved draft. You can continue or start over.</p>
+            <p className="text-xs font-medium text-amber-900 dark:text-amber-200">
+              We found a saved draft. You can continue or start over.
+            </p>
           </div>
           <button
             type="button"
             onClick={clearDraft}
-            className="text-[11px] font-bold text-amber-700 uppercase tracking-wider hover:text-amber-900 transition-colors"
+            className="text-[11px] font-bold text-amber-700 dark:text-amber-400 uppercase tracking-wider hover:text-amber-900 dark:hover:text-amber-300 transition-colors shrink-0"
           >
             Clear Draft
           </button>
         </div>
       )}
-      {/* ── PROGRESS STEPS ─────────────────────────────────────── */}
-      <div className="max-w-xl mx-auto mb-12 relative px-4">
-        <div className="absolute top-[18px] left-0 w-full h-[1px] bg-black/[0.05] -z-0">
-          <div className="h-full bg-[#FF6A00] transition-all duration-700 ease-in-out" style={{ width: `${((currentStep - 1) / (totalSteps - 1)) * 100}%` }} />
+
+      {/* ── PROGRESS STEPS ── */}
+      <div className="max-w-2xl mx-auto mb-10 relative px-4">
+        <div className="absolute top-[18px] left-0 w-full h-[1px] bg-zinc-200 dark:bg-zinc-800 -z-0">
+          <div
+            className="h-full bg-[#FF6A00] transition-all duration-700 ease-in-out"
+            style={{ width: `${((currentStep - 1) / (totalSteps - 1)) * 100}%` }}
+          />
         </div>
         <div className="relative flex justify-between z-10">
           {steps.map((step, i) => (
             <div key={i} className="flex flex-col items-center">
-              <div className={`w-9 h-9 rounded-lg flex items-center justify-center font-bold text-[12px] transition-all duration-500
-                ${currentStep > i + 1
-                  ? "bg-[#FF6A00] text-white"
-                  : currentStep === i + 1
-                    ? "bg-[#0A0A0F] text-white shadow-xl scale-110"
-                    : "bg-white text-[#0A0A0F]/20 border border-black/[0.05]"
-                }`}>
+              <div
+                className={`w-9 h-9 rounded-lg flex items-center justify-center font-bold text-xs transition-all duration-500 ${
+                  currentStep > i + 1
+                    ? "bg-[#FF6A00] text-white"
+                    : currentStep === i + 1
+                    ? "bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900 shadow-lg scale-110"
+                    : "bg-white text-zinc-400 border border-zinc-200 dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-500"
+                }`}
+              >
                 {currentStep > i + 1 ? <CircleCheckBig size={16} /> : i + 1}
               </div>
               <div className="absolute top-10 flex flex-col items-center whitespace-nowrap">
-                <span className={`text-[10px] font-bold uppercase tracking-[0.15em] transition-colors duration-300 ${currentStep === i + 1 ? "text-[#0A0A0F]" : "text-[#0A0A0F]/20"}`}>
+                <span
+                  className={`text-[10px] font-bold uppercase tracking-widest transition-colors duration-300 ${
+                    currentStep === i + 1
+                      ? "text-zinc-900 dark:text-zinc-100"
+                      : "text-zinc-400 dark:text-zinc-600"
+                  }`}
+                >
                   {step.title}
                 </span>
               </div>
@@ -586,56 +684,67 @@ const ShopForm = ({ initialData, onSubmit, isEdit = false, isLoading = false, er
         </div>
       </div>
 
-      <form onSubmit={(e) => e.preventDefault()} className="space-y-10">
-        {/* ── ERROR DISPLAY ─────────────────────────────────────── */}
+      <form onSubmit={(e) => e.preventDefault()} className="space-y-6">
+        {/* ── ERROR DISPLAY ── */}
         {displayError && (
-          <div className="bg-red-50 rounded-2xl p-5 flex items-start gap-4 border border-red-100 animate-in shake duration-300">
-            <div className="w-10 h-10 rounded-lg bg-red-100 flex items-center justify-center text-red-500 shrink-0">
+          <div className="bg-red-50 rounded-2xl p-4 flex items-start gap-4 border border-red-100 animate-in shake duration-300 dark:bg-red-500/10 dark:border-red-500/20">
+            <div className="w-10 h-10 rounded-lg bg-red-100 flex items-center justify-center text-red-500 shrink-0 dark:bg-red-500/20">
               <CircleAlert size={20} />
             </div>
             <div>
-              <p className="text-[11px] font-bold text-red-600 uppercase tracking-widest mb-1">Attention Required</p>
-              <p className="text-[14px] text-red-700 font-medium leading-relaxed">{displayError}</p>
+              <p className="text-[11px] font-bold text-red-600 dark:text-red-400 uppercase tracking-widest mb-1">
+                Attention Required
+              </p>
+              <p className="text-xs text-red-700 dark:text-red-300 font-medium leading-relaxed">
+                {displayError}
+              </p>
             </div>
           </div>
         )}
 
-        {/* ── STEP 1: BASICS ─────────────────────────────────────── */}
+        {/* ── STEP 1: BASICS ── */}
         {currentStep === 1 && (
-          <div className="space-y-8 animate-in fade-in duration-700 slide-in-from-bottom-2">
-            <div>
-              <h2 className="text-[20px] font-bold text-[#0A0A0F] tracking-tight mb-1">Business Identity</h2>
-              <p className="text-[13px] text-[#0A0A0F]/45 font-medium">Define your store name, category, and core specialties.</p>
+          <div className="space-y-6 animate-in fade-in duration-500 slide-in-from-bottom-2">
+            <div className="border-b border-zinc-100 dark:border-zinc-800 pb-4">
+              <h2 className="text-lg font-bold text-zinc-900 dark:text-zinc-100 tracking-tight mb-1">
+                Business Identity
+              </h2>
+              <p className="text-xs text-zinc-500 dark:text-zinc-400 font-medium">
+                Define your store name, category, and core specialties.
+              </p>
             </div>
 
-            <div className="space-y-8">
-              <div className="w-full flex flex-col md:flex-row gap-6">
-                <ImageUpload
-                  onSelect={(file) => {
-                    setLogoFile(file);
-                    setLogoPreview(file ? URL.createObjectURL(file) : "");
-                  }}
-                  currentImage={logoPreview}
-
-                  className="aspect-[4/3]"
-                  label="Store Logo"
-                />
-                <div className="flex-1">
+            <div className="space-y-6">
+              {/* Image Upload Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
+                <div>
+                  <ImageUpload
+                    onSelect={(file) => {
+                      setLogoFile(file);
+                      setLogoPreview(file ? URL.createObjectURL(file) : "");
+                    }}
+                    currentImage={logoPreview}
+                    className="w-full h-32"
+                    label="Store Logo"
+                  />
+                </div>
+                <div className="md:col-span-2">
                   <ImageUpload
                     label="Background Cover Image"
                     onSelect={(file) => {
                       setCoverFile(file);
                       setCoverPreview(file ? URL.createObjectURL(file) : "");
                     }}
-                    className="w-full h-36"
+                    className="w-full h-32"
                     currentImage={coverPreview}
-                    helpText="Recommended size: 1200x400. This will appear as the banner on your shop profile."
-                  /></div>
+                    helpText="Recommended size: 1200x400. Appears as banner on profile."
+                  />
+                </div>
               </div>
 
-              <div className="flex flex-col md:flex-row gap-8 items-start">
-
-                <div className="flex-1 w-full">
+              {/* Business Name & Categorization Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
+                <div className="md:col-span-1">
                   <Input
                     label="Business Name"
                     name="name"
@@ -646,7 +755,46 @@ const ShopForm = ({ initialData, onSubmit, isEdit = false, isLoading = false, er
                     helpText="This will define your unique ShopBajar URL"
                   />
                 </div>
+
+                <div className="md:col-span-1 space-y-3">
+                  <HybridSelect
+                    label="Market Category"
+                    name="category"
+                    value={formData.category}
+                    onChange={handleChange}
+                    required
+                    options={[
+                      { value: "", label: "Select a category", disabled: true },
+                      ...dbCategories.map((c) => ({ value: c, label: c })),
+                      { value: "OTHER_PROPOSE", label: "➕ Propose new category..." },
+                    ]}
+                    showInput={showNewCategoryInput}
+                    onToggleInput={setShowNewCategoryInput}
+                    inputName="proposedCategory"
+                    inputValue={proposedCategory}
+                    onInputChange={(e) => setProposedCategory(e.target.value)}
+                    inputPlaceholder="e.g., Organic Lifestyle"
+                    inputHelpText="We will review and add this to our directory"
+                  />
+                </div>
+
+                <div className="md:col-span-1">
+                  <Select
+                    label="Service Model"
+                    name="businessType"
+                    value={formData.businessType}
+                    onChange={handleChange}
+                    required
+                    options={[
+                      { value: "product", label: "Product Based (Retail, Grocery)" },
+                      { value: "service", label: "Service Based (Salon, Repair)" },
+                      { value: "mixed", label: "Hybrid (Both Products & Services)" },
+                    ]}
+                  />
+                </div>
               </div>
+
+              {/* Store Description */}
               <Textarea
                 label="Store Description"
                 name="description"
@@ -657,68 +805,34 @@ const ShopForm = ({ initialData, onSubmit, isEdit = false, isLoading = false, er
                 rows={3}
                 helpText="A brief overview of your business for search results."
               />
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <HybridSelect
-                  label="Market Category"
-                  name="category"
-                  value={formData.category}
-                  onChange={handleChange}
-                  required
-                  options={[
-                    { value: "", label: "Select a category", disabled: true },
-                    ...dbCategories.map(c => ({ value: c, label: c })),
-                    { value: "OTHER_PROPOSE", label: "➕ Propose new category..." }
-                  ]}
-                  showInput={showNewCategoryInput}
-                  onToggleInput={setShowNewCategoryInput}
-                  inputName="proposedCategory"
-                  inputValue={proposedCategory}
-                  onInputChange={(e) => setProposedCategory(e.target.value)}
-                  inputPlaceholder="e.g., Organic Lifestyle"
-                  inputHelpText="We will review and add this to our directory"
-                />
-
-                <Select
-                  label="Service Model"
-                  name="businessType"
-                  value={formData.businessType}
-                  onChange={handleChange}
-                  required
-                  options={[
-                    { value: "product", label: "Product Based (Retail, Grocery)" },
-                    { value: "service", label: "Service Based (Salon, Repair)" },
-                    { value: "mixed", label: "Hybrid (Both Products & Services)" }
-                  ]}
-                />
-              </div>
-
-
-
             </div>
           </div>
         )}
 
-        {/* ── STEP 2: LOCATION ───────────────────────────────────── */}
+        {/* ── STEP 2: LOCATION & CONTACT ── */}
         {currentStep === 2 && (
-          <div className="space-y-12 animate-in fade-in duration-500 slide-in-from-bottom-4">
+          <div className="space-y-8 animate-in fade-in duration-500 slide-in-from-bottom-4">
             {/* 📍 SECTION: LOCATION */}
-            <div className="space-y-6">
-              <div className="flex items-center gap-3">
+            <div className="space-y-4">
+              <div className="flex items-center gap-3 border-b border-zinc-100 dark:border-zinc-800 pb-4">
                 <div className="w-10 h-10 rounded-lg bg-[#FF6A00]/10 flex items-center justify-center text-[#FF6A00]">
                   <MapIcon size={20} />
                 </div>
                 <div>
-                  <h2 className="text-xl font-bold text-[#0A0A0F]">Shop Location</h2>
-                  <p className="text-[13px] text-[#0A0A0F]/50">Pin your shop accurately for customers to find you.</p>
+                  <h2 className="text-lg font-bold text-zinc-900 dark:text-zinc-100 tracking-tight">
+                    Shop Location
+                  </h2>
+                  <p className="text-xs text-zinc-500 dark:text-zinc-400 font-medium">
+                    Pin your shop accurately for customers to find you.
+                  </p>
                 </div>
               </div>
 
-              <div className="bg-[#F7F7F5] rounded-lg border border-black/[0.05] overflow-hidden relative">
+              <div className="bg-zinc-50 dark:bg-zinc-800/50 rounded-2xl border border-zinc-200/80 dark:border-zinc-800 overflow-hidden relative shadow-sm">
                 {/* Map Search Overlay */}
                 <div className="absolute top-4 left-4 right-4 z-[400] flex gap-2">
                   <div className="flex-1 relative group">
-                    <div className="absolute left-3 top-1/2 -translate-y-1/2 text-[#0A0A0F]/30 group-focus-within:text-[#FF6A00] transition-colors">
+                    <div className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 group-focus-within:text-[#FF6A00] transition-colors">
                       <Search size={14} />
                     </div>
                     <input
@@ -726,48 +840,57 @@ const ShopForm = ({ initialData, onSubmit, isEdit = false, isLoading = false, er
                       placeholder="Search for area, building or street..."
                       value={mapSearchQuery}
                       onChange={(e) => setMapSearchQuery(e.target.value)}
-                      onKeyDown={(e) => e.key === 'Enter' && handleMapSearch(e)}
-                      className="w-full h-9 pl-9 pr-4 bg-white/90 backdrop-blur-md border border-black/[0.05] rounded-lg text-[12px] font-medium shadow-xl focus:outline-none focus:ring-1 focus:ring-[#FF6A00]/40 transition-all"
+                      onKeyDown={(e) => e.key === "Enter" && handleMapSearch(e)}
+                      className="w-full h-9 pl-9 pr-4 bg-white/90 dark:bg-zinc-900/90 backdrop-blur-md border border-zinc-200/80 dark:border-zinc-700 rounded-lg text-xs font-medium shadow-lg focus:outline-none focus:ring-1 focus:ring-[#FF6A00]/40 transition-all dark:text-zinc-100"
                     />
                   </div>
                   <button
                     type="button"
                     onClick={handleMapSearch}
-                    className="h-9 px-4 bg-[#0A0A0F] text-white rounded-lg font-bold text-[11px] shadow-xl hover:bg-[#FF6A00] transition-all active:scale-95 flex items-center gap-2"
+                    className="h-9 px-4 bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900 rounded-lg font-bold text-xs shadow-lg hover:bg-[#FF6A00] dark:hover:bg-[#FF6A00] dark:hover:text-white transition-all active:scale-95 flex items-center gap-2"
                   >
                     Find
                   </button>
                 </div>
 
                 <MapComponent
-                  height="340px"
+                  height="280px"
                   center={{
                     lat: formData.lat || 23.0225,
-                    lng: formData.lng || 72.5714
+                    lng: formData.lng || 72.5714,
                   }}
                   onLocationSelect={handleLocationSelect}
                 />
 
-                <div className="absolute bottom-6 left-6 right-6 z-[400] flex justify-between items-end pointer-events-none">
+                <div className="absolute bottom-4 left-4 right-4 z-[400] flex justify-between items-end pointer-events-none">
                   <button
                     type="button"
                     onClick={async () => {
-                      if (!navigator.geolocation) return alert("Geolocation not supported");
+                      if (!navigator.geolocation)
+                        return alert("Geolocation not supported");
                       setIsGeocoding(true);
-                      navigator.geolocation.getCurrentPosition((pos) => {
-                        handleLocationSelect({ lat: pos.coords.latitude, lng: pos.coords.longitude });
-                      }, () => setIsGeocoding(false));
+                      navigator.geolocation.getCurrentPosition(
+                        (pos) => {
+                          handleLocationSelect({
+                            lat: pos.coords.latitude,
+                            lng: pos.coords.longitude,
+                          });
+                        },
+                        () => setIsGeocoding(false)
+                      );
                     }}
-                    className="pointer-events-auto flex items-center gap-2 px-5 py-3 bg-white text-[#0A0A0F] rounded-2xl text-[13px] font-bold shadow-xl hover:text-[#FF6A00] transition-all active:scale-95 border border-white"
+                    className="pointer-events-auto flex items-center gap-2 px-4 py-2 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 rounded-xl text-xs font-bold shadow-lg hover:text-[#FF6A00] dark:hover:text-[#FF6A00] transition-all active:scale-95 border border-zinc-200/80 dark:border-zinc-700"
                   >
-                    <Navigation size={16} className="text-[#FF6A00]" />
+                    <Navigation size={14} className="text-[#FF6A00]" />
                     Use Current Location
                   </button>
 
                   {isGeocoding && (
-                    <div className="pointer-events-auto bg-white/90 backdrop-blur-md px-4 py-2 rounded-lg shadow-xl flex items-center gap-3 border border-white">
-                      <Loader2 size={16} className="animate-spin text-[#FF6A00]" />
-                      <span className="text-[12px] font-bold text-[#0A0A0F]">Smart Locating...</span>
+                    <div className="pointer-events-auto bg-white/90 dark:bg-zinc-900/90 backdrop-blur-md px-3 py-2 rounded-lg shadow-lg flex items-center gap-2 border border-zinc-200/80 dark:border-zinc-700">
+                      <Loader2 size={14} className="animate-spin text-[#FF6A00]" />
+                      <span className="text-[11px] font-bold text-zinc-900 dark:text-zinc-100">
+                        Smart Locating...
+                      </span>
                     </div>
                   )}
                 </div>
@@ -775,18 +898,23 @@ const ShopForm = ({ initialData, onSubmit, isEdit = false, isLoading = false, er
             </div>
 
             {/* 🏢 SECTION: ADDRESS DETAILS */}
-            <div className="space-y-6">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center text-blue-500">
+            <div className="space-y-4">
+              <div className="flex items-center gap-3 border-b border-zinc-100 dark:border-zinc-800 pb-4">
+                <div className="w-10 h-10 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-500">
                   <Building2 size={20} />
                 </div>
                 <div>
-                  <h2 className="text-xl font-bold text-[#0A0A0F]">Address Details</h2>
-                  <p className="text-[13px] text-[#0A0A0F]/50">Verify and complete your business address.</p>
+                  <h2 className="text-lg font-bold text-zinc-900 dark:text-zinc-100 tracking-tight">
+                    Address Details
+                  </h2>
+                  <p className="text-xs text-zinc-500 dark:text-zinc-400 font-medium">
+                    Verify and complete your business address.
+                  </p>
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* 4-Column Grid for Address Fields */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 items-start">
                 <Input
                   label="Shop Number (Optional)"
                   name="shopNo"
@@ -795,25 +923,19 @@ const ShopForm = ({ initialData, onSubmit, isEdit = false, isLoading = false, er
                   placeholder="e.g. Shop G-12"
                 />
                 <Input
-                  label="Building / Complex (Optional)"
+                  label="Building / Complex"
                   name="building"
                   value={formData.building}
                   onChange={handleChange}
                   placeholder="e.g. Skyline Corporate Park"
                 />
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <Select
                   label="Country"
                   name="country"
                   value={formData.country}
                   onChange={handleCountryChange}
                   required
-                  options={[
-                    { value: "", label: "Select Country" },
-                    ...countryOptions
-                  ]}
+                  options={[{ value: "", label: "Select Country" }, ...countryOptions]}
                 />
                 <Select
                   label="State"
@@ -821,24 +943,18 @@ const ShopForm = ({ initialData, onSubmit, isEdit = false, isLoading = false, er
                   value={formData.state}
                   onChange={handleStateChange}
                   required
-                  options={[
-                    { value: "", label: "Select State" },
-                    ...stateOptions
-                  ]}
+                  options={[{ value: "", label: "Select State" }, ...stateOptions]}
                 />
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 items-start pt-2">
                 <Select
                   label="City"
                   name="city"
                   value={formData.city}
                   onChange={handleCityChange}
                   required
-                  options={[
-                    { value: "", label: "Select City" },
-                    ...cityOptions
-                  ]}
+                  options={[{ value: "", label: "Select City" }, ...cityOptions]}
                 />
                 <Select
                   label="Area / Locality"
@@ -846,14 +962,8 @@ const ShopForm = ({ initialData, onSubmit, isEdit = false, isLoading = false, er
                   value={formData.area}
                   onChange={handleAreaChange}
                   required
-                  options={[
-                    { value: "", label: "Select Area" },
-                    ...areaOptions
-                  ]}
+                  options={[{ value: "", label: "Select Area" }, ...areaOptions]}
                 />
-              </div>
-
-              <div className="grid grid-cols-2 gap-6">
                 <Input
                   label="Pincode"
                   name="pincode"
@@ -863,7 +973,7 @@ const ShopForm = ({ initialData, onSubmit, isEdit = false, isLoading = false, er
                   required
                 />
                 <Input
-                  label="Village"
+                  label="Village / Sub-area"
                   name="village"
                   value={formData.village}
                   onChange={handleChange}
@@ -876,48 +986,56 @@ const ShopForm = ({ initialData, onSubmit, isEdit = false, isLoading = false, er
                 <button
                   type="button"
                   onClick={() => setShowMoreAddress(!showMoreAddress)}
-                  className="flex items-center gap-2 text-[13px] font-bold text-[#FF6A00] hover:underline"
+                  className="flex items-center gap-1.5 text-xs font-bold text-[#FF6A00] hover:underline"
                 >
-                  <Plus size={16} className={`transition-transform duration-300 ${showMoreAddress ? 'rotate-45' : ''}`} />
-                  {showMoreAddress ? 'Hide additional details' : 'Add more address details'}
+                  <Plus
+                    size={14}
+                    className={`transition-transform duration-300 ${
+                      showMoreAddress ? "rotate-45" : ""
+                    }`}
+                  />
+                  {showMoreAddress
+                    ? "Hide additional details"
+                    : "Add landmark & business cluster"}
                 </button>
 
                 {showMoreAddress && (
-                  <div className="mt-6 space-y-6 animate-in slide-in-from-top-4 duration-300">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <Input
-                        label="Landmark"
-                        name="zone"
-                        value={formData.zone}
-                        onChange={handleChange}
-                        placeholder="e.g. Opp. Reliance Fresh"
-                      />
-                      <HybridSelect
-                        label="Market / Business Area (Optional)"
-                        name="clusterType"
-                        value={formData.clusterType}
-                        onChange={handleChange}
-                        options={[
-                          { value: "", label: "Select Business Area" },
-                          ...dbClusters.map(c => ({ value: c.name, label: c.name })),
-                          { value: "CUSTOM", label: "Other / Propose New Market Area" }
-                        ]}
-                        helpText="Groups your business with similar local hubs."
-                        showInput={showCustomCluster}
-                        onToggleInput={setShowCustomCluster}
-                        inputName="proposedCluster"
-                        inputValue={proposedCluster}
-                        onInputChange={(e) => setProposedCluster(e.target.value)}
-                        inputPlaceholder="e.g. Navrangpura Commercial Hub"
-                        inputHelpText="Our team will review and add this market to the discovery engine."
-                      />
-                    </div>
+                  <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4 animate-in slide-in-from-top-4 duration-300 items-start">
+                    <Input
+                      label="Landmark"
+                      name="zone"
+                      value={formData.zone}
+                      onChange={handleChange}
+                      placeholder="e.g. Opp. Reliance Fresh"
+                    />
+                    <HybridSelect
+                      label="Market / Business Area (Optional)"
+                      name="clusterType"
+                      value={formData.clusterType}
+                      onChange={handleChange}
+                      options={[
+                        { value: "", label: "Select Business Area" },
+                        ...masterClusters.map((c) => ({
+                          value: c.name,
+                          label: c.name,
+                        })),
+                        { value: "CUSTOM", label: "Other / Propose New Market Area" },
+                      ]}
+                      helpText="Groups your business with similar local hubs."
+                      showInput={showCustomCluster}
+                      onToggleInput={setShowCustomCluster}
+                      inputName="proposedCluster"
+                      inputValue={proposedCluster}
+                      onInputChange={(e) => setProposedCluster(e.target.value)}
+                      inputPlaceholder="e.g. Navrangpura Commercial Hub"
+                      inputHelpText="Our team will review and add this market to the discovery engine."
+                    />
                   </div>
                 )}
               </div>
 
-              {/* Contact Details */}
-              <div className="pt-6 border-t border-black/[0.04] grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Contact Details Grid */}
+              <div className="pt-6 border-t border-zinc-100 dark:border-zinc-800 grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
                 <Input
                   label="WhatsApp For Business"
                   name="phone"
@@ -943,41 +1061,50 @@ const ShopForm = ({ initialData, onSubmit, isEdit = false, isLoading = false, er
             </div>
 
             {/* 🌐 SECTION: DISCOVERY & SEO */}
-            <div className="space-y-6">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-lg bg-purple-50 flex items-center justify-center text-purple-500">
+            <div className="space-y-4 pt-4 border-t border-zinc-100 dark:border-zinc-800">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 rounded-lg bg-purple-500/10 flex items-center justify-center text-purple-500">
                   <Globe size={20} />
                 </div>
                 <div>
-                  <h2 className="text-xl font-bold text-[#0A0A0F]">Discovery & SEO</h2>
-                  <p className="text-[13px] text-[#0A0A0F]/50">How your shop appears to customers online.</p>
+                  <h2 className="text-lg font-bold text-zinc-900 dark:text-zinc-100 tracking-tight">
+                    Discovery & SEO
+                  </h2>
+                  <p className="text-xs text-zinc-500 dark:text-zinc-400 font-medium">
+                    How your shop appears to customers online.
+                  </p>
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="p-6 bg-white border border-[#0A0A0F]/[0.06] rounded-[24px] space-y-4">
-                  <div className="flex items-center gap-2 text-[11px] font-bold text-[#0A0A0F]/40 uppercase tracking-wider">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch">
+                <div className="p-4 bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200/80 dark:border-zinc-700/80 rounded-2xl space-y-3 shadow-sm flex flex-col justify-center">
+                  <div className="flex items-center gap-2 text-[11px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">
                     <LinkIcon size={12} />
                     Live SEO URL Preview
                   </div>
-                  <div className="text-[14px] font-medium text-[#0A0A0F] break-all">
+                  <div className="text-xs font-medium text-zinc-900 dark:text-zinc-100 break-all">
                     shopbajar.com/
                     <span className="text-[#FF6A00]">{slugify(formData.city || "city")}/</span>
                     <span className="text-[#FF6A00]">{slugify(formData.area || "area")}/</span>
-                    <span className="text-[#FF6A00] font-bold">{slugify(formData.name || "shop-name")}</span>
+                    <span className="text-[#FF6A00] font-bold">
+                      {slugify(formData.name || "shop-name")}
+                    </span>
                   </div>
                 </div>
 
-                <div className="p-6 bg-[#0A0A0F] rounded-[24px] space-y-4 shadow-xl">
-                  <div className="flex items-center gap-2 text-[11px] font-bold text-white/40 uppercase tracking-wider">
+                <div className="p-4 bg-zinc-900 dark:bg-zinc-100 rounded-2xl space-y-3 shadow-sm flex flex-col justify-center">
+                  <div className="flex items-center gap-2 text-[11px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">
                     <Eye size={12} />
                     Marketplace Discovery
                   </div>
                   <div className="space-y-1">
-                    <p className="text-[12px] text-white/60">Your shop will appear under:</p>
-                    <p className="text-[16px] font-bold text-white flex items-center gap-2">
-                      <Sparkles size={16} className="text-[#FF6A00]" />
-                      {formData.category || "Select Category"}s in {formData.area || "Select Area"}
+                    <p className="text-[11px] text-zinc-400 dark:text-zinc-600">
+                      Your shop will appear under:
+                    </p>
+                    <p className="text-xs font-bold text-white dark:text-zinc-900 flex items-center gap-2">
+                      <Sparkles size={14} className="text-[#FF6A00]" />
+                      {formData.category || "Select Category"}s in{" "}
+                      {formData.area || "Select Area"}
                     </p>
                   </div>
                 </div>
@@ -985,30 +1112,45 @@ const ShopForm = ({ initialData, onSubmit, isEdit = false, isLoading = false, er
             </div>
 
             {/* Agreement Card */}
-            <div className="p-8 bg-gradient-to-br from-[#0A0A0F] to-[#2D3450] rounded-[32px] text-white relative overflow-hidden shadow-2xl">
-              <div className="absolute top-0 right-0 p-8 opacity-10"><ShieldCheck size={120} /></div>
-              <div className="relative z-10 max-w-lg">
-                <h3 className="text-[11px] font-bold text-[#FF6A00] uppercase tracking-[0.2em] mb-4">Final Registration</h3>
-                <p className="text-[18px] font-bold mb-6 leading-tight">Your digital storefront is almost ready for launch.</p>
-                <div className="flex flex-wrap items-center gap-6 text-[13px] font-bold opacity-70">
-                  <div className="flex items-center gap-2"><CircleCheckBig size={16} className="text-[#25D366]" /> <span>Free Listing</span></div>
-                  <div className="flex items-center gap-2"><CircleCheckBig size={16} className="text-[#25D366]" /> <span>Live Maps</span></div>
-                  <div className="flex items-center gap-2"><CircleCheckBig size={16} className="text-[#25D366]" /> <span>Direct WhatsApp</span></div>
+            <div className="p-6 bg-gradient-to-br from-zinc-900 to-zinc-800 dark:from-zinc-800 dark:to-zinc-700 rounded-2xl text-white relative overflow-hidden shadow-sm w-full">
+              <div className="absolute top-0 right-0 p-6 opacity-10">
+                <ShieldCheck size={100} />
+              </div>
+              <div className="relative z-10 max-w-2xl">
+                <h3 className="text-[10px] font-bold text-[#FF6A00] uppercase tracking-widest mb-2">
+                  Final Registration
+                </h3>
+                <p className="text-base font-bold mb-4 tracking-tight leading-snug">
+                  Your digital storefront is almost ready for launch.
+                </p>
+                <div className="flex flex-wrap items-center gap-6 text-xs font-bold opacity-80">
+                  <div className="flex items-center gap-1.5">
+                    <CircleCheckBig size={14} className="text-[#25D366]" />{" "}
+                    <span>Free Listing</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <CircleCheckBig size={14} className="text-[#25D366]" />{" "}
+                    <span>Live Maps</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <CircleCheckBig size={14} className="text-[#25D366]" />{" "}
+                    <span>Direct WhatsApp</span>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
         )}
 
-        {/* ── NAVIGATION ─────────────────────────────────────────── */}
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-6 pt-10 border-t border-[#0A0A0F]/[0.06]">
+        {/* ── NAVIGATION ── */}
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-6 border-t border-zinc-100 dark:border-zinc-800">
           <Button
             type="button"
             variant="outline"
             size="lg"
             onClick={prevStep}
             icon={ChevronLeft}
-            className={`w-full sm:w-auto bg-white ${currentStep === 1 ? "invisible" : ""}`}
+            className={`w-full sm:w-auto h-10 ${currentStep === 1 ? "invisible" : ""}`}
           >
             Go Back
           </Button>
@@ -1020,7 +1162,7 @@ const ShopForm = ({ initialData, onSubmit, isEdit = false, isLoading = false, er
                 variant="dark"
                 size="lg"
                 onClick={nextStep}
-                className="w-full sm:w-auto shadow-md"
+                className="w-full sm:w-auto h-10 shadow-sm"
                 icon={ChevronRight}
                 iconPosition="right"
               >
@@ -1034,7 +1176,7 @@ const ShopForm = ({ initialData, onSubmit, isEdit = false, isLoading = false, er
                 size="xl"
                 disabled={isLoading || uploadStatus}
                 loading={isLoading || !!uploadStatus}
-                className="w-full sm:w-auto px-12 shadow-md shadow-[#FF6A00]/20"
+                className="w-full sm:w-auto px-10 h-10 shadow-sm"
                 icon={Save}
               >
                 {uploadStatus || (isEdit ? "Update Business" : "Launch Storefront")}
@@ -1048,4 +1190,3 @@ const ShopForm = ({ initialData, onSubmit, isEdit = false, isLoading = false, er
 };
 
 export default ShopForm;
-

@@ -3,7 +3,7 @@
 import React, { useRef, useState, useMemo, useEffect } from "react";
 import { useSelector } from "react-redux";
 import { Award, ChevronRight, ChevronLeft, Store, MapPin } from "lucide-react";
-import CategoryIcon from "@/components/UI/CategoryIcon";
+import CategoryIcon, { getEmojiByName } from "@/components/UI/CategoryIcon";
 
 const ClusterSlider = ({ clusters = [], shops = [], onClusterClick, parsed }) => {
   const { userCoords, userLocationName } = useSelector((state) => state.search);
@@ -83,6 +83,7 @@ const ClusterSlider = ({ clusters = [], shops = [], onClusterClick, parsed }) =>
           id: doc.id || key,
           name: clusterName,
           category: displayCat,
+          categories: new Set(),
           area: shop.area || "",
           city: shop.city || "",
           lat: doc.lat || shop.lat || null,
@@ -90,6 +91,8 @@ const ClusterSlider = ({ clusters = [], shops = [], onClusterClick, parsed }) =>
           count: 0,
         };
       }
+      if (shop.category) groups[key].categories.add(shop.category.trim());
+      if (clusterDocMap[clusterName]?.category) groups[key].categories.add(clusterDocMap[clusterName].category.trim());
       groups[key].count += 1;
     });
 
@@ -108,6 +111,7 @@ const ClusterSlider = ({ clusters = [], shops = [], onClusterClick, parsed }) =>
 
     const finalClusters = Object.values(groups).map(c => ({
       ...c,
+      categories: Array.from(c.categories),
       distance: getDistance(userCoords?.lat, userCoords?.lng, c.lat, c.lng)
     }));
 
@@ -312,9 +316,24 @@ const ClusterSlider = ({ clusters = [], shops = [], onClusterClick, parsed }) =>
                     <h3 className="text-[13px] font-bold text-[#0A0A0F] group-hover/card:text-[#FF6A00] transition-colors truncate leading-tight">
                       {cluster.name}
                     </h3>
-                    <p className="text-[10px] font-medium text-[#0A0A0F]/40 uppercase tracking-wider truncate leading-none mt-0.5">
-                      {cluster.category}
-                    </p>
+                    {(() => {
+                      const catList = cluster.categories?.length > 0 ? cluster.categories : [cluster.category].filter(Boolean);
+                      const uniqueEmojis = Array.from(new Set(catList.map(cat => getEmojiByName(cat))));
+                      return (
+                        <div className="flex items-center gap-1 mt-1">
+                          {uniqueEmojis.slice(0, 5).map((emoji, eIdx) => (
+                            <span key={eIdx} className="text-[11px] bg-black/[0.04] w-4 h-4 rounded flex items-center justify-center" title={catList[eIdx] || ""}>
+                              {emoji}
+                            </span>
+                          ))}
+                          {uniqueEmojis.length > 5 && (
+                            <span className="text-[9px] font-bold text-[#0A0A0F]/50 bg-black/[0.06] px-1 py-0.5 rounded flex items-center justify-center h-4">
+                              +{uniqueEmojis.length - 5}
+                            </span>
+                          )}
+                        </div>
+                      );
+                    })()}
                   </div>
                 </div>
                 <span className="text-[10px] font-semibold bg-black/[0.06] text-[#0A0A0F] group-hover/card:bg-[#0A0A0F] group-hover/card:text-white transition-all px-1.5 py-0.5 rounded-md flex-shrink-0">
