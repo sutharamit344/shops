@@ -3,13 +3,13 @@
 import React from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { 
-  Target, 
-  Users, 
-  Heart, 
-  TrendingUp, 
-  Store, 
-  Globe, 
+import {
+  Target,
+  Users,
+  Heart,
+  TrendingUp,
+  Store,
+  Globe,
   ArrowRight,
   Sparkles,
   Zap,
@@ -53,7 +53,7 @@ const AboutPage = () => {
     <div className="min-h-screen bg-[#F7F7F5] selection:bg-[#FF6A00]/10 selection:text-[#FF6A00]">
       <Navbar />
       <div className="absolute inset-0 dot-grid opacity-[0.05] pointer-events-none" />
-      
+
       {/* Hero Section */}
       <section className="pt-32 pb-24 px-4 relative z-10 max-w-7xl mx-auto">
         <div className="animate-in fade-in duration-700">
@@ -65,7 +65,7 @@ const AboutPage = () => {
             Architecting the <span className="text-[#FF6A00]">Future of Bharat.</span>
           </h1>
           <p className="text-[15px] md:text-[18px] text-[#0A0A0F]/45 font-medium leading-relaxed max-w-2xl">
-            {BRAND} is more than a directory. We are developing the infrastructure that connects local businesses 
+            {BRAND} is more than a directory. We are developing the infrastructure that connects local businesses
             to their neighborhood, provisioning every business with a premium digital storefront.
           </p>
         </div>
@@ -76,7 +76,7 @@ const AboutPage = () => {
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {stats.map((stat, i) => (
             <Card key={i} className="p-6 border-black/[0.03] text-center hover:border-[#FF6A00]/30 transition-all group">
-              <div className="w-10 h-10 rounded-lg bg-black/[0.02] border border-black/[0.05] flex items-center justify-center text-[#FF6A00] mx-auto mb-4 group-hover:scale-105 transition-transform">
+              <div className="w-10 h-10 rounded-md bg-black/[0.02] border border-black/[0.05] flex items-center justify-center text-[#FF6A00] mx-auto mb-4 group-hover:scale-105 transition-transform">
                 <stat.icon size={18} />
               </div>
               <div className="text-[24px] font-bold text-[#0A0A0F] mb-0.5">{stat.value}</div>
@@ -114,13 +114,13 @@ const AboutPage = () => {
           </div>
         </div>
         <div className="relative animate-in slide-in-from-right-4 duration-700">
-          <Card padding={false} className="p-2 border-none shadow-2xl rounded-3xl overflow-hidden aspect-square flex items-center justify-center bg-white relative">
-             <div className="absolute inset-0 dot-grid opacity-[0.03]" />
-             <div className="relative text-center z-10">
-                <Store size={120} className="text-[#FF6A00]/10 mb-4 mx-auto" />
-                <div className="text-[44px] font-bold text-[#0A0A0F] leading-none mb-2">{BRAND}</div>
-                <div className="text-[12px] font-bold text-[#FF6A00] uppercase tracking-[0.4em]">NETWORK BHARAT</div>
-             </div>
+          <Card padding={false} className="p-2 border-none shadow-2xl rounded-md overflow-hidden aspect-square flex items-center justify-center bg-white relative">
+            <div className="absolute inset-0 dot-grid opacity-[0.03]" />
+            <div className="relative text-center z-10">
+              <Store size={120} className="text-[#FF6A00]/10 mb-4 mx-auto" />
+              <div className="text-[44px] font-bold text-[#0A0A0F] leading-none mb-2">{BRAND}</div>
+              <div className="text-[12px] font-bold text-[#FF6A00] uppercase tracking-[0.4em]">NETWORK BHARAT</div>
+            </div>
           </Card>
         </div>
       </section>
@@ -135,7 +135,7 @@ const AboutPage = () => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
             {values.map((value, i) => (
               <div key={i} className="text-center group">
-                <div className="w-16 h-16 rounded-2xl bg-[#F7F7F5] border border-black/[0.05] flex items-center justify-center text-[#0A0A0F]/20 mx-auto shadow-sm group-hover:text-[#FF6A00] group-hover:bg-white transition-all duration-500 mb-8">
+                <div className="w-16 h-16 rounded-md bg-[#F7F7F5] border border-black/[0.05] flex items-center justify-center text-[#0A0A0F]/20 mx-auto shadow-sm group-hover:text-[#FF6A00] group-hover:bg-white transition-all duration-500 mb-8">
                   <value.icon size={28} />
                 </div>
                 <h3 className="text-[20px] font-bold text-[#0A0A0F] mb-4 tracking-tight">{value.title}</h3>

@@ -43,7 +43,7 @@ const ListingLayout = ({ shops = [], title, subtitle, city, type }) => {
             </div>
             <div>
               <h3 className="text-xl font-bold text-[#0A0A0F] mb-1">No businesses found</h3>
-              <p className="text-[14px] text-[#0A0A0F]/40 font-medium">We couldn't find any approved shops matching this {type || 'category'} yet.</p>
+              <p className="text-[14px] text-[#0A0A0F]/40 font-medium">We couldn&apos;t find any approved shops matching this {type || 'category'} yet.</p>
             </div>
             <Link href="/explore">
               <Button variant="primary" icon={ChevronRight} iconPosition="right">Explore All Shops</Button>

@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import Image from "next/image";
+import SafeImage from "@/components/UI/SafeImage";
 import { useRouter } from "next/navigation";
 import { useSelector, useDispatch } from "react-redux";
 import { toggleFavoriteInDb } from "@/redux/thunks/authThunks";
@@ -128,22 +128,17 @@ const ShopCard = ({ shop, variant = "grid", showActions = false, index = 0 }) =>
         <>
           {/* Logo */}
           <div className="relative flex-shrink-0">
-            {shop.logo ? (
-              <div className="w-12 h-12 md:w-14 md:h-14 rounded-lg overflow-hidden border border-[#0A0A0F]/[0.06] group-hover/card:scale-105 transition-transform duration-300 relative shadow-sm">
-                <Image
-                  src={shop.logo.includes(" ") ? shop.logo.replace(/\s/g, "%20") : shop.logo}
-                  alt={shop.name}
-                  fill
-                  unoptimized
-                  className="object-cover"
-                  sizes="(max-width: 768px) 48px, 56px"
-                />
-              </div>
-            ) : (
-              <div className="w-12 h-12 md:w-14 md:h-14 rounded-lg text-white flex items-center justify-center font-black text-lg md:text-xl shadow-inner bg-[#0A0A0F]">
-                {shop.name.charAt(0)}
-              </div>
-            )}
+            <div className="w-12 h-12 md:w-14 md:h-14 rounded-md overflow-hidden border border-[#0A0A0F]/[0.06] group-hover/card:scale-105 transition-transform duration-300 relative shadow-sm">
+              <SafeImage
+                src={shop.logo}
+                alt={shop.name}
+                fill
+                fallbackIcon={Store}
+                iconSize={20}
+                className="object-cover"
+                sizes="(max-width: 768px) 48px, 56px"
+              />
+            </div>
             {isApproved && (
               <div className="absolute -bottom-1 -right-1 w-4.5 h-4.5 rounded-full flex items-center justify-center border-2 border-white shadow-md bg-[#FF6A00]">
                 <ShieldCheck size={9} className="text-white" />
@@ -202,14 +197,14 @@ const ShopCard = ({ shop, variant = "grid", showActions = false, index = 0 }) =>
 
           {/* Action Buttons */}
           <div className="flex-shrink-0 ml-auto flex items-center gap-1.5 md:gap-2">
-            <div className="flex items-center gap-1 bg-black/[0.03] px-2 py-1 rounded-lg text-[12px] font-bold text-[#0A0A0F] border border-black/[0.04] mr-0.5">
+            <div className="flex items-center gap-1 bg-black/[0.03] px-2 py-1 rounded-md text-[12px] font-bold text-[#0A0A0F] border border-black/[0.04] mr-0.5">
               <Star size={12} className="text-[#FF6A00] fill-[#FF6A00]" />
               <span>{shop.avgRating || shop.rating || "5.0"}</span>
             </div>
             <div className="hidden sm:flex items-center gap-1.5">
               <button
                 onClick={handleFavorite}
-                className={`w-8 h-8 md:w-9 md:h-9 rounded-lg flex items-center justify-center transition-all ${isFavorited
+                className={`w-8 h-8 md:w-9 md:h-9 rounded-md flex items-center justify-center transition-all ${isFavorited
                   ? "bg-red-50 text-red-500 border border-red-100 shadow-sm"
                   : "bg-black/[0.03] text-[#0A0A0F]/30 hover:text-red-500 hover:bg-red-50"
                   }`}
@@ -218,12 +213,12 @@ const ShopCard = ({ shop, variant = "grid", showActions = false, index = 0 }) =>
               </button>
               <button
                 onClick={handleShare}
-                className="w-8 h-8 md:w-9 md:h-9 rounded-lg bg-black/[0.03] flex items-center justify-center text-[#0A0A0F]/30 hover:text-[#FF6A00] hover:bg-[#FF6A00]/10 transition-all"
+                className="w-8 h-8 md:w-9 md:h-9 rounded-md bg-black/[0.03] flex items-center justify-center text-[#0A0A0F]/30 hover:text-[#FF6A00] hover:bg-[#FF6A00]/10 transition-all"
               >
                 {copied ? <Check size={15} className="text-green-500" /> : <Share2 size={15} />}
               </button>
             </div>
-            <div className="w-8 h-8 md:w-9 md:h-9 rounded-lg bg-black/[0.04] text-[#0A0A0F]/40 flex items-center justify-center group-hover/card:bg-[#FF6A00] group-hover/card:text-white group-hover/card:scale-105 transition-all duration-300 shadow-sm">
+            <div className="w-8 h-8 md:w-9 md:h-9 rounded-md bg-black/[0.04] text-[#0A0A0F]/40 flex items-center justify-center group-hover/card:bg-[#FF6A00] group-hover/card:text-white group-hover/card:scale-105 transition-all duration-300 shadow-sm">
               <ArrowRight size={16} className="transform group-hover/card:translate-x-0.5 transition-transform" />
             </div>
           </div>
@@ -232,22 +227,17 @@ const ShopCard = ({ shop, variant = "grid", showActions = false, index = 0 }) =>
         <div className="p-3.5 md:p-4 flex flex-col flex-1 relative z-10">
           <div className="flex items-start justify-between mb-3">
             <div className="relative">
-              {shop.logo ? (
-                <div className="w-11 h-11 rounded-lg overflow-hidden border border-[#0A0A0F]/[0.06] group-hover/card:scale-110 transition-transform duration-300 relative">
-                  <Image
-                    src={shop.logo.includes(" ") ? shop.logo.replace(/\s/g, "%20") : shop.logo}
-                    alt={shop.name}
-                    fill
-                    unoptimized
-                    className="object-cover"
-                    sizes="44px"
-                  />
-                </div>
-              ) : (
-                <div className="w-11 h-11 rounded-lg bg-[#0A0A0F] text-white flex items-center justify-center font-bold text-base group-hover/card:scale-110 transition-transform duration-300">
-                  {shop.name.charAt(0)}
-                </div>
-              )}
+              <div className="w-11 h-11 rounded-md overflow-hidden border border-[#0A0A0F]/[0.06] group-hover/card:scale-110 transition-transform duration-300 relative">
+                <SafeImage
+                  src={shop.logo}
+                  alt={shop.name}
+                  fill
+                  fallbackIcon={Store}
+                  iconSize={18}
+                  className="object-cover"
+                  sizes="44px"
+                />
+              </div>
               {isApproved && (
                 <div className="absolute -bottom-1 -right-1 w-4.5 h-4.5 bg-[#FF6A00] rounded-full flex items-center justify-center shadow-md border-2 border-white">
                   <ShieldCheck size={8} className="text-white" />
@@ -307,7 +297,7 @@ const ShopCard = ({ shop, variant = "grid", showActions = false, index = 0 }) =>
               <div className="flex items-center gap-1.5">
                 <button
                   onClick={handleFavorite}
-                  className={`w-7 h-7 rounded-lg flex items-center justify-center transition-all ${isFavorited
+                  className={`w-7 h-7 rounded-md flex items-center justify-center transition-all ${isFavorited
                     ? "bg-red-50 text-red-500 border border-red-100"
                     : "bg-black/[0.03] text-[#0A0A0F]/30 hover:text-red-500 hover:bg-red-50"
                     }`}
@@ -316,7 +306,7 @@ const ShopCard = ({ shop, variant = "grid", showActions = false, index = 0 }) =>
                 </button>
                 <button
                   onClick={handleShare}
-                  className="w-7 h-7 rounded-lg bg-black/[0.03] flex items-center justify-center text-[#0A0A0F]/30 hover:text-[#FF6A00] hover:bg-[#FF6A00]/10 transition-all"
+                  className="w-7 h-7 rounded-md bg-black/[0.03] flex items-center justify-center text-[#0A0A0F]/30 hover:text-[#FF6A00] hover:bg-[#FF6A00]/10 transition-all"
                 >
                   {copied ? <Check size={12} className="text-green-500" /> : <Share2 size={12} />}
                 </button>

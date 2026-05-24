@@ -13,7 +13,7 @@ export async function generateMetadata({ params }) {
   // Heuristic to decide if it's a category or area (can be refined)
   // For SEO, we can assume it's a category first as it's more common
   const title = `${decodedSlug.charAt(0).toUpperCase() + decodedSlug.slice(1)} in ${decodedCity} | ${BRAND}`;
-  
+
   return {
     title,
     description: `Explore shops and services for ${decodedSlug} in ${decodedCity}. Detailed listings and ratings on ${BRAND}.`,
@@ -25,7 +25,7 @@ export async function generateMetadata({ params }) {
 
 export default async function CitySlugPage({ params }) {
   const { city, slug } = await params;
-  
+
   // Try Category first
   let shops = await getShopsByCityAndCategory(city, slug);
   let type = "category";
@@ -42,7 +42,7 @@ export default async function CitySlugPage({ params }) {
   const decodedCity = city.replace(/-/g, " ");
   const decodedSlug = slug.replace(/-/g, " ");
 
-  const heading = type === "category" 
+  const heading = type === "category"
     ? `${decodedSlug} in ${decodedCity}`
     : `Shops in ${decodedSlug}, ${decodedCity}`;
 
@@ -66,8 +66,8 @@ export default async function CitySlugPage({ params }) {
             ))}
           </div>
         ) : (
-          <div className="bg-white rounded-3xl border border-black/[0.05] p-20 flex flex-col items-center text-center gap-4">
-            <div className="w-16 h-16 rounded-2xl bg-gray-50 flex items-center justify-center text-gray-300">
+          <div className="bg-white rounded-md border border-black/[0.05] p-20 flex flex-col items-center text-center gap-4">
+            <div className="w-16 h-16 rounded-md bg-gray-50 flex items-center justify-center text-gray-300">
               <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>

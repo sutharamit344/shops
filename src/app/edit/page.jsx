@@ -93,7 +93,7 @@ const EditShopContent = () => {
         <Navbar />
         <main className="max-w-xl mx-auto px-4 py-32 text-center">
           <Card className="p-12 shadow-2xl">
-            <div className="w-16 h-16 bg-red-500/10 rounded-2xl flex items-center justify-center mx-auto mb-6">
+            <div className="w-16 h-16 bg-red-500/10 rounded-md flex items-center justify-center mx-auto mb-6">
               <CircleAlert size={32} className="text-red-500" />
             </div>
             <h1 className="text-[24px] font-bold text-[#0A0A0F] mb-3 tracking-tight">{error}</h1>
@@ -114,7 +114,7 @@ const EditShopContent = () => {
       <div className="min-h-screen bg-[#F7F7F5]">
         <Navbar />
         <main className="max-w-xl mx-auto px-4 py-32 text-center">
-          <div className="w-16 h-16 bg-emerald-500/10 rounded-2xl flex items-center justify-center mx-auto mb-8">
+          <div className="w-16 h-16 bg-emerald-500/10 rounded-md flex items-center justify-center mx-auto mb-8">
             <CircleCheckBig size={32} className="text-emerald-500" />
           </div>
           <h1 className="text-[28px] md:text-[36px] font-bold text-[#0A0A0F] mb-4 tracking-tight">
@@ -123,7 +123,7 @@ const EditShopContent = () => {
           <p className="text-[15px] text-[#0A0A0F]/45 mb-10 max-w-sm mx-auto font-medium">
             Your business configuration has been successfully updated across the distributed network.
           </p>
-          <div className="inline-flex items-center gap-3 py-2 px-4 bg-white rounded-lg border border-black/[0.05] shadow-sm">
+          <div className="inline-flex items-center gap-3 py-2 px-4 bg-white rounded-md border border-black/[0.05] shadow-sm">
             <div className="w-3.5 h-3.5 border-2 border-[#FF6A00] border-t-transparent rounded-full animate-spin"></div>
             <span className="text-[11px] font-bold text-[#0A0A0F]/40 uppercase tracking-widest">Re-routing Console...</span>
           </div>
@@ -162,12 +162,12 @@ const EditShopContent = () => {
 
         {/* Support Section */}
         <div className="mt-16 text-center">
-           <div className="flex items-center justify-center gap-6">
-              <div className="flex items-center gap-2 text-[#0A0A0F]/20">
-                 <Sparkles size={14} />
-                 <span className="text-[11px] font-bold uppercase tracking-widest">Live Updates</span>
-              </div>
-           </div>
+          <div className="flex items-center justify-center gap-6">
+            <div className="flex items-center gap-2 text-[#0A0A0F]/20">
+              <Sparkles size={14} />
+              <span className="text-[11px] font-bold uppercase tracking-widest">Live Updates</span>
+            </div>
+          </div>
         </div>
       </main>
     </div>

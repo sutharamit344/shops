@@ -2,15 +2,15 @@
 
 import React from "react";
 import Link from "next/link";
-import { 
-  Shield, 
-  Lock, 
-  Eye, 
-  FileText, 
-  ChevronLeft, 
-  Globe, 
-  Mail, 
-  Phone, 
+import {
+  Shield,
+  Lock,
+  Eye,
+  FileText,
+  ChevronLeft,
+  Globe,
+  Mail,
+  Phone,
   AlertTriangle,
   ShieldCheck,
   Search,
@@ -25,7 +25,7 @@ import Navbar from "@/components/Navbar";
 const Section = ({ icon: Icon, title, children }) => (
   <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
     <div className="flex items-center gap-4">
-      <div className="w-10 h-10 rounded-lg bg-[#FF6A00]/5 border border-[#FF6A00]/10 flex items-center justify-center text-[#FF6A00]">
+      <div className="w-10 h-10 rounded-md bg-[#FF6A00]/5 border border-[#FF6A00]/10 flex items-center justify-center text-[#FF6A00]">
         <Icon size={18} />
       </div>
       <h2 className="text-[18px] font-bold text-[#0A0A0F] tracking-tight">{title}</h2>
@@ -41,7 +41,7 @@ export default function PrivacyPolicy() {
     <div className="bg-[#F7F7F5] min-h-screen selection:bg-[#FF6A00]/10 selection:text-[#FF6A00]">
       <Navbar />
       <div className="absolute inset-0 dot-grid opacity-[0.05] pointer-events-none" />
-      
+
       {/* Header */}
       <header className="pt-32 pb-16 px-4 relative z-10">
         <div className="max-w-4xl mx-auto text-center animate-in fade-in duration-700">
@@ -53,9 +53,9 @@ export default function PrivacyPolicy() {
             Privacy <span className="text-[#FF6A00]">Policy.</span>
           </h1>
           <div className="flex flex-col md:flex-row items-center justify-center gap-4 md:gap-8 mt-10">
-            <div className="flex items-center gap-2 px-4 py-2 bg-white rounded-lg border border-black/[0.05] shadow-sm">
-               <span className="text-[10px] font-bold text-[#0A0A0F]/30 uppercase tracking-widest">Last Modified</span>
-               <span className="text-[11px] font-bold text-[#0A0A0F]">APR 25, 2026</span>
+            <div className="flex items-center gap-2 px-4 py-2 bg-white rounded-md border border-black/[0.05] shadow-sm">
+              <span className="text-[10px] font-bold text-[#0A0A0F]/30 uppercase tracking-widest">Last Modified</span>
+              <span className="text-[11px] font-bold text-[#0A0A0F]">APR 25, 2026</span>
             </div>
             <Link href="/" className="text-[11px] font-bold text-[#0A0A0F]/40 hover:text-[#FF6A00] uppercase tracking-widest flex items-center gap-2 transition-colors">
               <ChevronLeft size={14} /> Back to Dashboard
@@ -131,8 +131,8 @@ export default function PrivacyPolicy() {
           <div className="pt-16 border-t border-black/[0.05]">
             <h2 className="text-[20px] font-bold text-[#0A0A0F] mb-8 tracking-tight">Support Center</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <a href="mailto:support@shopbajar.com" className="flex items-center gap-5 p-5 bg-[#F7F7F5] rounded-lg border border-black/[0.05] hover:border-[#FF6A00]/30 transition-all group">
-                <div className="w-10 h-10 rounded-lg bg-white shadow-sm flex items-center justify-center text-[#FF6A00] group-hover:scale-105 transition-transform">
+              <a href="mailto:support@shopbajar.com" className="flex items-center gap-5 p-5 bg-[#F7F7F5] rounded-md border border-black/[0.05] hover:border-[#FF6A00]/30 transition-all group">
+                <div className="w-10 h-10 rounded-md bg-white shadow-sm flex items-center justify-center text-[#FF6A00] group-hover:scale-105 transition-transform">
                   <Mail size={18} />
                 </div>
                 <div className="min-w-0">

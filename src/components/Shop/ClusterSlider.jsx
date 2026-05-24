@@ -36,13 +36,13 @@ const ClusterSlider = ({ clusters = [], shops = [], onClusterClick, parsed }) =>
       relevantShops = shops.filter(s => {
         const sCity = (s.city || "").toLowerCase();
         const sArea = (s.area || "").toLowerCase();
-        
+
         if (targetArea && sArea === targetArea) return true;
         if (targetCity && sCity === targetCity && !targetArea) return true;
-        
+
         // Fallback to the general context match
         if (activeContext && (sArea === activeContext || sCity === activeContext || activeContext.includes(sArea) || activeContext.includes(sCity))) return true;
-        
+
         return false;
       });
     }
@@ -63,19 +63,19 @@ const ClusterSlider = ({ clusters = [], shops = [], onClusterClick, parsed }) =>
         const normalizedSearch = currentCategory.replace(/&/g, "and");
         const nm = clusterName.toLowerCase();
 
-        const isMatch = docCat.includes(normalizedSearch) || 
-                       normalizedSearch.includes(docCat) ||
-                       shopCat.includes(normalizedSearch) ||
-                       normalizedSearch.includes(shopCat) || 
-                       nm.includes(normalizedSearch);
-        
+        const isMatch = docCat.includes(normalizedSearch) ||
+          normalizedSearch.includes(docCat) ||
+          shopCat.includes(normalizedSearch) ||
+          normalizedSearch.includes(shopCat) ||
+          nm.includes(normalizedSearch);
+
         if (!isMatch) return;
       }
 
       const key = `${clusterName}__${shopArea}__${shopCity}`;
       if (!groups[key]) {
         const doc = clusterDocMap[clusterName] || {};
-        const displayCat = currentCategory 
+        const displayCat = currentCategory
           ? currentCategory.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')
           : (doc.category || shop.category || "");
 
@@ -133,7 +133,7 @@ const ClusterSlider = ({ clusters = [], shops = [], onClusterClick, parsed }) =>
             if (!aMatch && bMatch) return 1;
           }
         }
-        
+
         // 3. Fallback to shop count
         return b.count - a.count;
       });
@@ -200,7 +200,7 @@ const ClusterSlider = ({ clusters = [], shops = [], onClusterClick, parsed }) =>
     const category = properCase(parsed?.category || "");
     const city = properCase(parsed?.city || "");
     const area = properCase(parsed?.area || "");
-    
+
     // Determine the most specific location for the title
     let location = area || city || userLocationName || "";
 
@@ -305,11 +305,11 @@ const ClusterSlider = ({ clusters = [], shops = [], onClusterClick, parsed }) =>
             <div
               key={`${cluster.name}-${cluster.area}-${cluster.city}-${idx}`}
               onClick={() => onClusterClick && onClusterClick(cluster.name, cluster.city, cluster.area)}
-              className="flex-shrink-0 w-56 md:w-60 bg-white p-2.5 rounded-lg border border-black/[0.06] hover:border-[#FF6A00]/30 hover:shadow-sm transition-all cursor-pointer group/card flex flex-col gap-2"
+              className="flex-shrink-0 w-56 md:w-60 bg-white p-2.5 rounded-md border border-black/[0.06] hover:border-[#FF6A00]/30 hover:shadow-sm transition-all cursor-pointer group/card flex flex-col gap-2"
             >
               <div className="flex items-start justify-between gap-2">
                 <div className="flex items-center gap-2 min-w-0">
-                  <div className="w-7 h-7 rounded-lg bg-[#FF6A00]/10 flex items-center justify-center text-[#FF6A00] flex-shrink-0">
+                  <div className="w-7 h-7 rounded-md bg-[#FF6A00]/10 flex items-center justify-center text-[#FF6A00] flex-shrink-0">
                     <CategoryIcon name={cluster.category} size={14} />
                   </div>
                   <div className="min-w-0">
@@ -365,7 +365,7 @@ const ClusterSlider = ({ clusters = [], shops = [], onClusterClick, parsed }) =>
         {visibleLimit < clusterData.length && (
           <div
             onClick={handleNext}
-            className="flex-shrink-0 w-32 flex flex-col items-center justify-center gap-1.5 text-[#FF6A00] font-bold cursor-pointer hover:bg-[#FF6A00]/5 rounded-lg border border-dashed border-[#FF6A00]/20 transition-all p-2"
+            className="flex-shrink-0 w-32 flex flex-col items-center justify-center gap-1.5 text-[#FF6A00] font-bold cursor-pointer hover:bg-[#FF6A00]/5 rounded-md border border-dashed border-[#FF6A00]/20 transition-all p-2"
           >
             <div className="w-7 h-7 rounded-full bg-[#FF6A00]/10 flex items-center justify-center">
               <ChevronRight size={16} />

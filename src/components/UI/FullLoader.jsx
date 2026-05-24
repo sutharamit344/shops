@@ -2,8 +2,6 @@
 
 import React from "react";
 import Image from "next/image";
-import { BRAND } from "@/lib/config";
-import { Store } from "lucide-react";
 
 const FullLoader = ({ message = "Initializing Network..." }) => {
   return (
@@ -16,9 +14,16 @@ const FullLoader = ({ message = "Initializing Network..." }) => {
         {/* Animated Business Container */}
         <div className="relative mb-10">
           <div className="absolute inset-[-20px] border border-black/[0.03] rounded-full animate-pulse" />
-          <div className="relative w-16 h-16 bg-white rounded-2xl flex items-center justify-center shadow-2xl border border-black/[0.05] z-10 overflow-hidden">
+          <div className="relative w-16 h-16 bg-white rounded-md flex items-center justify-center shadow-2xl border border-black/[0.05] z-10 overflow-hidden">
             <div className="absolute inset-0 bg-gradient-to-br from-white via-white to-black/[0.02]" />
-            <Store size={32} className="text-[#FF6A00] relative z-10 animate-in zoom-in-50 duration-500" />
+            <Image
+              src="/sb-logo-v3.png"
+              alt="ShopBajar logo"
+              width={44}
+              height={44}
+              priority
+              className="relative z-10 h-11 w-11 object-contain animate-in zoom-in-50 duration-500"
+            />
           </div>
           {/* Scanning Line */}
           <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-[#FF6A00]/40 to-transparent animate-scan" />

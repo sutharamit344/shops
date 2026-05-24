@@ -43,7 +43,7 @@ const ModalContainer = () => {
     >
       <div className="space-y-6 py-2">
         <div className="flex items-start gap-4">
-          <div className={`w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0 ${getIconColor()}`}>
+          <div className={`w-12 h-12 rounded-md flex items-center justify-center flex-shrink-0 ${getIconColor()}`}>
             {React.createElement(getIcon(), { size: 24 })}
           </div>
           <div className="space-y-1">
@@ -59,7 +59,7 @@ const ModalContainer = () => {
               type="text"
               value={modal.inputValue}
               onChange={(e) => dispatch(setInputValue(e.target.value))}
-              className="w-full h-12 bg-gray-50 border border-black/[0.06] rounded-lg px-4 text-[14px] outline-none focus:border-[#FF6A00] transition-all"
+              className="w-full h-12 bg-gray-50 border border-black/[0.06] rounded-md px-4 text-[14px] outline-none focus:border-[#FF6A00] transition-all"
               autoFocus
               onKeyDown={(e) => {
                 if (e.key === "Enter") {
@@ -78,7 +78,7 @@ const ModalContainer = () => {
                 modal.onCancel?.();
                 handleClose();
               }}
-              className="flex-1 h-12 rounded-lg text-[13px] font-bold text-[#666] bg-gray-100 hover:bg-gray-200 transition-all active:scale-95"
+              className="flex-1 h-12 rounded-md text-[13px] font-bold text-[#666] bg-gray-100 hover:bg-gray-200 transition-all active:scale-95"
             >
               {modal.cancelText}
             </button>
@@ -90,11 +90,10 @@ const ModalContainer = () => {
               }
               handleClose();
             }}
-            className={`flex-1 h-12 rounded-lg text-[13px] font-bold text-white transition-all active:scale-95 shadow-lg ${
-              modal.type === "error" ? "bg-red-500 hover:bg-red-600 shadow-red-500/20" : 
-              modal.type === "success" ? "bg-green-500 hover:bg-green-600 shadow-green-500/20" : 
-              "bg-[#0F0F0F] hover:bg-[#333] shadow-black/10"
-            }`}
+            className={`flex-1 h-12 rounded-md text-[13px] font-bold text-white transition-all active:scale-95 shadow-lg ${modal.type === "error" ? "bg-red-500 hover:bg-red-600 shadow-red-500/20" :
+              modal.type === "success" ? "bg-green-500 hover:bg-green-600 shadow-green-500/20" :
+                "bg-[#0F0F0F] hover:bg-[#333] shadow-black/10"
+              }`}
           >
             {modal.confirmText}
           </button>

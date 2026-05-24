@@ -120,7 +120,7 @@ const DiscoveryView = ({ title, subtitle, onSubtitleClick, onRefresh, isDetectin
     <div className="flex flex-col lg:flex-row gap-6 items-start">
       {/* Desktop Sticky Sidebar for Sort & Filter */}
       <div className="hidden lg:block w-64 flex-shrink-0 sticky top-[80px] z-30">
-        <div className="bg-white border border-black/[0.06] rounded-2xl p-4 shadow-sm">
+        <div className="bg-white border border-black/[0.06] rounded-md p-4 shadow-sm">
           <div className="mb-4 pb-3 border-b border-black/[0.05]">
             <h3 className="text-[15px] font-bold text-[#0A0A0F] mb-0.5">Sort & Filter</h3>
             <p className="text-[12px] text-[#0A0A0F]/40">Refine your discovery experience</p>
@@ -137,7 +137,7 @@ const DiscoveryView = ({ title, subtitle, onSubtitleClick, onRefresh, isDetectin
                   <button
                     key={option.id}
                     onClick={() => dispatch(setSortBy(option.id))}
-                    className={`flex items-center justify-between px-3 py-2.5 rounded-lg border transition-all text-left ${sortBy === option.id
+                    className={`flex items-center justify-between px-3 py-2.5 rounded-md border transition-all text-left ${sortBy === option.id
                       ? "border-[#FF6A00]/40 bg-[#FF6A00]/5 text-[#FF6A00]"
                       : "border-black/[0.05] bg-white text-[#0A0A0F]/60 hover:border-black/[0.1] hover:bg-black/[0.01]"
                       }`}
@@ -164,7 +164,7 @@ const DiscoveryView = ({ title, subtitle, onSubtitleClick, onRefresh, isDetectin
                   <button
                     key={tag.id}
                     onClick={() => dispatch(toggleTag(tag.id))}
-                    className={`flex items-center justify-between px-3 py-2.5 rounded-lg border transition-all text-left ${tags[tag.id]
+                    className={`flex items-center justify-between px-3 py-2.5 rounded-md border transition-all text-left ${tags[tag.id]
                       ? "border-[#FF6A00]/40 bg-[#FF6A00]/5 text-[#FF6A00]"
                       : "border-black/[0.05] bg-white text-[#0A0A0F]/60 hover:border-black/[0.1] hover:bg-black/[0.01]"
                       }`}
@@ -286,8 +286,8 @@ const DiscoveryView = ({ title, subtitle, onSubtitleClick, onRefresh, isDetectin
             ))}
           </div>
         ) : (
-          <div className="bg-white rounded-lg border border-black/[0.06] py-14 px-6 flex flex-col items-center text-center gap-5">
-            <div className="w-12 h-12 rounded-lg bg-black/[0.04] flex items-center justify-center text-[#0A0A0F]/20">
+          <div className="bg-white rounded-md border border-black/[0.06] py-14 px-6 flex flex-col items-center text-center gap-5">
+            <div className="w-12 h-12 rounded-md bg-black/[0.04] flex items-center justify-center text-[#0A0A0F]/20">
               <Search size={22} strokeWidth={1.5} />
             </div>
             <div>
@@ -302,7 +302,7 @@ const DiscoveryView = ({ title, subtitle, onSubtitleClick, onRefresh, isDetectin
                     <button
                       key={cluster.id}
                       onClick={() => onClusterClick(cluster.name, cluster.city, cluster.area)}
-                      className="p-3 rounded-lg bg-black/[0.03] border border-transparent hover:border-black/[0.08] hover:bg-white hover:shadow-sm transition-all text-left"
+                      className="p-3 rounded-md bg-black/[0.03] border border-transparent hover:border-black/[0.08] hover:bg-white hover:shadow-sm transition-all text-left"
                     >
                       <div className="text-xl mb-1">{getEmojiByName(cluster.name)}</div>
                       <div className="text-[13px] font-semibold text-[#0A0A0F] leading-tight">{cluster.name}</div>
@@ -321,7 +321,7 @@ const DiscoveryView = ({ title, subtitle, onSubtitleClick, onRefresh, isDetectin
           </div>
         )}
         {/* Merchant CTA */}
-        <div className="mt-10 p-6 md:p-8 rounded-2xl bg-[#0A0A0F] relative overflow-hidden">
+        <div className="mt-10 p-6 md:p-8 rounded-md bg-[#0A0A0F] relative overflow-hidden">
           <div className="absolute inset-0 dot-grid opacity-30" />
           <div className="absolute top-0 right-0 w-48 h-48 bg-[#FF6A00]/15 rounded-full blur-[60px]" />
           <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-5">
@@ -339,7 +339,7 @@ const DiscoveryView = ({ title, subtitle, onSubtitleClick, onRefresh, isDetectin
             </div>
             <button
               onClick={() => router.push('/create')}
-              className="flex-shrink-0 h-10 px-5 rounded-lg bg-[#FF6A00] text-white text-[13px] font-semibold hover:bg-[#E65F00] transition-all flex items-center gap-2 shadow-lg shadow-[#FF6A00]/20"
+              className="flex-shrink-0 h-10 px-5 rounded-md bg-[#FF6A00] text-white text-[13px] font-semibold hover:bg-[#E65F00] transition-all flex items-center gap-2 shadow-lg shadow-[#FF6A00]/20"
             >
               List Your Shop Free
               <ArrowRight size={14} />

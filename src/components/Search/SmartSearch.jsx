@@ -274,15 +274,15 @@ const SmartSearch = ({ onFocusStateChange, pageTitle, pageContext }) => {
     <div
       ref={containerRef}
       className={`w-full transition-all duration-200 z-50 ${isFocused
-          ? "fixed inset-0 mt-[60px] lg:mt-0 lg:top-0 bg-white z-[999] p-3 flex flex-col md:relative md:p-0 md:bg-transparent md:z-50 md:flex-none"
-          : "relative"
+        ? "fixed inset-0 mt-[60px] lg:mt-0 lg:top-0 bg-white z-[999] p-3 flex flex-col md:relative md:p-0 md:bg-transparent md:z-50 md:flex-none"
+        : "relative"
         }`}
     >
       {/* Input bar */}
       <div
         className={`relative flex items-center bg-white transition-all duration-150 ${isFocused
-            ? "rounded-t-lg md:rounded-lg border border-black/[0.12] shadow-[0_0_0_3px_rgba(255,106,0,0.08)]"
-            : "rounded-lg border border-black/[0.08] hover:border-black/[0.14]"
+          ? "rounded-t-lg md:rounded-md border border-black/[0.12] shadow-[0_0_0_3px_rgba(255,106,0,0.08)]"
+          : "rounded-md border border-black/[0.08] hover:border-black/[0.14]"
           }`}
       >
         {isFocused ? (
@@ -351,12 +351,12 @@ const SmartSearch = ({ onFocusStateChange, pageTitle, pageContext }) => {
                     role="option"
                   >
                     <div
-                      className={`w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 ${item.type === "history" ? "bg-black/[0.04] text-[#0A0A0F]/40" :
-                          item.type === "category" ? "bg-[#FF6A00]/10 text-[#FF6A00]" :
-                            item.type === "shop" ? "bg-emerald-50 text-emerald-600" :
-                              item.type === "cluster" ? "bg-amber-50 text-amber-600" :
-                                item.type === "location" ? "bg-blue-50 text-blue-600" :
-                                  "bg-black/[0.04] text-[#0A0A0F]/40"
+                      className={`w-7 h-7 rounded-md flex items-center justify-center flex-shrink-0 ${item.type === "history" ? "bg-black/[0.04] text-[#0A0A0F]/40" :
+                        item.type === "category" ? "bg-[#FF6A00]/10 text-[#FF6A00]" :
+                          item.type === "shop" ? "bg-emerald-50 text-emerald-600" :
+                            item.type === "cluster" ? "bg-amber-50 text-amber-600" :
+                              item.type === "location" ? "bg-blue-50 text-blue-600" :
+                                "bg-black/[0.04] text-[#0A0A0F]/40"
                         }`}
                     >
                       {item.type === "history" ? <History size={14} /> :

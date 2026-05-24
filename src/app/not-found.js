@@ -49,7 +49,7 @@ export default function NotFound() {
         // 1. Direct Shop Check (/shop/[slug] or /[slug])
         const firstSegment = decodeURIComponent(pathParts[0] || "");
         const secondSegment = decodeURIComponent(pathParts[1] || "");
-        
+
         if (firstSegment === 'shop' && secondSegment) {
           const shop = await getShopBySlug(secondSegment, true);
           if (shop) {
@@ -85,7 +85,7 @@ export default function NotFound() {
               return;
             }
           }
-          
+
           setData({ slug: pathname.substring(1), parsed });
           setView("discovery");
           setLoading(false);
@@ -128,7 +128,7 @@ export default function NotFound() {
       <Navbar />
       <div className="absolute inset-0 dot-grid opacity-[0.05] pointer-events-none" />
       <main className="flex-1 flex flex-col items-center justify-center px-4 relative z-10 text-center">
-        <div className="w-20 h-20 bg-black/[0.03] border border-black/[0.05] rounded-2xl flex items-center justify-center mb-8 shadow-sm">
+        <div className="w-20 h-20 bg-black/[0.03] border border-black/[0.05] rounded-md flex items-center justify-center mb-8 shadow-sm">
           <Store size={32} className="text-[#0A0A0F]/20" />
         </div>
         <h1 className="text-[32px] md:text-[48px] font-bold text-[#0A0A0F] mb-3 tracking-tight">Location not found</h1>

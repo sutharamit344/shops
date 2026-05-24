@@ -29,7 +29,7 @@ export default function CategoryListingClient({ shops, title, subtitle, view }) 
                   <div className="p-6">
                     <div className="flex items-center gap-4 mb-4">
                       {s.logo ? (
-                        <div className="w-14 h-14 rounded-2xl overflow-hidden border-2 border-primary/20 flex-shrink-0 shadow-sm">
+                        <div className="w-14 h-14 rounded-md overflow-hidden border-2 border-primary/20 flex-shrink-0 shadow-sm">
                           <img
                             src={s.logo}
                             alt={s.name}
@@ -37,7 +37,7 @@ export default function CategoryListingClient({ shops, title, subtitle, view }) 
                           />
                         </div>
                       ) : (
-                        <div className="w-14 h-14 rounded-2xl bg-[#FF6A00]/5 flex items-center justify-center text-[#FF6A00] font-black text-2xl flex-shrink-0">
+                        <div className="w-14 h-14 rounded-md bg-[#FF6A00]/5 flex items-center justify-center text-[#FF6A00] font-black text-2xl flex-shrink-0">
                           {s.name.charAt(0)}
                         </div>
                       )}
@@ -51,7 +51,7 @@ export default function CategoryListingClient({ shops, title, subtitle, view }) 
                           {s.name}
                         </h3>
                         <div className="flex items-center gap-2">
-                          <div className="flex items-center gap-1 text-[#FF6A00] px-2 py-0.5 rounded-lg text-[10px] font-black tracking-tighter bg-primary/5 border border-primary/10">
+                          <div className="flex items-center gap-1 text-[#FF6A00] px-2 py-0.5 rounded-md text-[10px] font-black tracking-tighter bg-primary/5 border border-primary/10">
                             <Star size={12} fill="currentColor" />{" "}
                             {s.avgRating || s.rating || "5.0"}
                           </div>

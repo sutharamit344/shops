@@ -22,7 +22,7 @@ const LocationModal = ({ isOpen, onClose, detectedLocation, onConfirm, onRefresh
     if (detectedLocation?.lat && detectedLocation?.lng) {
       const lat = parseFloat(detectedLocation.lat);
       const lng = parseFloat(detectedLocation.lng);
-      
+
       if (!isNaN(lat) && !isNaN(lng)) {
         setMapCoords({ lat, lng });
         setAddressData({
@@ -45,7 +45,7 @@ const LocationModal = ({ isOpen, onClose, detectedLocation, onConfirm, onRefresh
       );
       const data = await res.json();
       const addr = data.address || {};
-      
+
       const city = addr.city || addr.city_district || addr.state_district || addr.town || addr.village || "";
       const area = addr.suburb || addr.neighbourhood || addr.residential || addr.road || "";
       const village = addr.village || addr.hamlet || "";
@@ -73,8 +73,8 @@ const LocationModal = ({ isOpen, onClose, detectedLocation, onConfirm, onRefresh
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-[#0A0A0F]/40 backdrop-blur-[4px] animate-in fade-in duration-300">
-      <div className="bg-white w-full max-w-[340px] rounded-lg overflow-hidden shadow-2xl border border-black/[0.05] animate-in zoom-in-95 duration-200">
-        
+      <div className="bg-white w-full max-w-[340px] rounded-md overflow-hidden shadow-2xl border border-black/[0.05] animate-in zoom-in-95 duration-200">
+
         {/* Header */}
         <div className="p-4 border-b border-black/[0.05]">
           <div className="flex items-center justify-between mb-0.5">
@@ -88,7 +88,7 @@ const LocationModal = ({ isOpen, onClose, detectedLocation, onConfirm, onRefresh
 
         {/* Map Section */}
         <div className="p-4">
-          <div className="relative rounded-lg overflow-hidden border border-black/[0.08] h-[160px] bg-gray-50">
+          <div className="relative rounded-md overflow-hidden border border-black/[0.08] h-[160px] bg-gray-50">
             <MapComponent center={mapCoords} onLocationSelect={handleMapClick} />
             {isGeocoding && (
               <div className="absolute inset-0 bg-white/40 backdrop-blur-[1px] z-20 flex items-center justify-center">
@@ -97,13 +97,13 @@ const LocationModal = ({ isOpen, onClose, detectedLocation, onConfirm, onRefresh
             )}
           </div>
           <div className="mt-2 flex justify-center">
-             <span className="text-[10px] font-semibold text-[#0A0A0F]/20 uppercase tracking-widest">Tap to adjust marker</span>
+            <span className="text-[10px] font-semibold text-[#0A0A0F]/20 uppercase tracking-widest">Tap to adjust marker</span>
           </div>
         </div>
 
         {/* Selection Info */}
         <div className="px-4 mb-4">
-          <div className="bg-[#F7F7F5] rounded-lg p-3 border border-black/[0.03] flex items-start gap-3">
+          <div className="bg-[#F7F7F5] rounded-md p-3 border border-black/[0.03] flex items-start gap-3">
             <div className="mt-1 w-1.5 h-1.5 rounded-full bg-[#FF6A00] flex-shrink-0" />
             <div className="min-w-0">
               <p className="text-[13px] font-semibold text-[#0A0A0F] truncate leading-tight">
@@ -119,17 +119,17 @@ const LocationModal = ({ isOpen, onClose, detectedLocation, onConfirm, onRefresh
         {/* Actions */}
         <div className="p-4 pt-0 space-y-3">
           <div className="flex gap-2">
-            <Button 
-              variant="outline" 
-              size="md" 
+            <Button
+              variant="outline"
+              size="md"
               className="flex-1"
               onClick={onClose}
             >
               Cancel
             </Button>
-            <Button 
-              variant="primary" 
-              size="md" 
+            <Button
+              variant="primary"
+              size="md"
               className="flex-1 font-semibold"
               onClick={handleApply}
             >

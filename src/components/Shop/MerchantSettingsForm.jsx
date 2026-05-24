@@ -27,7 +27,7 @@ import {
 const MapComponent = dynamic(() => import("@/components/UI/MapComponent"), {
   ssr: false,
   loading: () => (
-    <div className="w-full h-[250px] bg-zinc-100 animate-pulse rounded-2xl flex items-center justify-center text-zinc-400 font-medium dark:bg-zinc-800">
+    <div className="w-full h-[250px] bg-zinc-100 animate-pulse rounded-md flex items-center justify-center text-zinc-400 font-medium dark:bg-zinc-800">
       Loading Map...
     </div>
   ),
@@ -58,6 +58,8 @@ import {
   Youtube,
   Twitter,
   Linkedin,
+  QrCode,
+  ChefHat,
 } from "lucide-react";
 
 const MerchantSettingsForm = ({
@@ -106,6 +108,9 @@ const MerchantSettingsForm = ({
     pincode: "",
     lat: null,
     lng: null,
+    qrOrderingConfig: {
+      requireWaiterApproval: false,
+    },
   });
 
   const [logoFile, setLogoFile] = useState(null);
@@ -132,6 +137,9 @@ const MerchantSettingsForm = ({
         ...prev,
         ...initialData,
         socialLinks: Array.isArray(initialData.socialLinks) ? initialData.socialLinks : [],
+        qrOrderingConfig: {
+          requireWaiterApproval: initialData.qrOrderingConfig?.requireWaiterApproval ?? false,
+        },
       }));
       setLogoPreview(initialData.logo || "");
       setCoverPreview(initialData.coverImage || "");
@@ -549,11 +557,9 @@ const MerchantSettingsForm = ({
       if (!lat || !lng) {
         try {
           setUploadStatus("Geocoding address...");
-          const addressStr = `${formData.shopNo || ""}, ${formData.building || ""}, ${
-            formData.zone || ""
-          }, ${formData.village || ""}, ${formData.area || ""}, ${formData.city}, ${
-            formData.state
-          }, India`;
+          const addressStr = `${formData.shopNo || ""}, ${formData.building || ""}, ${formData.zone || ""
+            }, ${formData.village || ""}, ${formData.area || ""}, ${formData.city}, ${formData.state
+            }, India`;
           const geoRes = await fetch(
             `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
               addressStr
@@ -602,8 +608,8 @@ const MerchantSettingsForm = ({
     <form onSubmit={handleSubmit} className="space-y-6 w-full">
       {/* ── ERROR DISPLAY ── */}
       {displayError && (
-        <div className="bg-red-50 rounded-2xl p-4 flex items-start gap-4 border border-red-100 animate-in shake duration-300 dark:bg-red-500/10 dark:border-red-500/20 shadow-sm">
-          <div className="w-10 h-10 rounded-lg bg-red-100 flex items-center justify-center text-red-500 shrink-0 dark:bg-red-500/20">
+        <div className="bg-red-50 rounded-md p-4 flex items-start gap-4 border border-red-100 animate-in shake duration-300 dark:bg-red-500/10 dark:border-red-500/20 shadow-sm">
+          <div className="w-10 h-10 rounded-md bg-red-100 flex items-center justify-center text-red-500 shrink-0 dark:bg-red-500/20">
             <CircleAlert size={20} />
           </div>
           <div>
@@ -622,10 +628,10 @@ const MerchantSettingsForm = ({
         ref={(el) => {
           if (sectionRefs?.current) sectionRefs.current["identity"] = el;
         }}
-        className="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200/80 dark:border-zinc-800 p-6 shadow-sm space-y-6 scroll-mt-24"
+        className="bg-white dark:bg-zinc-900 rounded-md border border-zinc-200/80 dark:border-zinc-800 p-6 shadow-sm space-y-6 scroll-mt-24"
       >
         <div className="border-b border-zinc-100 dark:border-zinc-800 pb-4 flex items-center gap-3">
-          <div className="w-10 h-10 rounded-lg bg-[#FF6A00]/10 flex items-center justify-center text-[#FF6A00]">
+          <div className="w-10 h-10 rounded-md bg-[#FF6A00]/10 flex items-center justify-center text-[#FF6A00]">
             <Store size={20} />
           </div>
           <div>
@@ -735,10 +741,10 @@ const MerchantSettingsForm = ({
         ref={(el) => {
           if (sectionRefs?.current) sectionRefs.current["location"] = el;
         }}
-        className="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200/80 dark:border-zinc-800 p-6 shadow-sm space-y-6 scroll-mt-24"
+        className="bg-white dark:bg-zinc-900 rounded-md border border-zinc-200/80 dark:border-zinc-800 p-6 shadow-sm space-y-6 scroll-mt-24"
       >
         <div className="border-b border-zinc-100 dark:border-zinc-800 pb-4 flex items-center gap-3">
-          <div className="w-10 h-10 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-500">
+          <div className="w-10 h-10 rounded-md bg-blue-500/10 flex items-center justify-center text-blue-500">
             <MapIcon size={20} />
           </div>
           <div>
@@ -751,7 +757,7 @@ const MerchantSettingsForm = ({
           </div>
         </div>
 
-        <div className="bg-zinc-50 dark:bg-zinc-800/50 rounded-2xl border border-zinc-200/80 dark:border-zinc-800 overflow-hidden relative shadow-sm">
+        <div className="bg-zinc-50 dark:bg-zinc-800/50 rounded-md border border-zinc-200/80 dark:border-zinc-800 overflow-hidden relative shadow-sm">
           {/* Map Search Overlay */}
           <div className="absolute top-4 left-4 right-4 z-[400] flex gap-2">
             <div className="flex-1 relative group">
@@ -764,13 +770,13 @@ const MerchantSettingsForm = ({
                 value={mapSearchQuery}
                 onChange={(e) => setMapSearchQuery(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleMapSearch(e)}
-                className="w-full h-9 pl-9 pr-4 bg-white/90 dark:bg-zinc-900/90 backdrop-blur-md border border-zinc-200/80 dark:border-zinc-700 rounded-lg text-xs font-medium shadow-lg focus:outline-none focus:ring-1 focus:ring-[#FF6A00]/40 transition-all dark:text-zinc-100"
+                className="w-full h-9 pl-9 pr-4 bg-white/90 dark:bg-zinc-900/90 backdrop-blur-md border border-zinc-200/80 dark:border-zinc-700 rounded-md text-xs font-medium shadow-lg focus:outline-none focus:ring-1 focus:ring-[#FF6A00]/40 transition-all dark:text-zinc-100"
               />
             </div>
             <button
               type="button"
               onClick={handleMapSearch}
-              className="h-9 px-4 bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900 rounded-lg font-bold text-xs shadow-lg hover:bg-[#FF6A00] dark:hover:bg-[#FF6A00] dark:hover:text-white transition-all active:scale-95 flex items-center gap-2"
+              className="h-9 px-4 bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900 rounded-md font-bold text-xs shadow-lg hover:bg-[#FF6A00] dark:hover:bg-[#FF6A00] dark:hover:text-white transition-all active:scale-95 flex items-center gap-2"
             >
               Find
             </button>
@@ -801,14 +807,14 @@ const MerchantSettingsForm = ({
                   () => setIsGeocoding(false)
                 );
               }}
-              className="pointer-events-auto flex items-center gap-2 px-4 py-2 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 rounded-xl text-xs font-bold shadow-lg hover:text-[#FF6A00] dark:hover:text-[#FF6A00] transition-all active:scale-95 border border-zinc-200/80 dark:border-zinc-700"
+              className="pointer-events-auto flex items-center gap-2 px-4 py-2 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 rounded-md text-xs font-bold shadow-lg hover:text-[#FF6A00] dark:hover:text-[#FF6A00] transition-all active:scale-95 border border-zinc-200/80 dark:border-zinc-700"
             >
               <Navigation size={14} className="text-[#FF6A00]" />
               Use Current Location
             </button>
 
             {isGeocoding && (
-              <div className="pointer-events-auto bg-white/90 dark:bg-zinc-900/90 backdrop-blur-md px-3 py-2 rounded-lg shadow-lg flex items-center gap-2 border border-zinc-200/80 dark:border-zinc-700">
+              <div className="pointer-events-auto bg-white/90 dark:bg-zinc-900/90 backdrop-blur-md px-3 py-2 rounded-md shadow-lg flex items-center gap-2 border border-zinc-200/80 dark:border-zinc-700">
                 <Loader2 size={14} className="animate-spin text-[#FF6A00]" />
                 <span className="text-[11px] font-bold text-zinc-900 dark:text-zinc-100">
                   Smart Locating...
@@ -895,9 +901,8 @@ const MerchantSettingsForm = ({
           >
             <Plus
               size={14}
-              className={`transition-transform duration-300 ${
-                showMoreAddress ? "rotate-45" : ""
-              }`}
+              className={`transition-transform duration-300 ${showMoreAddress ? "rotate-45" : ""
+                }`}
             />
             {showMoreAddress ? "Hide additional details" : "Add landmark & business cluster"}
           </button>
@@ -943,10 +948,10 @@ const MerchantSettingsForm = ({
         ref={(el) => {
           if (sectionRefs?.current) sectionRefs.current["contact"] = el;
         }}
-        className="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200/80 dark:border-zinc-800 p-6 shadow-sm space-y-6 scroll-mt-24"
+        className="bg-white dark:bg-zinc-900 rounded-md border border-zinc-200/80 dark:border-zinc-800 p-6 shadow-sm space-y-6 scroll-mt-24"
       >
         <div className="border-b border-zinc-100 dark:border-zinc-800 pb-4 flex items-center gap-3">
-          <div className="w-10 h-10 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-500">
+          <div className="w-10 h-10 rounded-md bg-emerald-500/10 flex items-center justify-center text-emerald-500">
             <Phone size={20} />
           </div>
           <div>
@@ -989,10 +994,10 @@ const MerchantSettingsForm = ({
         ref={(el) => {
           if (sectionRefs?.current) sectionRefs.current["social"] = el;
         }}
-        className="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200/80 dark:border-zinc-800 p-6 shadow-sm space-y-6 scroll-mt-24"
+        className="bg-white dark:bg-zinc-900 rounded-md border border-zinc-200/80 dark:border-zinc-800 p-6 shadow-sm space-y-6 scroll-mt-24"
       >
         <div className="border-b border-zinc-100 dark:border-zinc-800 pb-4 flex items-center gap-3">
-          <div className="w-10 h-10 rounded-lg bg-pink-500/10 flex items-center justify-center text-pink-500">
+          <div className="w-10 h-10 rounded-md bg-pink-500/10 flex items-center justify-center text-pink-500">
             <Share2 size={20} />
           </div>
           <div>
@@ -1011,7 +1016,7 @@ const MerchantSettingsForm = ({
             return (
               <div
                 key={index}
-                className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 p-3 bg-zinc-50 dark:bg-zinc-800/50 rounded-xl border border-zinc-200/80 dark:border-zinc-700/80 animate-in fade-in duration-300 shadow-sm"
+                className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 p-3 bg-zinc-50 dark:bg-zinc-800/50 rounded-md border border-zinc-200/80 dark:border-zinc-700/80 animate-in fade-in duration-300 shadow-sm"
               >
                 <div className="w-full sm:w-48 shrink-0">
                   <Select
@@ -1033,13 +1038,13 @@ const MerchantSettingsForm = ({
                     value={link.url}
                     onChange={(e) => handleSocialLinkChange(index, "url", e.target.value)}
                     onBlur={(e) => handleSocialUrlBlur(index, e.target.value)}
-                    className="w-full h-9 pl-10 pr-4 bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-700 rounded-lg text-xs font-medium focus:outline-none focus:ring-1 focus:ring-[#FF6A00]/40 transition-all dark:text-zinc-100 shadow-sm"
+                    className="w-full h-9 pl-10 pr-4 bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-700 rounded-md text-xs font-medium focus:outline-none focus:ring-1 focus:ring-[#FF6A00]/40 transition-all dark:text-zinc-100 shadow-sm"
                   />
                 </div>
                 <button
                   type="button"
                   onClick={() => handleRemoveSocialLink(index)}
-                  className="w-full sm:w-9 h-9 bg-red-50 text-red-600 hover:bg-red-100 dark:bg-red-500/10 dark:text-red-400 dark:hover:bg-red-500/20 rounded-lg flex items-center justify-center transition-colors shrink-0 shadow-sm active:scale-95"
+                  className="w-full sm:w-9 h-9 bg-red-50 text-red-600 hover:bg-red-100 dark:bg-red-500/10 dark:text-red-400 dark:hover:bg-red-500/20 rounded-md flex items-center justify-center transition-colors shrink-0 shadow-sm active:scale-95"
                   title="Remove Link"
                 >
                   <Trash2 size={16} />
@@ -1051,7 +1056,7 @@ const MerchantSettingsForm = ({
           <button
             type="button"
             onClick={handleAddSocialLink}
-            className="w-full py-3 px-4 border-2 border-dashed border-zinc-200 hover:border-[#FF6A00]/40 dark:border-zinc-800 dark:hover:border-[#FF6A00]/40 rounded-xl flex items-center justify-center gap-2 text-xs font-bold text-zinc-500 hover:text-[#FF6A00] dark:text-zinc-400 dark:hover:text-[#FF6A00] transition-all bg-transparent hover:bg-[#FF6A00]/5 dark:hover:bg-[#FF6A00]/5 active:scale-[0.99]"
+            className="w-full py-3 px-4 border-2 border-dashed border-zinc-200 hover:border-[#FF6A00]/40 dark:border-zinc-800 dark:hover:border-[#FF6A00]/40 rounded-md flex items-center justify-center gap-2 text-xs font-bold text-zinc-500 hover:text-[#FF6A00] dark:text-zinc-400 dark:hover:text-[#FF6A00] transition-all bg-transparent hover:bg-[#FF6A00]/5 dark:hover:bg-[#FF6A00]/5 active:scale-[0.99]"
           >
             <Plus size={16} />
             Add Social Media Link
@@ -1064,10 +1069,10 @@ const MerchantSettingsForm = ({
         ref={(el) => {
           if (sectionRefs?.current) sectionRefs.current["seo"] = el;
         }}
-        className="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200/80 dark:border-zinc-800 p-6 shadow-sm space-y-6 scroll-mt-24"
+        className="bg-white dark:bg-zinc-900 rounded-md border border-zinc-200/80 dark:border-zinc-800 p-6 shadow-sm space-y-6 scroll-mt-24"
       >
         <div className="border-b border-zinc-100 dark:border-zinc-800 pb-4 flex items-center gap-3">
-          <div className="w-10 h-10 rounded-lg bg-purple-500/10 flex items-center justify-center text-purple-500">
+          <div className="w-10 h-10 rounded-md bg-purple-500/10 flex items-center justify-center text-purple-500">
             <Globe size={20} />
           </div>
           <div>
@@ -1081,7 +1086,7 @@ const MerchantSettingsForm = ({
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch">
-          <div className="p-4 bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200/80 dark:border-zinc-700/80 rounded-2xl space-y-3 shadow-sm flex flex-col justify-center">
+          <div className="p-4 bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200/80 dark:border-zinc-700/80 rounded-md space-y-3 shadow-sm flex flex-col justify-center">
             <div className="flex items-center gap-2 text-[11px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">
               <LinkIcon size={12} />
               Live SEO URL Preview
@@ -1096,7 +1101,7 @@ const MerchantSettingsForm = ({
             </div>
           </div>
 
-          <div className="p-4 bg-zinc-900 dark:bg-zinc-100 rounded-2xl space-y-3 shadow-sm flex flex-col justify-center">
+          <div className="p-4 bg-zinc-900 dark:bg-zinc-100 rounded-md space-y-3 shadow-sm flex flex-col justify-center">
             <div className="flex items-center gap-2 text-[11px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">
               <Eye size={12} />
               Marketplace Discovery
@@ -1115,7 +1120,7 @@ const MerchantSettingsForm = ({
       </div>
 
       {/* Save Action Bar */}
-      <div className="flex items-center justify-end gap-4 pt-4 sticky bottom-6 z-40 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-md p-4 rounded-2xl border border-zinc-200/80 dark:border-zinc-800 shadow-lg">
+      <div className="flex items-center justify-end gap-4 pt-4 sticky bottom-6 z-40 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-md p-4 rounded-md border border-zinc-200/80 dark:border-zinc-800 shadow-lg">
         <Button
           type="submit"
           variant="primary"

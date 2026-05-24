@@ -24,8 +24,10 @@ import {
   Linkedin
 } from "lucide-react";
 import Dialog from "../UI/Dialog";
+import ItemModal from "./ItemModal";
 import Link from "next/link";
 import Image from "next/image";
+import SafeImage from "../UI/SafeImage";
 import { incrementViews, incrementLeads } from "@/lib/shopUtils";
 import { submitShopRating, getShopRatings } from "@/lib/db";
 import { slugify } from "@/lib/slugify";
@@ -94,7 +96,12 @@ const ShopProfileClient = ({ shop, masterCategories = [] }) => {
     if (shop?.id && typeof window !== "undefined") {
       const savedCart = localStorage.getItem(`inquiry_cart_${shop.id}`);
       if (savedCart) {
-        try { setCart(JSON.parse(savedCart)); } catch (e) { }
+        try {
+          const parsed = JSON.parse(savedCart);
+          setTimeout(() => {
+            setCart(parsed);
+          }, 0);
+        } catch (e) { }
       }
     }
   }, [shop?.id]);
@@ -143,7 +150,10 @@ const ShopProfileClient = ({ shop, masterCategories = [] }) => {
       incrementViews(shop.id);
       if (typeof window !== "undefined") {
         const savedShops = JSON.parse(localStorage.getItem("saved_shops") || "[]");
-        setIsSaved(savedShops.includes(shop.id));
+        const status = savedShops.includes(shop.id);
+        setTimeout(() => {
+          setIsSaved(status);
+        }, 0);
       }
     }
   }, [shop?.id]);
@@ -175,19 +185,21 @@ const ShopProfileClient = ({ shop, masterCategories = [] }) => {
     }
   };
 
-  useEffect(() => {
-    if (activeTab === 'reviews' && reviews.length === 0) {
-      fetchReviews();
-    }
-  }, [activeTab]);
-
-  const fetchReviews = async () => {
+  const fetchReviews = React.useCallback(async () => {
     if (!shop?.id) return;
     setLoadingReviews(true);
     const data = await getShopRatings(shop.id);
     setReviews(data);
     setLoadingReviews(false);
-  };
+  }, [shop]);
+
+  useEffect(() => {
+    if (activeTab === 'reviews' && reviews.length === 0) {
+      setTimeout(() => {
+        fetchReviews();
+      }, 0);
+    }
+  }, [activeTab, reviews.length, fetchReviews]);
 
   const handleReviewSubmit = async (e) => {
     e.preventDefault();
@@ -287,14 +299,15 @@ const ShopProfileClient = ({ shop, masterCategories = [] }) => {
         <div className="absolute inset-0 dot-grid opacity-[0.08]" />
         {shop.coverImage ? (
           <div className={`absolute top-0 left-0 right-0 h-60 md:h-[350px] transition-opacity duration-500 ${showCompactHeader ? "opacity-25" : "opacity-100"}`}>
-            <Image
-              src={shop.coverImage.includes(" ") ? shop.coverImage.replace(/\s/g, "%20") : shop.coverImage}
+            <SafeImage
+              src={shop.coverImage}
               alt={shop.name}
               fill
               priority
               unoptimized
               className="object-cover opacity-80"
               sizes="100vw"
+              fallbackIcon={Store}
             />
             <div
               className="absolute inset-0"
@@ -308,7 +321,7 @@ const ShopProfileClient = ({ shop, masterCategories = [] }) => {
             className="absolute top-0 left-0 right-0 h-60 md:h-[350px] flex items-center justify-center"
             style={{ backgroundColor: shop.primaryColor || '#0A0A0F' }}
           >
-            <div className="w-20 h-20 md:w-24 md:h-24 rounded-2xl bg-white/[0.15] backdrop-blur-md border border-white/[0.2] flex items-center justify-center shadow-lg">
+            <div className="w-20 h-20 md:w-24 md:h-24 rounded-md bg-white/[0.15] backdrop-blur-md border border-white/[0.2] flex items-center justify-center shadow-lg">
               <Store size={40} className="text-white" />
             </div>
             <div
@@ -328,20 +341,15 @@ const ShopProfileClient = ({ shop, masterCategories = [] }) => {
         </button>
 
         <div className={`flex items-center gap-2.5 transition-all duration-300 min-w-0 ${showCompactHeader ? "opacity-100 translate-y-0 max-w-full" : "opacity-0 translate-y-2 pointer-events-none max-w-[210px]"}`}>
-          <div className="w-7 h-7 rounded-lg bg-white p-0.5 shadow-sm border border-black/[0.08] flex-shrink-0 relative overflow-hidden">
-            {shop.logo ? (
-              <Image
-                src={shop.logo.includes(" ") ? shop.logo.replace(/\s/g, "%20") : shop.logo}
-                alt={shop.name}
-                fill
-                unoptimized
-                className="object-cover rounded-md"
-              />
-            ) : (
-              <div className="w-full h-full rounded-md bg-gradient-to-br from-[#FF6A00] to-[#E65F00] flex items-center justify-center text-white text-[11px] font-bold">
-                {shop.name?.charAt(0)}
-              </div>
-            )}
+          <div className="w-7 h-7 rounded-md bg-white p-0.5 shadow-sm border border-black/[0.08] flex-shrink-0 relative overflow-hidden">
+            <SafeImage
+              src={shop.logo}
+              alt={shop.name}
+              fill
+              unoptimized
+              className="object-cover rounded-md"
+              fallbackIcon={Store}
+            />
           </div>
           <span className="text-[15px] font-bold text-[#0A0A0F] tracking-tight truncate">
             {shop.name}
@@ -375,7 +383,7 @@ const ShopProfileClient = ({ shop, masterCategories = [] }) => {
             <div className="lg:col-span-4 space-y-4 lg:sticky lg:top-6 lg:z-30 transition-all duration-300 self-start">
 
               {/* Desktop Navigation & Actions */}
-              <div className="hidden lg:flex items-center justify-between bg-white/80 backdrop-blur-md p-1.5 rounded-2xl border border-black/[0.06] shadow-sm">
+              <div className="hidden lg:flex items-center justify-between bg-white/80 backdrop-blur-md p-1.5 rounded-md border border-black/[0.06] shadow-sm">
                 <Button variant="ghost" size="sm" icon={ArrowLeft} onClick={() => router.back()} className="text-[#0A0A0F]/60 hover:text-[#0A0A0F] font-bold">Back</Button>
                 <div className="flex items-center gap-1">
                   <Button variant="ghost" size="sm" icon={Share2} onClick={handleShare} className="text-[#0A0A0F]/60 hover:text-[#0A0A0F] font-bold">Share</Button>
@@ -385,26 +393,19 @@ const ShopProfileClient = ({ shop, masterCategories = [] }) => {
                 </div>
               </div>
 
-              <Card className="p-4 md:p-6 shadow-2xl border border-black/[0.06] rounded-lg overflow-hidden bg-white">
+              <Card className="p-4 md:p-6 shadow-2xl border border-black/[0.06] rounded-md overflow-hidden bg-white">
                 {/* Header Info Row */}
                 <div className="flex items-center gap-3 md:gap-4 mb-4">
                   <div className="relative flex-shrink-0">
-                    <div className="w-16 h-16 md:w-20 md:h-20 rounded-2xl bg-white p-1 shadow-md border border-black/[0.06] relative overflow-hidden">
-                      {shop.logo ? (
-                        <div className="relative w-full h-full rounded-lg overflow-hidden">
-                          <Image
-                            src={shop.logo.includes(" ") ? shop.logo.replace(/\s/g, "%20") : shop.logo}
-                            alt={shop.name}
-                            fill
-                            unoptimized
-                            className="object-cover"
-                          />
-                        </div>
-                      ) : (
-                        <div className="w-full h-full rounded-lg bg-gradient-to-br from-[#FF6A00] to-[#E65F00] flex items-center justify-center text-white text-2xl font-bold">
-                          {shop.name?.charAt(0)}
-                        </div>
-                      )}
+                    <div className="w-16 h-16 md:w-20 md:h-20 rounded-md bg-white p-1 shadow-md border border-black/[0.06] relative overflow-hidden">
+                      <SafeImage
+                        src={shop.logo}
+                        alt={shop.name}
+                        fill
+                        unoptimized
+                        className="object-cover rounded-md"
+                        fallbackIcon={Store}
+                      />
                     </div>
                     {shop.isVerified && (
                       <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center shadow-lg border-2 border-white z-10" title="Verified Business">
@@ -426,7 +427,7 @@ const ShopProfileClient = ({ shop, masterCategories = [] }) => {
                 </div>
 
                 {/* Rating & Open Status */}
-                <div className="flex items-center justify-between gap-2 p-3 bg-black/[0.02] rounded-lg border border-black/[0.04] mb-5">
+                <div className="flex items-center justify-between gap-2 p-3 bg-black/[0.02] rounded-md border border-black/[0.04] mb-5">
                   <div className="flex items-center gap-1.5 min-w-0">
                     <StarIcon size={15} className="text-amber-500 flex-shrink-0" fill="currentColor" />
                     <span className="text-[14px] font-bold text-[#0A0A0F]">{avgRating}</span>
@@ -438,7 +439,7 @@ const ShopProfileClient = ({ shop, masterCategories = [] }) => {
                 {/* Quick Actions */}
                 <div className="flex gap-2 mb-5">
                   <Button variant="primary" className="flex-1 font-bold h-10 text-[13px]" icon={MessageSquare} onClick={handleGeneralWhatsApp}>WhatsApp</Button>
-                  <Button variant="dark" className="w-12 h-10 p-0 rounded-lg flex items-center justify-center" onClick={() => window.location.href = `tel:${shop.phone}`}>
+                  <Button variant="dark" className="w-12 h-10 p-0 rounded-md flex items-center justify-center" onClick={() => window.location.href = `tel:${shop.phone}`}>
                     <Phone size={16} />
                   </Button>
                 </div>
@@ -473,7 +474,7 @@ const ShopProfileClient = ({ shop, masterCategories = [] }) => {
                             href={link.url}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className={`w-9 h-9 rounded-lg border flex items-center justify-center transition-all shadow-sm bg-white dark:bg-zinc-900 ${config.color}`}
+                            className={`w-9 h-9 rounded-md border flex items-center justify-center transition-all shadow-sm bg-white dark:bg-zinc-900 ${config.color}`}
                             title={link.platform ? link.platform.charAt(0).toUpperCase() + link.platform.slice(1) : "Website"}
                           >
                             <Icon size={16} />
@@ -488,7 +489,7 @@ const ShopProfileClient = ({ shop, masterCategories = [] }) => {
                 <div className="pt-4 border-t border-black/[0.05] space-y-3">
                   <div className="flex items-center justify-between group cursor-pointer" onClick={() => window.open(`https://maps.google.com/?q=${encodeURIComponent(getFullAddress(shop))}`)}>
                     <div className="flex items-center gap-3 min-w-0">
-                      <div className="w-8 h-8 rounded-lg bg-black/[0.03] border border-black/[0.05] flex items-center justify-center text-[#0A0A0F]/30 group-hover:text-[#FF6A00] transition-colors flex-shrink-0">
+                      <div className="w-8 h-8 rounded-md bg-black/[0.03] border border-black/[0.05] flex items-center justify-center text-[#0A0A0F]/30 group-hover:text-[#FF6A00] transition-colors flex-shrink-0">
                         <Navigation size={14} />
                       </div>
                       <div className="min-w-0">
@@ -501,7 +502,7 @@ const ShopProfileClient = ({ shop, masterCategories = [] }) => {
 
                   <div className="flex items-center justify-between group cursor-pointer" onClick={() => window.location.href = `tel:${shop.phone}`}>
                     <div className="flex items-center gap-3 min-w-0">
-                      <div className="w-8 h-8 rounded-lg bg-black/[0.03] border border-black/[0.05] flex items-center justify-center text-[#0A0A0F]/30 group-hover:text-emerald-500 transition-colors flex-shrink-0">
+                      <div className="w-8 h-8 rounded-md bg-black/[0.03] border border-black/[0.05] flex items-center justify-center text-[#0A0A0F]/30 group-hover:text-emerald-500 transition-colors flex-shrink-0">
                         <Phone size={14} />
                       </div>
                       <div className="min-w-0">
@@ -515,7 +516,7 @@ const ShopProfileClient = ({ shop, masterCategories = [] }) => {
                   {(shop.ownerEmail || shop.email) && (
                     <div className="flex items-center justify-between group cursor-pointer" onClick={() => window.location.href = `mailto:${shop.ownerEmail || shop.email}`}>
                       <div className="flex items-center gap-3 min-w-0">
-                        <div className="w-8 h-8 rounded-lg bg-black/[0.03] border border-black/[0.05] flex items-center justify-center text-[#0A0A0F]/30 group-hover:text-blue-500 transition-colors flex-shrink-0">
+                        <div className="w-8 h-8 rounded-md bg-black/[0.03] border border-black/[0.05] flex items-center justify-center text-[#0A0A0F]/30 group-hover:text-blue-500 transition-colors flex-shrink-0">
                           <Mail size={14} />
                         </div>
                         <div className="min-w-0">
@@ -524,6 +525,20 @@ const ShopProfileClient = ({ shop, masterCategories = [] }) => {
                         </div>
                       </div>
                       <ChevronRight size={14} className="text-[#0A0A0F]/20 group-hover:translate-x-1 transition-transform flex-shrink-0" />
+                    </div>
+                  )}
+
+                  {shop.gst && (
+                    <div className="flex items-center justify-between group">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="w-8 h-8 rounded-md bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-100 dark:border-emerald-500/20 flex items-center justify-center text-emerald-500 flex-shrink-0">
+                          <ShieldCheck size={14} />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-[10px] font-bold text-[#0A0A0F]/30 uppercase tracking-[0.1em] mb-0.5">GSTIN / Tax ID</p>
+                          <p className="text-[12px] font-semibold text-[#0A0A0F]/70 truncate">{shop.gst}</p>
+                        </div>
+                      </div>
                     </div>
                   )}
                 </div>
@@ -540,7 +555,7 @@ const ShopProfileClient = ({ shop, masterCategories = [] }) => {
                     const hours = shop.openingHoursDetails?.[day];
                     const isToday = new Date().toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase() === day;
                     return (
-                      <div key={day} className={`flex items-center justify-between ${isToday ? "bg-[#FF6A00]/5 -mx-3 px-3 py-1.5 rounded-lg" : "py-0.5"}`}>
+                      <div key={day} className={`flex items-center justify-between ${isToday ? "bg-[#FF6A00]/5 -mx-3 px-3 py-1.5 rounded-md" : "py-0.5"}`}>
                         <span className={`text-[12px] capitalize font-medium ${isToday ? "text-[#FF6A00] font-bold" : "text-[#0A0A0F]/50"}`}>{day}</span>
                         <span className={`text-[12px] font-semibold ${isToday ? "text-[#FF6A00]" : "text-[#0A0A0F]/80"}`}>
                           {hours && !hours.isClosed ? `${hours.open} - ${hours.close}` : "Closed"}
@@ -556,7 +571,7 @@ const ShopProfileClient = ({ shop, masterCategories = [] }) => {
             <div className="lg:col-span-8 space-y-6">
 
               {/* Desktop Tabs */}
-              <div className="bg-white p-1 rounded-lg border border-black/[0.05] flex gap-1 shadow-sm overflow-x-auto scrollbar-hide">
+              <div className="bg-white p-1 rounded-md border border-black/[0.05] flex gap-1 shadow-sm overflow-x-auto scrollbar-hide">
                 {[
                   { id: "products", label: "Catalog", icon: ShoppingBag },
                   { id: "gallery", label: "Gallery", icon: ImageIcon },
@@ -566,7 +581,7 @@ const ShopProfileClient = ({ shop, masterCategories = [] }) => {
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
-                    className={`flex items-center justify-center gap-2 px-6 py-2 rounded-lg text-[13px] font-bold transition-all whitespace-nowrap flex-1 ${activeTab === tab.id
+                    className={`flex items-center justify-center gap-2 px-6 py-2 rounded-md text-[13px] font-bold transition-all whitespace-nowrap flex-1 ${activeTab === tab.id
                       ? "bg-[#0A0A0F] text-white"
                       : "text-[#0A0A0F]/45 hover:bg-black/[0.04] hover:text-[#0A0A0F]"
                       }`}
@@ -589,12 +604,12 @@ const ShopProfileClient = ({ shop, masterCategories = [] }) => {
                         placeholder="Search items..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        className="w-full h-10 pl-9 pr-4 rounded-lg bg-white border border-black/[0.05] text-[13px] font-medium outline-none focus:border-[#FF6A00]/40 transition-all"
+                        className="w-full h-10 pl-9 pr-4 rounded-md bg-white border border-black/[0.05] text-[13px] font-medium outline-none focus:border-[#FF6A00]/40 transition-all"
                       />
                     </div>
                     <button
                       onClick={() => setViewMode(viewMode === "vertical" ? "grid" : "vertical")}
-                      className="w-10 h-10 rounded-lg bg-white border border-black/[0.08] flex items-center justify-center text-[#0A0A0F]/60 hover:text-[#0A0A0F] hover:bg-black/[0.04] transition-all shadow-sm flex-shrink-0"
+                      className="w-10 h-10 rounded-md bg-white border border-black/[0.08] flex items-center justify-center text-[#0A0A0F]/60 hover:text-[#0A0A0F] hover:bg-black/[0.04] transition-all shadow-sm flex-shrink-0"
                       title={viewMode === "vertical" ? "Switch to Grid View" : "Switch to Vertical List View"}
                     >
                       {viewMode === "vertical" ? <LayoutGrid size={15} /> : <List size={15} />}
@@ -616,13 +631,13 @@ const ShopProfileClient = ({ shop, masterCategories = [] }) => {
                             <h3 className="text-[18px] font-bold text-[#0A0A0F] tracking-tight truncate">
                               Featured Offerings
                             </h3>
-                            <span className="text-[11px] font-bold bg-[#FF6A00]/10 text-[#FF6A00] px-2.5 py-0.5 rounded-lg uppercase tracking-wider border border-[#FF6A00]/20">
+                            <span className="text-[11px] font-bold bg-[#FF6A00]/10 text-[#FF6A00] px-2.5 py-0.5 rounded-md uppercase tracking-wider border border-[#FF6A00]/20">
                               {featuredItems.length} {featuredItems.length === 1 ? 'Item' : 'Items'}
                             </span>
                           </div>
                           <p className="text-[12px] text-[#0A0A0F]/45 font-medium truncate">Handpicked premium products & services</p>
                         </div>
-                        <Link href={`/shop/${shop.slug}/catalog`} className="h-9 px-4 bg-[#0A0A0F] text-white rounded-xl font-bold text-[12px] flex items-center gap-1.5 shadow-md hover:bg-black/80 active:scale-[0.99] transition-all flex-shrink-0 whitespace-nowrap group">
+                        <Link href={`/shop/${shop.slug}/catalog`} className="h-9 px-4 bg-[#0A0A0F] text-white rounded-md font-bold text-[12px] flex items-center gap-1.5 shadow-md hover:bg-black/80 active:scale-[0.99] transition-all flex-shrink-0 whitespace-nowrap group">
                           <span>Full Catalog ({allItems.length})</span>
                           <ArrowRight size={14} className="group-hover:translate-x-0.5 transition-transform" />
                         </Link>
@@ -649,17 +664,17 @@ const ShopProfileClient = ({ shop, masterCategories = [] }) => {
                         </div>
                       ))}
                       <div className="pt-6 border-t border-black/[0.05]">
-                        <Link href={`/shop/${shop.slug}/catalog`} className="w-full py-3.5 px-4 bg-[#0A0A0F] text-white rounded-xl font-bold text-[14px] flex items-center justify-center gap-2 shadow-lg hover:bg-black/90 active:scale-[0.99] transition-all group">
+                        <Link href={`/shop/${shop.slug}/catalog`} className="w-full py-3.5 px-4 bg-[#0A0A0F] text-white rounded-md font-bold text-[14px] flex items-center justify-center gap-2 shadow-lg hover:bg-black/90 active:scale-[0.99] transition-all group">
                           <span>Explore Full Catalog ({allItems.length} Items)</span>
                           <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
                         </Link>
                       </div>
                     </div>
                   ) : (
-                    <div className="py-24 text-center bg-white rounded-lg border border-dashed border-black/[0.1]">
+                    <div className="py-24 text-center bg-white rounded-md border border-dashed border-black/[0.1]">
                       <ShoppingBag size={48} className="mx-auto text-[#0A0A0F]/10 mb-4" />
                       <h3 className="text-[15px] font-bold text-[#0A0A0F] mb-1">Catalogue is empty</h3>
-                      <p className="text-[13px] text-[#0A0A0F]/40 font-medium">This shop hasn't listed any products yet.</p>
+                      <p className="text-[13px] text-[#0A0A0F]/40 font-medium">This shop hasn&apos;t listed any products yet.</p>
                     </div>
                   )}
                 </div>
@@ -670,15 +685,22 @@ const ShopProfileClient = ({ shop, masterCategories = [] }) => {
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                   {shop.gallery && shop.gallery.length > 0 ? (
                     shop.gallery.map((img, idx) => (
-                      <div key={idx} className="aspect-square rounded-lg overflow-hidden border border-black/[0.05] relative group cursor-pointer" onClick={() => setSelectedGalleryIndex(idx)}>
-                        <Image src={img.includes(" ") ? img.replace(/\s/g, "%20") : img} alt="g" fill unoptimized className="object-cover group-hover:scale-110 transition-transform duration-500" />
+                      <div key={idx} className="aspect-square rounded-md overflow-hidden border border-black/[0.05] relative group cursor-pointer" onClick={() => setSelectedGalleryIndex(idx)}>
+                        <SafeImage
+                          src={img}
+                          alt="g"
+                          fill
+                          unoptimized
+                          className="object-cover group-hover:scale-110 transition-transform duration-500"
+                          fallbackIcon={ImageIcon}
+                        />
                         <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                           <Eye size={20} className="text-white" />
                         </div>
                       </div>
                     ))
                   ) : (
-                    <div className="col-span-full py-24 text-center bg-white rounded-lg border border-dashed border-black/[0.1]">
+                    <div className="col-span-full py-24 text-center bg-white rounded-md border border-dashed border-black/[0.1]">
                       <ImageIcon size={48} className="mx-auto text-[#0A0A0F]/10 mb-4" />
                       <p className="text-[13px] text-[#0A0A0F]/40 font-medium">No gallery images available.</p>
                     </div>
@@ -725,7 +747,7 @@ const ShopProfileClient = ({ shop, masterCategories = [] }) => {
                               {[1, 2, 3, 4, 5].map(s => <StarIcon key={s} size={10} fill={s <= review.rating ? "currentColor" : "none"} />)}
                             </div>
                           </div>
-                          <p className="text-[13px] text-[#0A0A0F]/60 font-medium leading-relaxed italic">"{review.comment}"</p>
+                          <p className="text-[13px] text-[#0A0A0F]/60 font-medium leading-relaxed italic">&ldquo;{review.comment}&rdquo;</p>
                         </Card>
                       ))}
                     </div>
@@ -744,8 +766,8 @@ const ShopProfileClient = ({ shop, masterCategories = [] }) => {
                   <Card className="p-6 space-y-6">
                     <div>
                       <h3 className="text-[15px] font-bold text-[#0A0A0F] mb-4">Verification Status</h3>
-                      <div className={`p-4 rounded-lg border flex items-center gap-4 ${shop.isVerified ? "bg-blue-500/[0.03] border-blue-500/10" : "bg-zinc-50 border-black/[0.05]"}`}>
-                        <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${shop.isVerified ? "bg-blue-500/10 text-blue-500" : "bg-zinc-200 text-zinc-500"}`}>
+                      <div className={`p-4 rounded-md border flex items-center gap-4 ${shop.isVerified ? "bg-blue-500/[0.03] border-blue-500/10" : "bg-zinc-50 border-black/[0.05]"}`}>
+                        <div className={`w-10 h-10 rounded-md flex items-center justify-center ${shop.isVerified ? "bg-blue-500/10 text-blue-500" : "bg-zinc-200 text-zinc-500"}`}>
                           <ShieldCheck size={20} />
                         </div>
                         <div>
@@ -811,7 +833,7 @@ const ShopProfileClient = ({ shop, masterCategories = [] }) => {
                   key={star}
                   type="button"
                   onClick={() => setReviewForm({ ...reviewForm, rating: star })}
-                  className={`p-1.5 rounded-lg transition-all ${reviewForm.rating >= star ? "text-amber-500 scale-110" : "text-[#0A0A0F]/10 hover:text-[#0A0A0F]/20"}`}
+                  className={`p-1.5 rounded-md transition-all ${reviewForm.rating >= star ? "text-amber-500 scale-110" : "text-[#0A0A0F]/10 hover:text-[#0A0A0F]/20"}`}
                 >
                   <StarIcon size={28} fill={reviewForm.rating >= star ? "currentColor" : "none"} />
                 </button>
@@ -828,7 +850,7 @@ const ShopProfileClient = ({ shop, masterCategories = [] }) => {
                 placeholder="e.g., Alex Rivers"
                 value={reviewForm.name}
                 onChange={(e) => setReviewForm({ ...reviewForm, name: e.target.value })}
-                className="w-full h-11 px-4 rounded-lg bg-black/[0.03] border border-black/[0.05] text-[14px] font-medium outline-none focus:border-[#FF6A00]/40 transition-all"
+                className="w-full h-11 px-4 rounded-md bg-black/[0.03] border border-black/[0.05] text-[14px] font-medium outline-none focus:border-[#FF6A00]/40 transition-all"
               />
             </div>
             <div className="space-y-1.5">
@@ -839,7 +861,7 @@ const ShopProfileClient = ({ shop, masterCategories = [] }) => {
                 placeholder="How was your experience?"
                 value={reviewForm.comment}
                 onChange={(e) => setReviewForm({ ...reviewForm, comment: e.target.value })}
-                className="w-full p-4 rounded-lg bg-black/[0.03] border border-black/[0.05] text-[14px] font-medium outline-none focus:border-[#FF6A00]/40 transition-all resize-none"
+                className="w-full p-4 rounded-md bg-black/[0.03] border border-black/[0.05] text-[14px] font-medium outline-none focus:border-[#FF6A00]/40 transition-all resize-none"
               />
             </div>
           </div>
@@ -858,7 +880,7 @@ const ShopProfileClient = ({ shop, masterCategories = [] }) => {
         maxWidth="max-w-[340px]"
       >
         <div className="flex flex-col items-center gap-6 py-4">
-          <div className="p-4 bg-white rounded-lg border border-black/[0.08] shadow-xl relative">
+          <div className="p-4 bg-white rounded-md border border-black/[0.08] shadow-xl relative">
             <div className="w-40 h-40 flex items-center justify-center">
               <img
                 src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(`${DOMAIN}/shop/${shop.slug}`)}&color=0A0A0F&bgcolor=FFFFFF`}
@@ -872,7 +894,7 @@ const ShopProfileClient = ({ shop, masterCategories = [] }) => {
           </div>
 
           <div className="w-full space-y-4">
-            <div className="p-3 rounded-lg bg-black/[0.03] border border-black/[0.05] flex items-center justify-between gap-3">
+            <div className="p-3 rounded-md bg-black/[0.03] border border-black/[0.05] flex items-center justify-between gap-3">
               <span className="text-[11px] font-semibold text-[#0A0A0F]/40 truncate flex-1">{`${DOMAIN}/shop/${shop.slug}`}</span>
               <button onClick={copyToClipboard} className="p-1.5 rounded-md hover:bg-black/[0.05] text-[#0A0A0F]/40 hover:text-[#FF6A00] transition-all">
                 <Copy size={14} />
@@ -909,15 +931,16 @@ const ShopProfileClient = ({ shop, masterCategories = [] }) => {
 
           {/* Main Image Container */}
           <div
-            className="relative w-full max-w-4xl max-h-[85vh] aspect-[4/3] rounded-2xl overflow-hidden shadow-2xl animate-in zoom-in-95 duration-300"
+            className="relative w-full max-w-4xl max-h-[85vh] aspect-[4/3] rounded-md overflow-hidden shadow-2xl animate-in zoom-in-95 duration-300"
             onClick={(e) => e.stopPropagation()}
           >
-            <Image
-              src={shop.gallery[selectedGalleryIndex].includes(" ") ? shop.gallery[selectedGalleryIndex].replace(/\s/g, "%20") : shop.gallery[selectedGalleryIndex]}
+            <SafeImage
+              src={shop.gallery[selectedGalleryIndex]}
               alt={`Gallery image ${selectedGalleryIndex + 1}`}
               fill
               unoptimized
               className="object-contain"
+              fallbackIcon={ImageIcon}
             />
 
             {/* Navigation Buttons */}
@@ -949,80 +972,21 @@ const ShopProfileClient = ({ shop, masterCategories = [] }) => {
         </div>
       )}
 
-      <Dialog
+      <ItemModal
+        item={selectedItem}
         isOpen={!!selectedItem}
         onClose={() => setSelectedItem(null)}
-        showHeader={false}
-        maxWidth="max-w-[420px]"
-      >
-        {selectedItem && (
-          <div className="flex flex-col gap-6 py-2 relative">
-            <button
-              onClick={() => setSelectedItem(null)}
-              className="absolute top-2 right-2 z-20 w-8 h-8 rounded-full bg-white/80 backdrop-blur-md flex items-center justify-center text-[#0A0A0F]/60 hover:text-[#0A0A0F] hover:bg-white shadow-lg transition-all"
-              aria-label="Close"
-            >
-              <X size={16} />
-            </button>
-            <div className="w-full aspect-video rounded-lg bg-zinc-50 border border-black/[0.05] overflow-hidden relative shadow-inner">
-              {selectedItem.image ? (
-                <Image src={selectedItem.image.includes(" ") ? selectedItem.image.replace(/\s/g, "%20") : selectedItem.image} alt={selectedItem.name} fill unoptimized className="object-cover" />
-              ) : (
-                <div className="w-full h-full flex flex-col items-center justify-center text-zinc-300 gap-2 bg-[#FAFAF8]">
-                  <ShoppingBag size={40} className="text-zinc-300" />
-                  <span className="text-[12px] font-medium text-zinc-400">No image available</span>
-                </div>
-              )}
-              {/* Overlay Badges Attached Flush to Corner */}
-              <div className="absolute top-0 left-0 z-10 flex items-center shadow-md rounded-br-xl overflow-hidden border-b border-r border-black/[0.1]">
-                {selectedItem.featured && (
-                  <span className="text-[10px] font-black bg-[#FF6A00] text-white px-3 py-1 uppercase tracking-wider flex items-center gap-1">Featured</span>
-                )}
-              </div>
-            </div>
-
-            <div className="space-y-4">
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <h3 className="text-[18px] font-bold text-[#0A0A0F] tracking-tight mb-1">{selectedItem.name}</h3>
-                  <p className="text-[12px] font-bold text-[#FF6A00] bg-[#FF6A00]/10 inline-block px-2 py-0.5 rounded-md">
-                    {selectedItem.price ? `₹${selectedItem.price}` : "Price on Enquiry"}
-                  </p>
-                </div>
-              </div>
-
-              <div className="pt-3 border-t border-black/[0.05]">
-                <h4 className="text-[11px] font-bold text-[#0A0A0F]/30 uppercase tracking-widest mb-1.5">Description</h4>
-                <p className="text-[13px] text-[#0A0A0F]/70 font-medium leading-relaxed whitespace-pre-line">
-                  {selectedItem.description || "Premium quality offering from our catalog. Contact us for more details, custom orders, or availability."}
-                </p>
-              </div>
-
-              <div className="pt-3 border-t border-black/[0.05]">
-                <Button
-                  variant="primary"
-                  size="lg"
-                  className="w-full font-bold shadow-md shadow-[#FF6A00]/20 text-[13px] h-10"
-                  icon={ShoppingBag}
-                  onClick={() => {
-                    handleUpdateCart(selectedItem, (cart.find(i => i.name === selectedItem.name)?.quantity || 0) + 1);
-                    setSelectedItem(null);
-                  }}
-                >
-                  Add to Inquiry Cart
-                </Button>
-              </div>
-            </div>
-          </div>
-        )}
-      </Dialog>
+        cart={cart}
+        onUpdateCart={handleUpdateCart}
+        isAddToCartEnabled={true}
+      />
 
       {/* ── FLOATING CART BAR ── */}
       {cart.length > 0 && (
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 w-full max-w-lg px-4 animate-fade-in">
-          <div className="bg-[#0A0A0F] text-white px-4 py-3 rounded-2xl shadow-2xl flex items-center justify-between gap-4 border border-white/10 backdrop-blur-md bg-[#0A0A0F]/95">
+          <div className="bg-[#0A0A0F] text-white px-4 py-3 rounded-md shadow-2xl flex items-center justify-between gap-4 border border-white/10 backdrop-blur-md bg-[#0A0A0F]/95">
             <div className="flex items-center gap-3 min-w-0">
-              <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center text-[#FF6A00] relative flex-shrink-0">
+              <div className="w-10 h-10 rounded-md bg-white/10 flex items-center justify-center text-[#FF6A00] relative flex-shrink-0">
                 <ShoppingBag size={20} />
                 <span className="absolute -top-1 -right-1 bg-[#FF6A00] text-white text-[10px] font-black w-5 h-5 rounded-full flex items-center justify-center shadow">
                   {cart.reduce((sum, i) => sum + i.quantity, 0)}
@@ -1040,7 +1004,7 @@ const ShopProfileClient = ({ shop, masterCategories = [] }) => {
             <div className="flex items-center gap-2 flex-shrink-0">
               <button
                 onClick={() => setIsCartOpen(true)}
-                className="h-9 px-4 rounded-xl bg-[#FF6A00] hover:bg-[#FF6A00]/90 text-white text-[13px] font-bold transition-all shadow-lg shadow-[#FF6A00]/20 flex items-center gap-2 whitespace-nowrap"
+                className="h-9 px-4 rounded-md bg-[#FF6A00] hover:bg-[#FF6A00]/90 text-white text-[13px] font-bold transition-all shadow-lg shadow-[#FF6A00]/20 flex items-center gap-2 whitespace-nowrap"
               >
                 <span>View Cart</span>
                 <ArrowRight size={14} />
@@ -1077,16 +1041,18 @@ const ShopProfileClient = ({ shop, masterCategories = [] }) => {
               </div>
               <div className="space-y-2.5">
                 {cart.map((item, idx) => (
-                  <div key={idx} className="flex items-center justify-between gap-3 p-2 rounded-xl bg-black/[0.02] border border-black/[0.05]">
+                  <div key={idx} className="flex items-center justify-between gap-3 p-2 rounded-md bg-black/[0.02] border border-black/[0.05]">
                     <div className="flex items-center gap-2.5 min-w-0">
-                      <div className="w-10 h-10 rounded-lg bg-white border border-black/[0.05] overflow-hidden relative flex-shrink-0">
-                        {item.image ? (
-                          <Image src={item.image.includes(" ") ? item.image.replace(/\s/g, "%20") : item.image} alt={item.name} fill unoptimized className="object-cover" />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center text-zinc-300 bg-white">
-                            <ShoppingBag size={16} />
-                          </div>
-                        )}
+                      <div className="w-10 h-10 rounded-md bg-white border border-black/[0.05] overflow-hidden relative flex-shrink-0">
+                        <SafeImage
+                          src={item.image}
+                          alt={item.name}
+                          fill
+                          unoptimized
+                          className="object-cover"
+                          fallbackIcon={ShoppingBag}
+                          iconSize={16}
+                        />
                       </div>
                       <div className="min-w-0">
                         <h5 className="text-[13px] font-bold text-[#0A0A0F] truncate">{item.name}</h5>
@@ -1095,7 +1061,7 @@ const ShopProfileClient = ({ shop, masterCategories = [] }) => {
                         </span>
                       </div>
                     </div>
-                    <div className="flex items-center bg-white border border-black/[0.1] rounded-lg shadow-2xs overflow-hidden h-7 flex-shrink-0">
+                    <div className="flex items-center bg-white border border-black/[0.1] rounded-md shadow-2xs overflow-hidden h-7 flex-shrink-0">
                       <button onClick={() => handleUpdateCart(item, item.quantity - 1)} className="w-7 h-full flex items-center justify-center text-[#0A0A0F]/60 hover:bg-black/[0.04] transition-colors">
                         <Minus size={12} />
                       </button>
@@ -1140,26 +1106,19 @@ const ShopProfileClient = ({ shop, masterCategories = [] }) => {
 /* ── SUB-COMPONENTS ────────────────────────────────────────── */
 
 const ProductCard = ({ item, onOrder, onView, viewType = "image", viewMode = "vertical", cartItem, onUpdateCart }) => {
-  const [imageError, setImageError] = React.useState(false);
-
   return (
-    <Card padding={false} className={`group bg-white border border-black/[0.06] hover:border-black/[0.15] hover:shadow-md transition-all duration-300 rounded-2xl relative overflow-hidden flex ${viewMode === 'grid' ? 'flex-col items-stretch' : 'items-stretch'}`}>
+    <Card padding={false} className={`group bg-white border border-black/[0.06] hover:border-black/[0.15] hover:shadow-md transition-all duration-300 rounded-md relative overflow-hidden flex ${viewMode === 'grid' ? 'flex-col items-stretch' : 'items-stretch'}`}>
       {viewType !== "text" && (
         <div className={`${viewMode === 'grid' ? 'w-full aspect-square border-b' : viewType === 'mini' ? 'w-16 self-stretch border-r' : 'w-24 sm:w-32 self-stretch border-r'} bg-zinc-50 border-black/[0.05] overflow-hidden flex-shrink-0 relative cursor-pointer group-hover:border-black/[0.1] transition-all`} onClick={() => onView?.(item)}>
-          {item.image && !imageError ? (
-            <Image
-              src={item.image.includes(" ") ? item.image.replace(/\s/g, "%20") : item.image}
-              alt={item.name}
-              fill
-              unoptimized
-              onError={() => setImageError(true)}
-              className="object-cover group-hover:scale-105 transition-transform duration-500"
-            />
-          ) : (
-            <div className="w-full h-full flex items-center justify-center text-zinc-300 bg-[#FAFAF8] absolute inset-0">
-              <ShoppingBag size={viewType === 'mini' ? 18 : 24} className="text-zinc-300" />
-            </div>
-          )}
+          <SafeImage
+            src={item.image}
+            alt={item.name}
+            fill
+            unoptimized
+            className="object-cover group-hover:scale-105 transition-transform duration-500"
+            fallbackIcon={ShoppingBag}
+            iconSize={viewType === 'mini' ? 18 : 24}
+          />
           {/* Overlay Badges Attached Flush to Corner */}
           <div className="absolute top-0 left-0 z-10 flex items-center">
             {item.featured && (
@@ -1173,7 +1132,24 @@ const ProductCard = ({ item, onOrder, onView, viewType = "image", viewMode = "ve
           <div className="flex items-center gap-1.5 mb-1 flex-wrap">
             <h4 className="text-[13px] sm:text-[15px] font-bold text-[#0A0A0F] truncate tracking-tight cursor-pointer group-hover:text-[#FF6A00] transition-colors" onClick={() => onView?.(item)}>{item.name}</h4>
           </div>
-          <p className={`text-[11px] sm:text-[12px] text-[#0A0A0F]/60 font-medium mb-2 sm:mb-3 ${viewMode === 'grid' ? 'line-clamp-2' : 'line-clamp-1'} cursor-pointer leading-snug`} onClick={() => onView?.(item)}>{item.description || "Premium quality product."}</p>
+          <p className={`text-[11px] sm:text-[12px] text-[#0A0A0F]/60 font-medium mb-1.5 sm:mb-2 ${viewMode === 'grid' ? 'line-clamp-2' : 'line-clamp-1'} cursor-pointer leading-snug`} onClick={() => onView?.(item)}>{item.description || "Premium quality product."}</p>
+          {/* Stock Badge — only shown when stock is tracked */}
+          {typeof item.stock === 'number' && (
+            item.stock <= 0 ? (
+              <span className="inline-flex items-center gap-1 text-[9px] font-bold text-rose-600 bg-rose-50 border border-rose-100 px-1.5 py-0.5 rounded-md mb-1.5 uppercase tracking-wide">
+                Out of stock
+              </span>
+            ) : item.stock <= 5 ? (
+              <span className="inline-flex items-center gap-1 text-[9px] font-bold text-amber-600 bg-amber-50 border border-amber-100 px-1.5 py-0.5 rounded-md mb-1.5 uppercase tracking-wide">
+                <span className="w-1 h-1 rounded-full bg-amber-500 animate-pulse inline-block" />
+                {item.stock} left
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1 text-[9px] font-bold text-zinc-500 bg-zinc-50 border border-zinc-100 px-1.5 py-0.5 rounded-md mb-1.5 uppercase tracking-wide">
+                {item.stock} in stock
+              </span>
+            )
+          )}
         </div>
         <div className="flex items-center justify-between gap-1.5 sm:gap-2 pt-2 border-t border-black/[0.04]">
           <div className="min-w-0">
@@ -1184,7 +1160,7 @@ const ProductCard = ({ item, onOrder, onView, viewType = "image", viewMode = "ve
           </div>
           <div className="flex items-center gap-1 sm:gap-1.5 flex-shrink-0">
             {cartItem ? (
-              <div className="flex items-center bg-[#FF6A00] text-white rounded-xl shadow-sm overflow-hidden h-7 sm:h-8 border border-[#FF6A00]">
+              <div className="flex items-center bg-[#FF6A00] text-white rounded-md shadow-sm overflow-hidden h-7 sm:h-8 border border-[#FF6A00]">
                 <button onClick={() => onUpdateCart(item, cartItem.quantity - 1)} className="w-7 sm:w-8 h-full flex items-center justify-center hover:bg-black/20 transition-colors">
                   <Minus size={12} className="sm:w-3.5 sm:h-3.5" />
                 </button>
@@ -1196,7 +1172,7 @@ const ProductCard = ({ item, onOrder, onView, viewType = "image", viewMode = "ve
             ) : (
               <button
                 onClick={() => onUpdateCart ? onUpdateCart(item, 1) : onOrder(item)}
-                className="h-7 px-2.5 sm:h-8 sm:px-3.5 rounded-xl bg-[#FF6A00]/10 border border-[#FF6A00]/20 flex items-center gap-1 sm:gap-1.5 text-[#FF6A00] hover:bg-[#FF6A00] hover:text-white transition-all shadow-2xs text-[11px] sm:text-[12px] font-bold"
+                className="h-7 px-2.5 sm:h-8 sm:px-3.5 rounded-md bg-[#FF6A00]/10 border border-[#FF6A00]/20 flex items-center gap-1 sm:gap-1.5 text-[#FF6A00] hover:bg-[#FF6A00] hover:text-white transition-all shadow-2xs text-[11px] sm:text-[12px] font-bold"
                 title="Add to Inquiry Cart"
               >
                 <Plus size={13} className="sm:w-3.5 sm:h-3.5" />

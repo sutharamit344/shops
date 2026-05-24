@@ -102,13 +102,13 @@ export default function Home() {
       {/* ── HERO SECTION (CLEAN CLOUD STYLE) ─────────────────────────── */}
       <section className="relative pt-[100px] pb-16 lg:pt-[120px] lg:pb-24 overflow-hidden bg-[#0A0A0F]">
         <div className="absolute inset-0 dot-grid opacity-[0.15]" />
-        
+
         {/* Subtle Ambient Glow — top-right only */}
         <div className="absolute top-0 right-0 w-[50%] h-[50%] bg-[#FF6A00]/8 rounded-full blur-[120px] -mr-[10%] -mt-[10%] pointer-events-none" />
 
         <div className="max-w-5xl mx-auto px-4 md:px-6 relative z-10">
           <div className="flex flex-col items-center gap-12 lg:gap-16">
-            
+
             {/* Top Content */}
             <div className="w-full space-y-8 text-center max-w-3xl mx-auto">
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-white/5 border border-white/10 animate-in fade-in duration-500">
@@ -130,7 +130,7 @@ export default function Home() {
 
               {/* Search Integration */}
               <div className="max-w-xl mx-auto relative z-30 animate-in fade-in slide-in-from-bottom-8 duration-1000">
-                <div className="p-1 rounded-lg bg-white/[0.03] border border-white/[0.08] shadow-2xl">
+                <div className="p-1 rounded-md bg-white/[0.03] border border-white/[0.08] shadow-2xl">
                   <SmartSearch onFocusStateChange={setSearchFocused} />
                 </div>
               </div>
@@ -201,9 +201,9 @@ export default function Home() {
             ].map((feature, idx) => (
               <div
                 key={idx}
-                className="group p-5 rounded-2xl bg-white border border-black/[0.05] hover:border-black/[0.1] transition-all duration-300 hover:shadow-sm"
+                className="group p-5 rounded-md bg-white border border-black/[0.05] hover:border-black/[0.1] transition-all duration-300 hover:shadow-sm"
               >
-                <div className={`w-9 h-9 rounded-lg ${feature.color} flex items-center justify-center mb-3.5 group-hover:scale-105 transition-transform`}>
+                <div className={`w-9 h-9 rounded-md ${feature.color} flex items-center justify-center mb-3.5 group-hover:scale-105 transition-transform`}>
                   <feature.icon size={16} />
                 </div>
                 <h3 className="text-[14px] font-bold text-[#0A0A0F] mb-1.5 tracking-tight">
@@ -243,10 +243,10 @@ export default function Home() {
 
       {/* ── FINAL CTA ────────────────────────────────── */}
       <section className="py-12 px-4 md:px-6 bg-[#F7F7F5]">
-        <div className="max-w-5xl mx-auto rounded-2xl bg-[#0A0A0F] p-8 md:p-12 text-center relative overflow-hidden">
+        <div className="max-w-5xl mx-auto rounded-md bg-[#0A0A0F] p-8 md:p-12 text-center relative overflow-hidden">
           <div className="absolute inset-0 dot-grid opacity-[0.1]" />
           <div className="absolute top-0 right-0 w-[50%] h-[50%] bg-[#FF6A00]/8 rounded-full blur-[100px] pointer-events-none" />
-          
+
           <div className="relative z-10 space-y-5">
             <div className="space-y-2.5">
               <h2 className="text-[26px] md:text-[38px] font-bold text-white tracking-tight leading-tight">
@@ -254,7 +254,7 @@ export default function Home() {
                 <span className="text-gradient">with intelligence.</span>
               </h2>
               <p className="text-[13px] text-white/40 max-w-lg mx-auto font-medium leading-relaxed">
-                Join the network of top-tier local businesses. 
+                Join the network of top-tier local businesses.
                 Start building your professional digital presence today.
               </p>
             </div>

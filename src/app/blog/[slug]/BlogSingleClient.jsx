@@ -3,8 +3,8 @@
 import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { 
-  Clock, 
+import {
+  Clock,
   ArrowLeft,
   Copy,
   CheckCircle2,
@@ -84,15 +84,15 @@ const BlogSingleClient = ({ blog }) => {
   return (
     <div className="min-h-screen bg-white">
       <Navbar />
-      
+
       {/* Reading Progress Bar */}
       <div className="fixed top-0 left-0 w-full h-[3px] bg-black/5 z-[100]">
-        <div 
+        <div
           className="h-full bg-[#FF6A00]"
           style={{ width: `${readingProgress}%` }}
         />
       </div>
-      
+
       <main className="pt-28 md:pt-32 pb-16 md:pb-20">
         {/* Article Header Section */}
         <header className="max-w-4xl mx-auto px-5 md:px-6 mb-8 md:mb-16">
@@ -125,15 +125,15 @@ const BlogSingleClient = ({ blog }) => {
             </div>
 
             <div className="flex items-center gap-2 md:gap-3">
-               <button onClick={copyToClipboard} className="w-9 h-9 md:w-10 md:h-10 rounded-full bg-[#FAFAF8] border border-black/5 flex items-center justify-center text-[#0A0A0F]/60 hover:bg-[#0A0A0F] hover:text-white transition-all">
-                 {copied ? <CheckCircle2 size={16} className="text-emerald-500" /> : <Copy size={16} />}
-               </button>
-               <button className="w-9 h-9 md:w-10 md:h-10 rounded-full bg-[#FAFAF8] border border-black/5 flex items-center justify-center text-[#0A0A0F]/60 hover:bg-[#1877F2] hover:text-white transition-all">
-                 <FacebookIcon size={16} />
-               </button>
-               <button className="w-9 h-9 md:w-10 md:h-10 rounded-full bg-[#FAFAF8] border border-black/5 flex items-center justify-center text-[#0A0A0F]/60 hover:bg-[#1DA1F2] hover:text-white transition-all">
-                 <TwitterIcon size={16} />
-               </button>
+              <button onClick={copyToClipboard} className="w-9 h-9 md:w-10 md:h-10 rounded-full bg-[#FAFAF8] border border-black/5 flex items-center justify-center text-[#0A0A0F]/60 hover:bg-[#0A0A0F] hover:text-white transition-all">
+                {copied ? <CheckCircle2 size={16} className="text-emerald-500" /> : <Copy size={16} />}
+              </button>
+              <button className="w-9 h-9 md:w-10 md:h-10 rounded-full bg-[#FAFAF8] border border-black/5 flex items-center justify-center text-[#0A0A0F]/60 hover:bg-[#1877F2] hover:text-white transition-all">
+                <FacebookIcon size={16} />
+              </button>
+              <button className="w-9 h-9 md:w-10 md:h-10 rounded-full bg-[#FAFAF8] border border-black/5 flex items-center justify-center text-[#0A0A0F]/60 hover:bg-[#1DA1F2] hover:text-white transition-all">
+                <TwitterIcon size={16} />
+              </button>
             </div>
           </div>
         </header>
@@ -141,8 +141,8 @@ const BlogSingleClient = ({ blog }) => {
         {/* Hero Image */}
         <div className="max-w-7xl mx-auto px-5 md:px-6 mb-12 md:mb-20">
           <div className="relative aspect-video md:aspect-[21/9] rounded-[32px] md:rounded-[48px] overflow-hidden shadow-2xl border border-black/5 group">
-            <Image 
-              src={blog.coverImage || "https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&q=80"} 
+            <Image
+              src={blog.coverImage || "https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&q=80"}
               alt={blog.title}
               fill
               className="object-cover transition-transform duration-1000 group-hover:scale-105"
@@ -153,21 +153,21 @@ const BlogSingleClient = ({ blog }) => {
 
         {/* Article Body */}
         <div className="max-w-7xl mx-auto px-5 md:px-6 flex flex-col lg:flex-row items-start gap-12 lg:gap-20">
-          
+
           {/* Left: Floating Sidebar */}
           <aside className="hidden lg:block w-20 flex-shrink-0">
             <div className="sticky top-32 flex flex-col items-center gap-4">
               <span className="text-[10px] font-black text-gray-300 uppercase tracking-widest [writing-mode:vertical-lr] rotate-180 mb-4">Share Story</span>
-              <button onClick={copyToClipboard} title="Copy Link" className="w-12 h-12 rounded-2xl bg-[#FAFAF8] border border-black/5 flex items-center justify-center text-[#0A0A0F]/60 hover:bg-emerald-500 hover:text-white hover:border-emerald-500 transition-all shadow-sm">
+              <button onClick={copyToClipboard} title="Copy Link" className="w-12 h-12 rounded-md bg-[#FAFAF8] border border-black/5 flex items-center justify-center text-[#0A0A0F]/60 hover:bg-emerald-500 hover:text-white hover:border-emerald-500 transition-all shadow-sm">
                 {copied ? <CheckCircle2 size={20} /> : <Copy size={20} />}
               </button>
-              <button title="Share on Facebook" className="w-12 h-12 rounded-2xl bg-[#FAFAF8] border border-black/5 flex items-center justify-center text-[#0A0A0F]/60 hover:bg-[#1877F2] hover:text-white hover:border-[#1877F2] transition-all shadow-sm">
+              <button title="Share on Facebook" className="w-12 h-12 rounded-md bg-[#FAFAF8] border border-black/5 flex items-center justify-center text-[#0A0A0F]/60 hover:bg-[#1877F2] hover:text-white hover:border-[#1877F2] transition-all shadow-sm">
                 <FacebookIcon size={20} />
               </button>
-              <button title="Share on Twitter" className="w-12 h-12 rounded-2xl bg-[#FAFAF8] border border-black/5 flex items-center justify-center text-[#0A0A0F]/60 hover:bg-[#1DA1F2] hover:text-white hover:border-[#1DA1F2] transition-all shadow-sm">
+              <button title="Share on Twitter" className="w-12 h-12 rounded-md bg-[#FAFAF8] border border-black/5 flex items-center justify-center text-[#0A0A0F]/60 hover:bg-[#1DA1F2] hover:text-white hover:border-[#1DA1F2] transition-all shadow-sm">
                 <TwitterIcon size={20} />
               </button>
-              <button title="Share on LinkedIn" className="w-12 h-12 rounded-2xl bg-[#FAFAF8] border border-black/5 flex items-center justify-center text-[#0A0A0F]/60 hover:bg-[#0A66C2] hover:text-white hover:border-[#0A66C2] transition-all shadow-sm">
+              <button title="Share on LinkedIn" className="w-12 h-12 rounded-md bg-[#FAFAF8] border border-black/5 flex items-center justify-center text-[#0A0A0F]/60 hover:bg-[#0A66C2] hover:text-white hover:border-[#0A66C2] transition-all shadow-sm">
                 <LinkedinIcon size={20} />
               </button>
             </div>
@@ -175,7 +175,7 @@ const BlogSingleClient = ({ blog }) => {
 
           {/* Center: Content */}
           <div className="flex-1 w-full max-w-3xl mx-auto lg:mx-0">
-            <div 
+            <div
               ref={contentRef}
               className="blog-content w-full"
               dangerouslySetInnerHTML={{ __html: blog.content }}
@@ -183,31 +183,31 @@ const BlogSingleClient = ({ blog }) => {
 
             {/* Newsletter Subscription Inside Content */}
             <div className="my-20 p-10 md:p-14 bg-[#0A0A0F] rounded-[32px] md:rounded-[48px] text-white relative overflow-hidden group">
-               <div className="relative z-10 max-w-lg">
-                  <h3 className="text-2xl md:text-3xl font-black mb-4 leading-tight">Get insights like this delivered weekly.</h3>
-                  <p className="text-white/60 font-medium mb-10 leading-relaxed text-sm">Join 12,000+ business owners receiving the ShopBajar Journal directly in their inbox.</p>
-                  <form className="flex flex-col sm:flex-row gap-4">
-                     <input 
-                       type="email" 
-                       placeholder="your@email.com" 
-                       className="flex-1 h-12 bg-white/10 border border-white/20 rounded-lg px-6 font-bold focus:outline-none focus:bg-white/20 transition-all placeholder:text-white/30"
-                     />
-                     <button className="h-12 bg-[#FF6A00] hover:bg-[#FF8533] text-white font-black px-8 rounded-lg transition-all shadow-xl shadow-[#FF6A00]/20 whitespace-nowrap">
-                        Join Journal
-                     </button>
-                  </form>
-               </div>
+              <div className="relative z-10 max-w-lg">
+                <h3 className="text-2xl md:text-3xl font-black mb-4 leading-tight">Get insights like this delivered weekly.</h3>
+                <p className="text-white/60 font-medium mb-10 leading-relaxed text-sm">Join 12,000+ business owners receiving the ShopBajar Journal directly in their inbox.</p>
+                <form className="flex flex-col sm:flex-row gap-4">
+                  <input
+                    type="email"
+                    placeholder="your@email.com"
+                    className="flex-1 h-12 bg-white/10 border border-white/20 rounded-md px-6 font-bold focus:outline-none focus:bg-white/20 transition-all placeholder:text-white/30"
+                  />
+                  <button className="h-12 bg-[#FF6A00] hover:bg-[#FF8533] text-white font-black px-8 rounded-md transition-all shadow-xl shadow-[#FF6A00]/20 whitespace-nowrap">
+                    Join Journal
+                  </button>
+                </form>
+              </div>
             </div>
 
             {/* Author Footer Card */}
             <div className="flex flex-col sm:flex-row items-center gap-8 py-12 border-y border-black/5 mb-20 text-center sm:text-left">
-               <div className="w-20 h-20 rounded-[24px] bg-[#FAFAF8] border border-black/5 flex items-center justify-center text-[#0A0A0F]/20 relative overflow-hidden flex-shrink-0 shadow-lg">
-                  <Image src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${blog.author}`} alt={blog.author} fill className="object-cover opacity-80" />
-               </div>
-               <div>
-                  <h4 className="text-lg font-black text-[#0A0A0F] mb-2 uppercase tracking-tight">Written by {blog.author || "Editorial Team"}</h4>
-                  <p className="text-gray-500 font-medium leading-relaxed mb-4 text-sm">Dedicated to empowering local shops with digital intelligence and growth strategies.</p>
-               </div>
+              <div className="w-20 h-20 rounded-[24px] bg-[#FAFAF8] border border-black/5 flex items-center justify-center text-[#0A0A0F]/20 relative overflow-hidden flex-shrink-0 shadow-lg">
+                <Image src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${blog.author}`} alt={blog.author} fill className="object-cover opacity-80" />
+              </div>
+              <div>
+                <h4 className="text-lg font-black text-[#0A0A0F] mb-2 uppercase tracking-tight">Written by {blog.author || "Editorial Team"}</h4>
+                <p className="text-gray-500 font-medium leading-relaxed mb-4 text-sm">Dedicated to empowering local shops with digital intelligence and growth strategies.</p>
+              </div>
             </div>
           </div>
         </div>
@@ -218,39 +218,39 @@ const BlogSingleClient = ({ blog }) => {
         <section className="bg-[#FAFAF8] py-20 md:py-32 border-t border-black/5">
           <div className="max-w-7xl mx-auto px-5 md:px-6">
             <div className="flex flex-col md:flex-row md:items-end justify-between mb-16 gap-6 text-center md:text-left">
-               <div>
-                 <p className="text-[10px] font-black text-[#FF6A00] uppercase tracking-[0.2em] mb-4">You might also like</p>
-                 <h2 className="text-3xl lg:text-5xl font-black text-[#0A0A0F] tracking-tight">Continue Reading</h2>
-               </div>
-               <Link href="/blog" className="group flex items-center gap-3 text-[10px] font-black text-[#0A0A0F] uppercase tracking-widest hover:text-[#FF6A00] transition-colors">
-                 All Journal Articles
-                 <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
-               </Link>
+              <div>
+                <p className="text-[10px] font-black text-[#FF6A00] uppercase tracking-[0.2em] mb-4">You might also like</p>
+                <h2 className="text-3xl lg:text-5xl font-black text-[#0A0A0F] tracking-tight">Continue Reading</h2>
+              </div>
+              <Link href="/blog" className="group flex items-center gap-3 text-[10px] font-black text-[#0A0A0F] uppercase tracking-widest hover:text-[#FF6A00] transition-colors">
+                All Journal Articles
+                <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
+              </Link>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
               {relatedBlogs.map((item) => (
                 <Link key={item.id} href={`/blog/${item.slug}`} className="group block">
                   <div className="relative aspect-[16/10] rounded-[32px] overflow-hidden border border-black/5 shadow-xl mb-6 group-hover:shadow-2xl transition-all duration-500">
-                    <Image 
-                      src={item.coverImage || "https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&q=80"} 
+                    <Image
+                      src={item.coverImage || "https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&q=80"}
                       alt={item.title}
                       fill
                       className="object-cover group-hover:scale-110 transition-transform duration-1000"
                     />
                     <div className="absolute top-4 left-4">
-                       <span className="px-3 py-1 bg-white/90 backdrop-blur-md rounded-full text-[8px] font-black text-[#0A0A0F] uppercase tracking-widest shadow-sm">
-                          {item.category}
-                       </span>
+                      <span className="px-3 py-1 bg-white/90 backdrop-blur-md rounded-full text-[8px] font-black text-[#0A0A0F] uppercase tracking-widest shadow-sm">
+                        {item.category}
+                      </span>
                     </div>
                   </div>
                   <h4 className="text-lg lg:text-xl font-black text-[#0A0A0F] group-hover:text-[#FF6A00] transition-colors leading-[1.3] mb-3 line-clamp-2 tracking-tight">
                     {item.title}
                   </h4>
                   <div className="flex items-center gap-3 text-[9px] font-bold text-gray-400 uppercase tracking-widest">
-                     <span className="flex items-center gap-1"><Clock size={10} /> {item.readTime}</span>
-                     <span className="w-0.5 h-0.5 rounded-full bg-black/10"></span>
-                     <span>By {(item.author || 'Editor').split(' ')[0]}</span>
+                    <span className="flex items-center gap-1"><Clock size={10} /> {item.readTime}</span>
+                    <span className="w-0.5 h-0.5 rounded-full bg-black/10"></span>
+                    <span>By {(item.author || 'Editor').split(' ')[0]}</span>
                   </div>
                 </Link>
               ))}

@@ -80,7 +80,7 @@ const Footer = () => {
               </span>
             </Link>
             <p className="text-[14px] text-[#0A0A0F]/45 font-medium leading-relaxed max-w-sm">
-              The premier digital growth platform for local businesses in Bharat. Establish 
+              The premier digital growth platform for local businesses in Bharat. Establish
               your digital storefront and scale your reach with direct WhatsApp connectivity.
             </p>
             <div className="flex gap-2">
@@ -88,7 +88,7 @@ const Footer = () => {
                 <a
                   key={i}
                   href={item.href}
-                  className="w-8 h-8 rounded-lg bg-black/[0.03] flex items-center justify-center text-[#0A0A0F]/30 hover:text-[#FF6A00] hover:bg-[#FF6A00]/5 transition-all"
+                  className="w-8 h-8 rounded-md bg-black/[0.03] flex items-center justify-center text-[#0A0A0F]/30 hover:text-[#FF6A00] hover:bg-[#FF6A00]/5 transition-all"
                 >
                   <item.icon size={14} />
                 </a>

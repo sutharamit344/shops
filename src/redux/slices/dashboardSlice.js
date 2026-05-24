@@ -4,6 +4,9 @@ import {
   updateMerchantShop,
   fetchMerchantReviews,
   deleteMerchantReview,
+  fetchMasterFeatures,
+  purchaseMerchantFeature,
+  toggleMerchantFeature,
 } from "../thunks/dashboardThunks";
 
 const defaultHours = {
@@ -21,9 +24,12 @@ const initialState = {
   openingHours: defaultHours,
   holidays: [],
   reviews: [],
+  masterFeatures: [],
   loading: true,
   isSaving: false,
   loadingReviews: false,
+  loadingFeatures: false,
+  activatingFeatureKey: null,
   error: null,
 };
 
@@ -39,6 +45,11 @@ export const dashboardSlice = createSlice({
     },
     clearDashboard: (state) => {
       return initialState;
+    },
+    updateShopLocalState: (state, action) => {
+      if (state.shop) {
+        state.shop = { ...state.shop, ...action.payload };
+      }
     },
   },
   extraReducers: (builder) => {
@@ -96,10 +107,42 @@ export const dashboardSlice = createSlice({
         if (state.shop && updatedShop) {
           state.shop = updatedShop;
         }
+      })
+      // Fetch Master Features
+      .addCase(fetchMasterFeatures.pending, (state) => {
+        state.loadingFeatures = true;
+      })
+      .addCase(fetchMasterFeatures.fulfilled, (state, action) => {
+        state.loadingFeatures = false;
+        state.masterFeatures = action.payload;
+      })
+      .addCase(fetchMasterFeatures.rejected, (state, action) => {
+        state.loadingFeatures = false;
+        state.error = action.payload;
+      })
+      // Purchase Merchant Feature
+      .addCase(purchaseMerchantFeature.pending, (state, action) => {
+        state.activatingFeatureKey = action.meta.arg.featureKey;
+      })
+      .addCase(purchaseMerchantFeature.fulfilled, (state, action) => {
+        state.activatingFeatureKey = null;
+        if (state.shop) {
+          state.shop.paidFeatures = action.payload.nextPaidFeatures;
+        }
+      })
+      .addCase(purchaseMerchantFeature.rejected, (state, action) => {
+        state.activatingFeatureKey = null;
+        state.error = action.payload;
+      })
+      // Toggle Merchant Feature
+      .addCase(toggleMerchantFeature.fulfilled, (state, action) => {
+        if (state.shop) {
+          state.shop.paidFeatures = action.payload.nextPaidFeatures;
+        }
       });
   },
 });
 
-export const { setOpeningHoursState, setHolidaysState, clearDashboard } =
+export const { setOpeningHoursState, setHolidaysState, clearDashboard, updateShopLocalState } =
   dashboardSlice.actions;
 export default dashboardSlice.reducer;

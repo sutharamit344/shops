@@ -36,7 +36,7 @@ export default function ShopRatingsList({ ratings }) {
               </span>
             </div>
             {rev.comment ? (
-              <p className="text-navy/60 text-xs leading-relaxed font-medium italic">"{rev.comment}"</p>
+              <p className="text-navy/60 text-xs leading-relaxed font-medium italic">&ldquo;{rev.comment}&rdquo;</p>
             ) : (
               <p className="text-navy/20 text-[10px] italic">No comment left.</p>
             )}

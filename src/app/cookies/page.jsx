@@ -11,7 +11,7 @@ import { BRAND } from "@/lib/config";
 const Section = ({ icon: Icon, title, children }) => (
   <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
     <div className="flex items-center gap-4">
-      <div className="w-10 h-10 rounded-lg bg-[#FF6A00]/5 border border-[#FF6A00]/10 flex items-center justify-center text-[#FF6A00]">
+      <div className="w-10 h-10 rounded-md bg-[#FF6A00]/5 border border-[#FF6A00]/10 flex items-center justify-center text-[#FF6A00]">
         <Icon size={18} />
       </div>
       <h2 className="text-[18px] font-bold text-[#0A0A0F] tracking-tight">{title}</h2>
@@ -27,7 +27,7 @@ export default function CookiesPolicy() {
     <div className="bg-[#F7F7F5] min-h-screen selection:bg-[#FF6A00]/10 selection:text-[#FF6A00]">
       <Navbar />
       <div className="absolute inset-0 dot-grid opacity-[0.05] pointer-events-none" />
-      
+
       {/* Header */}
       <header className="pt-32 pb-16 px-4 relative z-10">
         <div className="max-w-4xl mx-auto text-center animate-in fade-in duration-700">
@@ -39,9 +39,9 @@ export default function CookiesPolicy() {
             Cookie <span className="text-[#FF6A00]">Policy.</span>
           </h1>
           <div className="flex flex-col md:flex-row items-center justify-center gap-4 md:gap-8 mt-10">
-            <div className="flex items-center gap-2 px-4 py-2 bg-white rounded-lg border border-black/[0.05] shadow-sm">
-               <span className="text-[10px] font-bold text-[#0A0A0F]/30 uppercase tracking-widest">Version Alpha</span>
-               <span className="text-[11px] font-bold text-[#0A0A0F]">APR 25, 2026</span>
+            <div className="flex items-center gap-2 px-4 py-2 bg-white rounded-md border border-black/[0.05] shadow-sm">
+              <span className="text-[10px] font-bold text-[#0A0A0F]/30 uppercase tracking-widest">Version Alpha</span>
+              <span className="text-[11px] font-bold text-[#0A0A0F]">APR 25, 2026</span>
             </div>
             <Link href="/" className="text-[11px] font-bold text-[#0A0A0F]/40 hover:text-[#FF6A00] uppercase tracking-widest flex items-center gap-2 transition-colors">
               <ChevronLeft size={14} /> Back to Dashboard

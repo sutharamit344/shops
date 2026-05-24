@@ -69,8 +69,8 @@ const ShopHeader = ({ name, phone, shareUrl, logo, isSticky, onQRClick }) => {
     <>
       <header
         className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${isScrolled
-            ? 'bg-white/80 backdrop-blur-xl border-b border-black/[0.05] py-2 shadow-[0_2px_20px_-5px_rgba(0,0,0,0.05)]'
-            : 'bg-transparent py-4'
+          ? 'bg-white/80 backdrop-blur-xl border-b border-black/[0.05] py-2 shadow-[0_2px_20px_-5px_rgba(0,0,0,0.05)]'
+          : 'bg-transparent py-4'
           }`}
       >
         <div className="flex items-center justify-between px-4 h-12 max-w-7xl mx-auto">
@@ -78,9 +78,9 @@ const ShopHeader = ({ name, phone, shareUrl, logo, isSticky, onQRClick }) => {
           <div className="flex items-center gap-3">
             <button
               onClick={() => router.back()}
-              className={`w-9 h-9 rounded-lg flex items-center justify-center transition-all ${isScrolled
-                  ? 'bg-black/[0.03] text-[#0F0F0F] hover:bg-black/[0.08]'
-                  : 'bg-white/10 backdrop-blur-md text-white border border-white/20 hover:bg-white/20'
+              className={`w-9 h-9 rounded-md flex items-center justify-center transition-all ${isScrolled
+                ? 'bg-black/[0.03] text-[#0F0F0F] hover:bg-black/[0.08]'
+                : 'bg-white/10 backdrop-blur-md text-white border border-white/20 hover:bg-white/20'
                 }`}
               aria-label="Go back"
             >
@@ -89,7 +89,7 @@ const ShopHeader = ({ name, phone, shareUrl, logo, isSticky, onQRClick }) => {
 
             <div className={`flex items-center gap-3 transition-all duration-500 ${isScrolled ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4 pointer-events-none'}`}>
               {logo && (
-                <div className="w-8 h-8 rounded-lg overflow-hidden bg-white border border-black/[0.06] shadow-sm">
+                <div className="w-8 h-8 rounded-md overflow-hidden bg-white border border-black/[0.06] shadow-sm">
                   <img src={logo} alt={name} className="w-full h-full object-cover" />
                 </div>
               )}
@@ -106,7 +106,7 @@ const ShopHeader = ({ name, phone, shareUrl, logo, isSticky, onQRClick }) => {
             <div className="hidden md:flex items-center gap-2">
               <button
                 onClick={handleWhatsApp}
-                className="flex items-center gap-2 px-4 py-2 bg-[#25D366] text-white text-[12px] font-bold rounded-lg hover:shadow-[0_4px_15px_-3px_rgba(37,211,102,0.4)] transition-all hover:-translate-y-0.5 active:translate-y-0"
+                className="flex items-center gap-2 px-4 py-2 bg-[#25D366] text-white text-[12px] font-bold rounded-md hover:shadow-[0_4px_15px_-3px_rgba(37,211,102,0.4)] transition-all hover:-translate-y-0.5 active:translate-y-0"
               >
                 <MessageCircle size={16} />
                 <span>WhatsApp</span>
@@ -114,9 +114,9 @@ const ShopHeader = ({ name, phone, shareUrl, logo, isSticky, onQRClick }) => {
 
               <button
                 onClick={() => window.location.href = `tel:+91${phone}`}
-                className={`flex items-center gap-2 px-4 py-2 text-[12px] font-bold rounded-lg transition-all hover:-translate-y-0.5 active:translate-y-0 ${isScrolled
-                    ? 'bg-[#0F0F0F] text-white shadow-lg shadow-black/10'
-                    : 'bg-white text-[#0F0F0F] shadow-lg shadow-black/5'
+                className={`flex items-center gap-2 px-4 py-2 text-[12px] font-bold rounded-md transition-all hover:-translate-y-0.5 active:translate-y-0 ${isScrolled
+                  ? 'bg-[#0F0F0F] text-white shadow-lg shadow-black/10'
+                  : 'bg-white text-[#0F0F0F] shadow-lg shadow-black/5'
                   }`}
               >
                 <Phone size={16} />
@@ -128,9 +128,9 @@ const ShopHeader = ({ name, phone, shareUrl, logo, isSticky, onQRClick }) => {
             <div className="flex items-center gap-1.5">
               <button
                 onClick={handleWhatsApp}
-                className={`md:hidden w-9 h-9 rounded-lg flex items-center justify-center transition-all ${isScrolled
-                    ? 'bg-[#25D366]/10 text-[#25D366] hover:bg-[#25D366]/20'
-                    : 'bg-white/10 backdrop-blur-md text-white border border-white/20 hover:bg-white/20'
+                className={`md:hidden w-9 h-9 rounded-md flex items-center justify-center transition-all ${isScrolled
+                  ? 'bg-[#25D366]/10 text-[#25D366] hover:bg-[#25D366]/20'
+                  : 'bg-white/10 backdrop-blur-md text-white border border-white/20 hover:bg-white/20'
                   }`}
                 aria-label="WhatsApp"
               >
@@ -139,9 +139,9 @@ const ShopHeader = ({ name, phone, shareUrl, logo, isSticky, onQRClick }) => {
 
               <button
                 onClick={handleShare}
-                className={`w-9 h-9 rounded-lg flex items-center justify-center transition-all ${isScrolled
-                    ? 'bg-black/[0.03] text-[#0F0F0F] hover:bg-black/[0.08]'
-                    : 'bg-white/10 backdrop-blur-md text-white border border-white/20 hover:bg-white/20'
+                className={`w-9 h-9 rounded-md flex items-center justify-center transition-all ${isScrolled
+                  ? 'bg-black/[0.03] text-[#0F0F0F] hover:bg-black/[0.08]'
+                  : 'bg-white/10 backdrop-blur-md text-white border border-white/20 hover:bg-white/20'
                   }`}
                 aria-label="Share"
               >
@@ -151,9 +151,9 @@ const ShopHeader = ({ name, phone, shareUrl, logo, isSticky, onQRClick }) => {
               {onQRClick && (
                 <button
                   onClick={onQRClick}
-                  className={`w-9 h-9 rounded-lg flex items-center justify-center transition-all ${isScrolled
-                      ? 'bg-black/[0.03] text-[#0F0F0F] hover:bg-black/[0.08]'
-                      : 'bg-white/10 backdrop-blur-md text-white border border-white/20 hover:bg-white/20'
+                  className={`w-9 h-9 rounded-md flex items-center justify-center transition-all ${isScrolled
+                    ? 'bg-black/[0.03] text-[#0F0F0F] hover:bg-black/[0.08]'
+                    : 'bg-white/10 backdrop-blur-md text-white border border-white/20 hover:bg-white/20'
                     }`}
                   aria-label="QR Code"
                 >
@@ -168,7 +168,7 @@ const ShopHeader = ({ name, phone, shareUrl, logo, isSticky, onQRClick }) => {
       {/* Toast Notification for Copied Link */}
       {showCopiedFeedback && (
         <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-[100] animate-fade-in-up">
-          <div className="bg-[#0F0F0F] text-white px-4 py-2.5 rounded-lg shadow-lg text-[12px] font-medium flex items-center gap-2">
+          <div className="bg-[#0F0F0F] text-white px-4 py-2.5 rounded-md shadow-lg text-[12px] font-medium flex items-center gap-2">
             <span>✓</span>
             <span>Link copied to clipboard!</span>
           </div>

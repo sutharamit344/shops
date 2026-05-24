@@ -13,7 +13,7 @@ import {
   deleteDoc,
   runTransaction,
 } from "firebase/firestore";
-import { db } from "./firebase";
+import { auth, db } from "./firebase";
 export { db };
 import { slugify } from "./slugify";
 
@@ -35,6 +35,7 @@ if (typeof window === "undefined") {
 const COLLECTION_NAME = "shops";
 const LOGS_COLLECTION = "activity_logs";
 const LOCATION_CACHE = "locations";
+const BILLS_COLLECTION = "bills";
 
 /**
  * LOCATION CACHE SYSTEM
@@ -1248,6 +1249,159 @@ export async function updateShop(id, data) {
 }
 
 /**
+ * BILLING MANAGEMENT
+ */
+export async function createBill(billData) {
+  try {
+    const docRef = await addDoc(collection(db, BILLS_COLLECTION), {
+      ...billData,
+      ownerId: billData.ownerId || auth.currentUser?.uid || null,
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    });
+
+    return { success: true, id: docRef.id };
+  } catch (error) {
+    console.error("Error creating bill: ", error);
+    return { success: false, error };
+  }
+}
+
+export async function getShopBills(shopId) {
+  try {
+    const currentUid = auth.currentUser?.uid;
+    if (!currentUid) {
+      console.error("Error getting shop bills: missing authenticated user");
+      return [];
+    }
+
+    const q = query(
+      collection(db, BILLS_COLLECTION),
+      where("shopId", "==", shopId)
+    );
+    const querySnapshot = await getDocs(q);
+    const results = querySnapshot.docs
+      .map(standardizeData)
+      .filter(Boolean);
+
+    return results.sort((a, b) => {
+      const aTime = new Date(a.updatedAt || a.createdAt || 0).getTime();
+      const bTime = new Date(b.updatedAt || b.createdAt || 0).getTime();
+      return bTime - aTime;
+    });
+  } catch (error) {
+    console.error("Error getting shop bills: ", error);
+    return [];
+  }
+}
+
+export async function updateBill(id, billData) {
+  try {
+    const docRef = doc(db, BILLS_COLLECTION, id);
+    await updateDoc(docRef, {
+      ...billData,
+      updatedAt: serverTimestamp(),
+    });
+
+    return { success: true };
+  } catch (error) {
+    console.error("Error updating bill: ", error);
+    return { success: false, error };
+  }
+}
+
+export async function finalizeBillWithTransaction(billId, billData, shopId, itemsToDeduct) {
+  try {
+    const shopRef = doc(db, "shops", shopId);
+    let finalBillId = billId;
+    let finalMenu = [];
+
+    await runTransaction(db, async (transaction) => {
+      const shopSnap = await transaction.get(shopRef);
+      if (!shopSnap.exists()) {
+        throw new Error("Shop not found");
+      }
+
+      const shopDetails = shopSnap.data();
+      const menu = JSON.parse(JSON.stringify(shopDetails.menu || []));
+
+      // Validate and deduct stock
+      for (const item of itemsToDeduct) {
+        if (!item.name) continue;
+
+        let found = false;
+        for (const category of menu) {
+          const catName = category.name || category.category || "";
+          if (catName.toLowerCase().trim() === (item.category || "").toLowerCase().trim()) {
+            const menuItem = (category.items || []).find(
+              (i) => (i.name || "").toLowerCase().trim() === item.name.toLowerCase().trim()
+            );
+
+            if (menuItem) {
+              found = true;
+              if (
+                menuItem.stock !== undefined &&
+                menuItem.stock !== null &&
+                (typeof menuItem.stock === "number" || typeof menuItem.stock === "string")
+              ) {
+                const currentStock = Number(menuItem.stock);
+                if (!isNaN(currentStock)) {
+                  if (currentStock < item.quantity) {
+                    throw new Error(`Insufficient stock for "${item.name}". Available: ${currentStock}, Requested: ${item.quantity}`);
+                  }
+                  menuItem.stock = currentStock - item.quantity;
+                }
+              }
+              break;
+            }
+          }
+        }
+      }
+
+      const now = new Date();
+      const serializedBillData = {
+        ...billData,
+        updatedAt: now.toISOString(),
+      };
+
+      if (finalBillId) {
+        const billRef = doc(db, BILLS_COLLECTION, finalBillId);
+        transaction.update(billRef, serializedBillData);
+      } else {
+        const billsCol = collection(db, BILLS_COLLECTION);
+        const newBillRef = doc(billsCol);
+        finalBillId = newBillRef.id;
+        serializedBillData.id = finalBillId;
+        serializedBillData.createdAt = now.toISOString();
+        transaction.set(newBillRef, serializedBillData);
+      }
+
+      transaction.update(shopRef, {
+        menu,
+        updatedAt: serverTimestamp(),
+      });
+
+      finalMenu = menu;
+    });
+
+    return { success: true, billId: finalBillId, menu: finalMenu };
+  } catch (error) {
+    console.error("Error finalizing bill transaction:", error);
+    return { success: false, error: error.message };
+  }
+}
+
+export async function deleteBill(id) {
+  try {
+    await deleteDoc(doc(db, BILLS_COLLECTION, id));
+    return { success: true };
+  } catch (error) {
+    console.error("Error deleting bill: ", error);
+    return { success: false, error };
+  }
+}
+
+/**
  * Submits a new rating for a shop and updates the aggregate average.
  * Also stores the individual rating and comment in a subcollection.
  */
@@ -1554,3 +1708,267 @@ export async function getAreas() {
     return [];
   }
 }
+
+/**
+ * ADMIN: MASTER FEATURES SYSTEM (SAAS ADD-ONS)
+ */
+
+export async function getMasterFeatures(includeInactive = false) {
+  try {
+    const constraints = [orderBy("createdAt", "asc")];
+    if (!includeInactive) {
+      constraints.push(where("status", "==", "active"));
+    }
+    const q = query(collection(db, "features"), ...constraints);
+    const snap = await getDocs(q);
+    return snap.docs.map(standardizeData);
+  } catch (error) {
+    console.error("Error getting master features:", error);
+    return [];
+  }
+}
+
+export async function addMasterFeature(featureData) {
+  try {
+    const docRef = await addDoc(collection(db, "features"), {
+      ...featureData,
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    });
+    await logActivity(
+      "FEATURE_CREATE",
+      `Created master feature "${featureData.title}" (${featureData.featureKey})`,
+      docRef.id,
+      "feature",
+      "Admin"
+    );
+    return { success: true, id: docRef.id };
+  } catch (error) {
+    console.error("Error adding master feature:", error);
+    return { success: false, error: error.message };
+  }
+}
+
+export async function updateMasterFeature(id, featureData) {
+  try {
+    const docRef = doc(db, "features", id);
+    await updateDoc(docRef, {
+      ...featureData,
+      updatedAt: serverTimestamp(),
+    });
+    await logActivity(
+      "FEATURE_UPDATE",
+      `Updated master feature ID ${id}`,
+      id,
+      "feature",
+      "Admin"
+    );
+    return { success: true };
+  } catch (error) {
+    console.error("Error updating master feature:", error);
+    return { success: false, error: error.message };
+  }
+}
+
+export async function deleteMasterFeature(id) {
+  try {
+    const docRef = doc(db, "features", id);
+    await deleteDoc(docRef);
+    await logActivity(
+      "FEATURE_DELETE",
+      `Deleted master feature ID ${id}`,
+      id,
+      "feature",
+      "Admin"
+    );
+    return { success: true };
+  } catch (error) {
+    console.error("Error deleting master feature:", error);
+    return { success: false, error: error.message };
+  }
+}
+
+export async function seedDefaultFeatures() {
+  try {
+    const existing = await getMasterFeatures(true);
+    for (const feat of existing) {
+      await deleteDoc(doc(db, "features", feat.id));
+    }
+
+    const defaultFeatures = [
+      {
+        featureKey: "whatsapp_checkout",
+        title: "Checkout with WhatsApp",
+        description: "Enable customers to submit their cart inquiries directly via WhatsApp message.",
+        icon: "Phone",
+        price: 299,
+        billingCycle: "monthly",
+        category: "Inquiry",
+        trialDays: 14,
+        status: "active"
+      },
+      {
+        featureKey: "dashboard_checkout",
+        title: "Checkout with Dashboard",
+        description: "Enable customers to submit inquiries directly to your Merchant Dashboard console.",
+        icon: "LayoutDashboard",
+        price: 499,
+        billingCycle: "monthly",
+        category: "Inquiry",
+        trialDays: 14,
+        status: "active"
+      },
+      {
+        featureKey: "invoice_tools",
+        title: "Inquiry Invoice Tools",
+        description: "Unlock invoice viewing, editing, and proforma invoice printing inside the Merchant Dashboard inquiry panel.",
+        icon: "FileText",
+        price: 199,
+        billingCycle: "monthly",
+        category: "Inquiry",
+        trialDays: 7,
+        status: "active"
+      },
+      {
+        featureKey: "pos_slip_tools",
+        title: "POS Slip Printing",
+        description: "Enable compact thermal-style POS slip printing for inquiry items directly from the Merchant Dashboard.",
+        icon: "Printer",
+        price: 149,
+        billingCycle: "monthly",
+        category: "Inquiry",
+        trialDays: 7,
+        status: "active"
+      },
+      {
+        featureKey: "qr_ordering",
+        title: "QR Table Ordering",
+        description: "Let customers scan a table QR code, browse your menu on their phone, and place orders directly — no waiter needed. Includes live kitchen dashboard, real-time order tracking, and browser popup notifications.",
+        icon: "QrCode",
+        price: 799,
+        billingCycle: "monthly",
+        category: "Ordering",
+        trialDays: 14,
+        status: "active"
+      }
+    ];
+
+    const promises = defaultFeatures.map(f => addDoc(collection(db, "features"), {
+      ...f,
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    }));
+
+    await Promise.all(promises);
+    return { success: true, message: "Successfully seeded default features", count: defaultFeatures.length };
+  } catch (error) {
+    console.error("Error seeding default features:", error);
+    return { success: false, error: error.message };
+  }
+}
+
+/**
+ * INQUIRY MANAGEMENT SYSTEM
+ */
+
+export async function submitInquiry(inquiryData) {
+  try {
+    const docRef = await addDoc(collection(db, "inquiries"), {
+      ...inquiryData,
+      status: "Submitted",
+      createdAt: serverTimestamp(),
+    });
+
+    await logActivity(
+      "INQUIRY",
+      `New inquiry submitted for shop "${inquiryData.shopName}"`,
+      docRef.id,
+      "inquiry",
+      inquiryData.customerPhone || "Guest"
+    );
+
+    return { success: true, id: docRef.id };
+  } catch (error) {
+    console.error("Error submitting inquiry: ", error);
+    return { success: false, error: error.message };
+  }
+}
+
+export async function getUserInquiries(deviceId, userId = null) {
+  try {
+    const inquiriesRef = collection(db, "inquiries");
+    let allInquiries = [];
+
+    // Fetch by deviceId
+    if (deviceId) {
+      const qDevice = query(inquiriesRef, where("deviceId", "==", deviceId));
+      const snapDevice = await getDocs(qDevice);
+      allInquiries.push(...snapDevice.docs.map(standardizeData));
+    }
+
+    // Fetch by userId if logged in
+    if (userId) {
+      const qUser = query(inquiriesRef, where("userId", "==", userId));
+      const snapUser = await getDocs(qUser);
+      allInquiries.push(...snapUser.docs.map(standardizeData));
+    }
+
+    // Deduplicate by ID
+    const uniqueMap = new Map();
+    allInquiries.forEach(item => {
+      if (item && item.id) uniqueMap.set(item.id, item);
+    });
+
+    const results = Array.from(uniqueMap.values());
+    return results.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+  } catch (error) {
+    console.error("Error getting user inquiries: ", error);
+    return [];
+  }
+}
+
+export async function getShopInquiries(shopId) {
+  try {
+    const q = query(
+      collection(db, "inquiries"),
+      where("shopId", "==", shopId)
+    );
+    const snap = await getDocs(q);
+    const results = snap.docs.map(standardizeData);
+    return results.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+  } catch (error) {
+    console.error("Error getting shop inquiries: ", error);
+    return [];
+  }
+}
+
+export async function updateInquiryStatus(id, newStatus) {
+  try {
+    const docRef = doc(db, "inquiries", id);
+    await updateDoc(docRef, {
+      status: newStatus,
+      updatedAt: serverTimestamp(),
+    });
+    return { success: true };
+  } catch (error) {
+    console.error("Error updating inquiry status: ", error);
+    return { success: false, error: error.message };
+  }
+}
+
+export async function updateInquiryItems(id, items, totalAmount) {
+  try {
+    const docRef = doc(db, "inquiries", id);
+    await updateDoc(docRef, {
+      items,
+      totalAmount,
+      updatedAt: serverTimestamp(),
+    });
+    return { success: true };
+  } catch (error) {
+    console.error("Error updating inquiry items: ", error);
+    return { success: false, error: error.message };
+  }
+}
+
+

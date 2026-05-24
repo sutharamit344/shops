@@ -14,7 +14,7 @@ import "swiper/css/navigation";
 // Color Mapper for Categories (Cloud UI Palette)
 const getCategoryColor = (name) => {
   const n = (name || "").toLowerCase();
-  
+
   if (n.includes("grocery") || n.includes("kirana")) return "bg-emerald-50 text-emerald-600 border-emerald-100";
   if (n.includes("food") || n.includes("restaurant") || n.includes("bakery")) return "bg-orange-50 text-orange-600 border-orange-100";
   if (n.includes("cloth") || n.includes("fashion") || n.includes("wear")) return "bg-blue-50 text-blue-600 border-blue-100";
@@ -28,7 +28,7 @@ const getCategoryColor = (name) => {
   if (n.includes("auto") || n.includes("car") || n.includes("bike")) return "bg-zinc-100 text-zinc-800 border-zinc-200";
   if (n.includes("game") || n.includes("toy")) return "bg-purple-50 text-purple-600 border-purple-100";
   if (n.includes("gift") || n.includes("love")) return "bg-rose-50 text-rose-600 border-rose-100";
-  
+
   return "bg-black/[0.03] text-[#0A0A0F]/60 border-black/[0.05]";
 };
 
@@ -47,8 +47,8 @@ const CategoryGrid = ({ categories = [], currentCity = "ahmedabad" }) => {
               Explore local <span className="text-gradient">specialties</span>
             </h2>
           </div>
-          
-          <Link 
+
+          <Link
             href={`/${currentCity}`}
             className="hidden md:flex items-center gap-1.5 text-[11px] font-bold text-[#0A0A0F]/30 uppercase tracking-widest hover:text-[#FF6A00] transition-colors"
           >
@@ -61,7 +61,7 @@ const CategoryGrid = ({ categories = [], currentCity = "ahmedabad" }) => {
           <button className="category-prev absolute -left-3 top-1/2 -translate-y-1/2 z-20 w-9 h-9 rounded-full bg-white border border-black/[0.08] flex items-center justify-center text-[#0A0A0F]/40 hover:text-[#FF6A00] hover:border-[#FF6A00]/20 transition-all shadow-sm active:scale-95 disabled:opacity-0 pointer-events-auto cursor-pointer">
             <ChevronLeft size={18} />
           </button>
-          
+
           <button className="category-next absolute -right-3 top-1/2 -translate-y-1/2 z-20 w-9 h-9 rounded-full bg-white border border-black/[0.08] flex items-center justify-center text-[#0A0A0F]/40 hover:text-[#FF6A00] hover:border-[#FF6A00]/20 transition-all shadow-sm active:scale-95 disabled:opacity-0 pointer-events-auto cursor-pointer">
             <ChevronRight size={18} />
           </button>
@@ -91,17 +91,17 @@ const CategoryGrid = ({ categories = [], currentCity = "ahmedabad" }) => {
               const categoryName = typeof cat === "string" ? cat : cat.name || "";
               const slug = cat.slug || (typeof cat === "string" ? cat : cat.name || "");
               const colorClass = getCategoryColor(categoryName);
-              
+
               return (
                 <SwiperSlide key={idx} className="!h-auto">
                   <Link
                     href={`/${currentCity}/${slug.toLowerCase()}`}
-                    className="group relative flex flex-col items-center justify-center p-4 rounded-lg bg-white border border-black/[0.05] hover:border-[#FF6A00]/20 transition-all duration-300 hover:shadow-sm h-full min-h-[110px] md:min-h-[130px]"
+                    className="group relative flex flex-col items-center justify-center p-4 rounded-md bg-white border border-black/[0.05] hover:border-[#FF6A00]/20 transition-all duration-300 hover:shadow-sm h-full min-h-[110px] md:min-h-[130px]"
                   >
-                    <div className={`w-10 h-10 rounded-lg border ${colorClass} flex items-center justify-center mb-2.5 transition-transform duration-300 group-hover:scale-105 flex-shrink-0`}>
+                    <div className={`w-10 h-10 rounded-md border ${colorClass} flex items-center justify-center mb-2.5 transition-transform duration-300 group-hover:scale-105 flex-shrink-0`}>
                       <CategoryIcon name={categoryName} size={18} strokeWidth={1.5} />
                     </div>
-                    
+
                     <span className="text-[12px] font-bold text-[#0A0A0F]/70 text-center tracking-tight group-hover:text-[#FF6A00] transition-colors line-clamp-2 w-full px-1 leading-tight">
                       {categoryName}
                     </span>

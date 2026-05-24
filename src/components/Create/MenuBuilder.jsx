@@ -20,10 +20,10 @@ const MenuBuilder = ({ menuData, onChange, businessType = "mixed" }) => {
   const isService = businessType === "service";
 
   const addCategory = () => {
-    onChange([...(menuData || []), { 
-      category: isService ? "Our Services" : "Our Products", 
+    onChange([...(menuData || []), {
+      category: isService ? "Our Services" : "Our Products",
       defaultUnit: isService ? "session" : "pc",
-      items: [{ name: "", price: "", unit: isService ? "session" : "pc", description: "", image: "", file: null }] 
+      items: [{ name: "", price: "", unit: isService ? "session" : "pc", description: "", image: "", file: null }]
     }]);
   };
 
@@ -82,11 +82,11 @@ const MenuBuilder = ({ menuData, onChange, businessType = "mixed" }) => {
   return (
     <div className="space-y-8">
       {menuData?.map((section, catIndex) => (
-        <div key={catIndex} className="bg-white border border-gray-200 rounded-3xl p-5 md:p-8 relative">
+        <div key={catIndex} className="bg-white border border-gray-200 rounded-md p-5 md:p-8 relative">
           {/* Category Header */}
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
             <div className="flex items-center gap-3 flex-1">
-              <div className="p-2.5 bg-primary/5 text-primary rounded-lg">
+              <div className="p-2.5 bg-primary/5 text-primary rounded-md">
                 <LayoutGrid size={22} />
               </div>
               <div className="flex-1">
@@ -101,9 +101,9 @@ const MenuBuilder = ({ menuData, onChange, businessType = "mixed" }) => {
             </div>
 
             <div className="flex items-center gap-4">
-              <div className="flex items-center gap-3 px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg">
+              <div className="flex items-center gap-3 px-4 py-2 bg-gray-50 border border-gray-200 rounded-md">
                 <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none">Default Unit</span>
-                <select 
+                <select
                   value={section.defaultUnit || ""}
                   onChange={(e) => updateCategoryUnit(catIndex, e.target.value)}
                   className="bg-transparent text-sm font-bold text-navy outline-none cursor-pointer"
@@ -115,10 +115,10 @@ const MenuBuilder = ({ menuData, onChange, businessType = "mixed" }) => {
                   ))}
                 </select>
               </div>
-              <Button 
-                variant="ghost" 
-                type="button" 
-                onClick={() => removeCategory(catIndex)} 
+              <Button
+                variant="ghost"
+                type="button"
+                onClick={() => removeCategory(catIndex)}
                 className="p-2 text-gray-300 hover:text-red-500 shadow-none !rounded-md"
               >
                 <Trash2 size={20} />
@@ -146,7 +146,7 @@ const MenuBuilder = ({ menuData, onChange, businessType = "mixed" }) => {
                         placeholder={isService ? "e.g. Haircut" : "e.g. Cheese Burger"}
                         value={item.name}
                         onChange={(e) => updateItem(catIndex, itemIndex, "name", e.target.value)}
-                        className="w-full bg-gray-50/30 p-3 rounded-lg border border-gray-200 focus:border-primary font-bold text-sm outline-none transition-all"
+                        className="w-full bg-gray-50/30 p-3 rounded-md border border-gray-200 focus:border-primary font-bold text-sm outline-none transition-all"
                       />
                     </div>
                     <div className="md:col-span-3 space-y-1">
@@ -156,15 +156,15 @@ const MenuBuilder = ({ menuData, onChange, businessType = "mixed" }) => {
                         placeholder="0"
                         value={item.price}
                         onChange={(e) => updateItem(catIndex, itemIndex, "price", e.target.value)}
-                        className="w-full bg-gray-50/30 p-3 rounded-lg border border-gray-200 focus:border-primary font-bold text-sm outline-none transition-all"
+                        className="w-full bg-gray-50/30 p-3 rounded-md border border-gray-200 focus:border-primary font-bold text-sm outline-none transition-all"
                       />
                     </div>
                     <div className="md:col-span-3 space-y-1">
                       <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Unit</label>
-                      <select 
+                      <select
                         value={item.unit || ""}
                         onChange={(e) => updateItem(catIndex, itemIndex, "unit", e.target.value)}
-                        className="w-full bg-gray-50/30 p-3 rounded-lg border border-gray-200 focus:border-primary font-bold text-sm outline-none cursor-pointer appearance-none"
+                        className="w-full bg-gray-50/30 p-3 rounded-md border border-gray-200 focus:border-primary font-bold text-sm outline-none cursor-pointer appearance-none"
                       >
                         {UNIT_OPTIONS.map(group => (
                           <optgroup key={group.group} label={group.group}>
@@ -185,21 +185,21 @@ const MenuBuilder = ({ menuData, onChange, businessType = "mixed" }) => {
                       value={item.description || ""}
                       onChange={(e) => updateItem(catIndex, itemIndex, "description", e.target.value)}
                       rows={2}
-                      className="w-full bg-gray-50/30 p-3 rounded-lg border border-gray-200 focus:border-primary font-medium text-sm outline-none transition-all resize-none"
+                      className="w-full bg-gray-50/30 p-3 rounded-md border border-gray-200 focus:border-primary font-medium text-sm outline-none transition-all resize-none"
                     />
                   </div>
                 </div>
 
                 {/* 3. Action Hub */}
                 <div className="flex flex-col justify-center pt-5">
-                   <Button 
-                    variant="ghost" 
-                    type="button" 
-                    onClick={() => removeItem(catIndex, itemIndex)} 
+                  <Button
+                    variant="ghost"
+                    type="button"
+                    onClick={() => removeItem(catIndex, itemIndex)}
                     className="p-2 text-gray-200 hover:text-red-500 shadow-none !rounded-md"
-                   >
-                     <Trash2 size={18} />
-                   </Button>
+                  >
+                    <Trash2 size={18} />
+                  </Button>
                 </div>
               </div>
             ))}
@@ -208,7 +208,7 @@ const MenuBuilder = ({ menuData, onChange, businessType = "mixed" }) => {
               variant="outline"
               type="button"
               onClick={() => addItem(catIndex)}
-              className="w-full py-4 border border-dashed border-gray-200 !rounded-2xl text-gray-400 hover:text-primary hover:border-primary/40 hover:bg-primary/5 transition-all flex items-center justify-center gap-2 font-black text-[10px] uppercase tracking-widest shadow-none"
+              className="w-full py-4 border border-dashed border-gray-200 !rounded-md text-gray-400 hover:text-primary hover:border-primary/40 hover:bg-primary/5 transition-all flex items-center justify-center gap-2 font-black text-[10px] uppercase tracking-widest shadow-none"
             >
               <CirclePlus size={18} /> Add {isService ? "Service" : "Item"}
             </Button>

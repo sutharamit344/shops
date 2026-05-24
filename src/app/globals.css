@@ -75,7 +75,7 @@ input, select, textarea {
 
   /* Premium card surface */
   .card-surface {
-    @apply bg-white border border-black/[0.06] rounded-lg shadow-[0_1px_3px_rgba(0,0,0,0.04),0_1px_2px_rgba(0,0,0,0.03)];
+    @apply bg-white border border-black/[0.06] rounded-md shadow-[0_1px_3px_rgba(0,0,0,0.04),0_1px_2px_rgba(0,0,0,0.03)];
   }
   .card-surface-hover {
     @apply hover:shadow-[0_4px_16px_rgba(0,0,0,0.08)] hover:border-black/[0.1] transition-all duration-200;
@@ -183,6 +183,6 @@ input, select, textarea {
 .blog-content ul { @apply list-disc; }
 .blog-content ol { @apply list-decimal; }
 .blog-content li { @apply text-[15px]; }
-.blog-content img { @apply rounded-lg border border-black/5 shadow-lg my-8 w-full object-cover; }
+.blog-content img { @apply rounded-md border border-black/5 shadow-lg my-8 w-full object-cover; }
 .blog-content a  { @apply text-[#FF6A00] font-semibold no-underline hover:underline; }
 .blog-content hr { @apply border-black/5 my-10; }

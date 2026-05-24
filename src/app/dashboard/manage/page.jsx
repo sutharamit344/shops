@@ -5,7 +5,6 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
 import { useModal } from "@/hooks/useModal";
 import { getProfileCompletion, getWeeklyViewStats } from "@/lib/shopUtils";
-import Navbar from "@/components/Navbar";
 import Image from "next/image";
 import ImageUpload from "@/components/UI/ImageUpload";
 import {
@@ -19,10 +18,12 @@ import {
   CircleCheckBig,
   CircleAlert,
   QrCode,
+  ChefHat,
   ExternalLink,
   MapPin,
   Building2,
   Calendar,
+  Calculator,
   Zap,
   BarChart3,
   ListFilter,
@@ -51,15 +52,25 @@ import {
   Youtube,
   Twitter,
   Linkedin,
-  Globe
+  Globe,
+  Sparkles,
+  Menu,
+  LayoutGrid,
+  LayoutList,
+  Bell
 } from "lucide-react";
 import Link from "next/link";
 import ShopHistoryDialog from "@/components/Shop/HistoryDialog";
 import MerchantSettingsForm from "@/components/Shop/MerchantSettingsForm";
+import PaidFeaturesTab from "@/components/Shop/PaidFeaturesTab";
+import InquiriesTab from "@/components/Shop/InquiriesTab";
+import BillingPosTab from "@/components/Shop/BillingPosTab";
 import Dialog from "@/components/UI/Dialog";
+import Drawer from "@/components/UI/Drawer";
 import Input from "@/components/UI/Input";
 import Textarea from "@/components/UI/Textarea";
 import Button from "@/components/UI/Button";
+import Select from "@/components/UI/Select";
 import { slugify } from "@/lib/slugify";
 
 // Redux Toolkit Integration
@@ -82,11 +93,11 @@ import {
 } from "@/redux/selectors/dashboardSelectors";
 import { setOpeningHoursState, setHolidaysState, clearDashboard } from "@/redux/slices/dashboardSlice";
 
-function CatalogImage({ src, alt, featured }) {
+function CatalogImage({ src, alt, featured, isNew }) {
   const [hasError, setHasError] = useState(false);
 
   return (
-    <div className="w-20 sm:w-24 self-stretch flex-shrink-0 border-r bg-zinc-50 border-zinc-200/60 overflow-hidden relative group-hover:border-zinc-300 transition-all flex items-center justify-center dark:bg-zinc-800 dark:border-zinc-700">
+    <div className="absolute inset-0 bg-zinc-50 dark:bg-zinc-800 overflow-hidden flex items-center justify-center">
       {src && !hasError ? (
         <Image
           src={src.includes(" ") ? src.replace(/\s/g, "%20") : src}
@@ -101,13 +112,18 @@ function CatalogImage({ src, alt, featured }) {
           <ShoppingBag size={18} className="text-zinc-300 dark:text-zinc-600" />
         </div>
       )}
-      {featured && (
-        <div className="absolute top-0 left-0 z-10 flex items-center">
-          <span className="text-[9px] font-black bg-[#FF6A00] text-white px-1.5 py-0.5 rounded-br-md uppercase tracking-wider shadow-sm border-b border-r border-[#FF6A00]/20 flex items-center gap-0.5">
+      <div className="absolute top-0 left-0 z-10 flex flex-col items-start gap-0">
+        {featured && (
+          <span className="text-[7px] font-black bg-[#FF6A00] text-white px-1 py-px rounded-br uppercase tracking-wide shadow-sm flex items-center">
             Featured
           </span>
-        </div>
-      )}
+        )}
+        {isNew !== false && (
+          <span className={`text-[7px] font-black bg-emerald-600 text-white px-1 py-px ${featured ? 'rounded-r' : 'rounded-br'} uppercase tracking-wide shadow-sm flex items-center`}>
+            New
+          </span>
+        )}
+      </div>
     </div>
   );
 }
@@ -135,6 +151,14 @@ function ShopDashboardContent() {
   const [historyShop, setHistoryShop] = useState(null);
   const sectionRefs = useRef({});
 
+  // Sync active view with query parameter for deep-linking
+  useEffect(() => {
+    const viewParam = searchParams.get("view");
+    if (viewParam) {
+      setActiveView(viewParam);
+    }
+  }, [searchParams]);
+
   const scrollToSection = (id) => {
     const element = sectionRefs.current[id];
     if (element) {
@@ -160,10 +184,16 @@ function ShopDashboardContent() {
   const [itemDescription, setItemDescription] = useState("");
   const [itemImage, setItemImage] = useState("");
   const [itemFeatured, setItemFeatured] = useState(false);
+  const [itemIsNew, setItemIsNew] = useState(true);
+  const [itemStock, setItemStock] = useState("");
+  const [trackStock, setTrackStock] = useState(false);
+  const [itemDiet, setItemDiet] = useState("");
 
   const [collapsedCategories, setCollapsedCategories] = useState(new Set());
   const [searchQuery, setSearchQuery] = useState("");
   const searchDebounceRef = useRef(null);
+  const [isMobileDrawerOpen, setIsMobileDrawerOpen] = useState(false);
+  const [catalogView, setCatalogView] = useState("grid"); // "grid" | "list"
 
   const [newHoliday, setNewHoliday] = useState({ date: "", title: "" });
   const qrRef = useRef(null);
@@ -176,11 +206,110 @@ function ShopDashboardContent() {
     searchDebounceRef.current = setTimeout(() => setSearchQuery(value), 250);
   }, []);
 
+  const navItems = [
+    {
+      id: "overview",
+      label: "Overview & Analytics",
+      shortLabel: "Overview",
+      icon: LayoutDashboard,
+      desc: "Views, leads & charts",
+    },
+    {
+      id: "catalog",
+      label: "Catalog Manager",
+      shortLabel: "Catalog",
+      icon: ListFilter,
+      desc: "Categories & items",
+    },
+    {
+      id: "gallery",
+      label: "Photo Gallery",
+      shortLabel: "Gallery",
+      icon: ImageIcon,
+      desc: "Storefront images",
+    },
+    {
+      id: "hours",
+      label: "Business Hours",
+      shortLabel: "Hours",
+      icon: CalendarDays,
+      desc: "Timings & holidays",
+    },
+    {
+      id: "reviews",
+      label: "Customer Reviews",
+      shortLabel: "Reviews",
+      icon: Star,
+      desc: "Ratings & feedback",
+    },
+    {
+      id: "settings",
+      label: "Shop Settings",
+      shortLabel: "Settings",
+      icon: Settings2,
+      desc: "Configuration & SEO",
+      subTabs: [
+        { id: "identity", label: "Business Identity" },
+        { id: "location", label: "Location & Address" },
+        { id: "contact", label: "Contact Details" },
+        { id: "delivery", label: "Delivery & Logistics" },
+        { id: "social", label: "Social Media Links" },
+        { id: "seo", label: "Discovery & SEO" },
+      ],
+    },
+    {
+      id: "features",
+      label: "Paid Features",
+      shortLabel: "Features",
+      icon: Sparkles,
+      desc: "SaaS Add-ons & Billing",
+    },
+    {
+      id: "billing",
+      label: "Billing & POS",
+      shortLabel: "Billing",
+      icon: Calculator,
+      desc: "Invoices, counter bills & slips",
+    },
+    {
+      id: "inquiries",
+      label: "Customer Inquiries",
+      shortLabel: "Inquiries",
+      icon: MessageSquare,
+      desc: "Order leads & requests",
+    },
+  ];
+
+  const activeNavItem = navItems.find((item) => item.id === activeView) || navItems[0];
+
+  const handleSelectView = (viewId) => {
+    setActiveView(viewId);
+    setIsMobileDrawerOpen(false);
+  };
+
+  const handleSelectSubTab = (subTabId) => {
+    setActiveView("settings");
+    setIsMobileDrawerOpen(false);
+    setTimeout(() => scrollToSection(subTabId), 50);
+  };
+
+  // Redirect to dashboard if not authenticated or if shopId is missing
+  useEffect(() => {
+    if (!authLoading) {
+      if (!user || !shopId) {
+        router.replace("/dashboard");
+      }
+    }
+  }, [authLoading, user, shopId, router]);
+
   // Fetch Shop Data on Mount
   useEffect(() => {
     if (user && shopId) {
       dispatch(fetchMerchantShop({ shopId, userId: user.uid }));
     }
+    return () => {
+      dispatch(clearDashboard());
+    };
   }, [user, shopId, dispatch]);
 
   // Fetch Reviews when Reviews tab is active
@@ -189,6 +318,8 @@ function ShopDashboardContent() {
       dispatch(fetchMerchantReviews(shopId));
     }
   }, [activeView, shopId, dispatch]);
+
+
 
   const handleDownloadQR = async () => {
     if (!qrRef.current) return;
@@ -334,6 +465,9 @@ function ShopDashboardContent() {
         description: itemDescription.trim(),
         image: itemImage,
         featured: itemFeatured,
+        isNew: itemIsNew,
+        stock: trackStock ? (itemStock ? parseInt(itemStock, 10) : 0) : null,
+        diet: itemDiet || null,
       },
     ];
     newMenu[activeCategoryIdx] = updatedCategory;
@@ -354,6 +488,9 @@ function ShopDashboardContent() {
       description: itemDescription.trim(),
       image: itemImage,
       featured: itemFeatured,
+      isNew: itemIsNew,
+      stock: trackStock ? (itemStock ? parseInt(itemStock, 10) : 0) : null,
+      diet: itemDiet || null,
     };
     updatedCategory.items = updatedItems;
     newMenu[activeCategoryIdx] = updatedCategory;
@@ -368,6 +505,10 @@ function ShopDashboardContent() {
     setItemDescription("");
     setItemImage("");
     setItemFeatured(false);
+    setItemIsNew(true);
+    setItemStock("");
+    setTrackStock(false);
+    setItemDiet("");
   };
 
   const handleDeleteItem = () => {
@@ -412,8 +553,16 @@ function ShopDashboardContent() {
   };
 
   const handleDeletePhoto = async (idx) => {
-    const newGallery = (shop?.gallery || []).filter((_, i) => i !== idx);
-    dispatch(updateMerchantShop({ shopId, updateData: { gallery: newGallery } }));
+    showConfirm({
+      title: "Delete Photo",
+      message: "Are you sure you want to remove this photo from your gallery?",
+      confirmText: "Yes, Delete",
+      type: "error",
+      onConfirm: async () => {
+        const newGallery = (shop?.gallery || []).filter((_, i) => i !== idx);
+        dispatch(updateMerchantShop({ shopId, updateData: { gallery: newGallery } }));
+      },
+    });
   };
 
   const handleUpdateHours = async () => {
@@ -440,7 +589,15 @@ function ShopDashboardContent() {
   };
 
   const handleDeleteHoliday = (idx) => {
-    dispatch(setHolidaysState(holidays.filter((_, i) => i !== idx)));
+    showConfirm({
+      title: "Delete Holiday",
+      message: "Are you sure you want to delete this holiday? Your shop will resume normal business hours for this date.",
+      confirmText: "Yes, Delete",
+      type: "error",
+      onConfirm: () => {
+        dispatch(setHolidaysState(holidays.filter((_, i) => i !== idx)));
+      },
+    });
   };
 
   const handleExportCatalog = async () => {
@@ -461,6 +618,7 @@ function ShopDashboardContent() {
               Price: item.price || "",
               "Image URL": item.image || "",
               "Is Popular": item.featured || item.popular ? "Yes" : "No",
+              "Is New": item.isNew !== false ? "Yes" : "No",
             });
           });
         }
@@ -474,6 +632,7 @@ function ShopDashboardContent() {
           Price: 500,
           "Image URL": "",
           "Is Popular": "Yes",
+          "Is New": "Yes",
         });
       }
 
@@ -556,6 +715,16 @@ function ShopDashboardContent() {
             const featured =
               isPopStr === "yes" || isPopStr === "true" || isPopStr === "1";
 
+            const isNewStr = (
+              row["Is New"] ||
+              row["new"] ||
+              row["isNew"] ||
+              ""
+            )
+              .toString()
+              .toLowerCase();
+            const isNew = isNewStr === "" ? true : (isNewStr === "yes" || isNewStr === "true" || isNewStr === "1");
+
             if (itemName) {
               if (!sectionsMap[catName]) sectionsMap[catName] = [];
               sectionsMap[catName].push({
@@ -565,6 +734,7 @@ function ShopDashboardContent() {
                 image,
                 featured,
                 popular: featured,
+                isNew,
               });
             }
           });
@@ -607,7 +777,9 @@ function ShopDashboardContent() {
     }
   };
 
-  if (authLoading || loading) {
+  const isPageLoading = authLoading || !!(user && shopId && loading);
+
+  if (isPageLoading) {
     return (
       <div className="min-h-screen bg-zinc-50 flex items-center justify-center dark:bg-zinc-950">
         <div className="text-center space-y-3">
@@ -623,7 +795,7 @@ function ShopDashboardContent() {
   if (!shop) {
     return (
       <div className="min-h-screen bg-zinc-50 flex flex-col items-center justify-center text-center p-4 dark:bg-zinc-950">
-        <div className="w-14 h-14 bg-zinc-100 border border-zinc-200 rounded-2xl flex items-center justify-center mb-4 dark:bg-zinc-900 dark:border-zinc-800">
+        <div className="w-14 h-14 bg-zinc-100 border border-zinc-200 rounded-md flex items-center justify-center mb-4 dark:bg-zinc-900 dark:border-zinc-800">
           <CircleAlert size={28} className="text-zinc-400" />
         </div>
         <h1 className="text-xl font-bold text-zinc-900 mb-1 dark:text-zinc-100 tracking-tight">
@@ -634,7 +806,7 @@ function ShopDashboardContent() {
         </p>
         <Link
           href="/dashboard"
-          className="h-9 px-5 bg-zinc-900 hover:bg-zinc-800 text-white text-xs font-bold rounded-lg flex items-center justify-center transition-all shadow-sm dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
+          className="h-9 px-5 bg-zinc-900 hover:bg-zinc-800 text-white text-xs font-bold rounded-md flex items-center justify-center transition-all shadow-sm dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
         >
           Return to Console
         </Link>
@@ -647,44 +819,43 @@ function ShopDashboardContent() {
 
   return (
     <div className="min-h-screen bg-zinc-50 text-zinc-900 dark:bg-zinc-950 dark:text-zinc-100 selection:bg-[#FF6A00]/10 selection:text-[#FF6A00]">
-      <main className="max-w-7xl mx-auto px-4 md:px-6 pt-4 md:pt-6 pb-16">
+      <main className="w-full px-3 md:px-4 pt-3 md:pt-4 pb-12">
         {/* Compact ERP Header */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 bg-white p-4 rounded-2xl border border-zinc-200/80 shadow-sm dark:bg-zinc-900 dark:border-zinc-800">
-          <div className="flex items-center gap-3 min-w-0">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-4 bg-white p-3 rounded-md border border-zinc-200/80 shadow-sm dark:bg-zinc-900 dark:border-zinc-800">
+          <div className="flex items-center gap-2.5 min-w-0">
             <Link
               href="/dashboard"
-              className="w-9 h-9 rounded-lg bg-zinc-50 border border-zinc-200/80 flex items-center justify-center text-zinc-500 hover:text-zinc-900 hover:border-zinc-300 transition-all shrink-0 dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-100"
+              className="w-8 h-8 rounded-md bg-zinc-50 border border-zinc-200/80 flex items-center justify-center text-zinc-500 hover:text-zinc-900 hover:border-zinc-300 transition-all shrink-0 dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-100"
             >
-              <ArrowLeft size={16} />
+              <ArrowLeft size={14} />
             </Link>
             <div className="min-w-0">
               <div className="flex items-center gap-2 mb-0.5 flex-wrap">
-                <h1 className="text-lg font-bold text-zinc-900 dark:text-zinc-100 tracking-tight truncate">
+                <h1 className="text-base font-bold text-zinc-900 dark:text-zinc-100 tracking-tight truncate">
                   {shop?.name}
                 </h1>
                 <span
-                  className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider shrink-0 ${
-                    shop?.status === "approved"
-                      ? "bg-emerald-500/10 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-400"
-                      : shop?.status === "rejected"
+                  className={`px-1.5 py-0.5 rounded text-[8px] font-bold uppercase tracking-wider shrink-0 ${shop?.status === "approved"
+                    ? "bg-emerald-500/10 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-400"
+                    : shop?.status === "rejected"
                       ? "bg-red-500/10 text-red-600 dark:bg-red-500/20 dark:text-red-400"
                       : "bg-amber-500/10 text-amber-600 dark:bg-amber-500/20 dark:text-amber-400"
-                  }`}
+                    }`}
                 >
                   {shop?.status === "approved"
                     ? "Operational"
                     : shop?.status === "rejected"
-                    ? "Rejected"
-                    : "Provisioning"}
+                      ? "Rejected"
+                      : "Provisioning"}
                 </span>
               </div>
-              <div className="flex items-center gap-2 text-xs text-zinc-500 dark:text-zinc-400 font-medium truncate">
+              <div className="flex items-center gap-2 text-[11px] text-zinc-500 dark:text-zinc-400 font-medium truncate">
                 <span className="flex items-center gap-1 shrink-0">
-                  <Building2 size={12} /> {shop?.category}
+                  <Building2 size={11} /> {shop?.category}
                 </span>
                 <span className="w-1 h-1 rounded-full bg-zinc-300 dark:bg-zinc-700 shrink-0" />
                 <span className="flex items-center gap-1 truncate">
-                  <MapPin size={12} /> {shop?.city}
+                  <MapPin size={11} /> {shop?.city}
                 </span>
               </div>
             </div>
@@ -692,7 +863,7 @@ function ShopDashboardContent() {
 
           {/* Social Media Quick Links */}
           {shop?.socialLinks && shop.socialLinks.length > 0 && (
-            <div className="flex items-center gap-1.5 flex-wrap">
+            <div className="flex items-center gap-1 flex-wrap">
               {shop.socialLinks.map((link, index) => {
                 if (!link.url) return null;
                 const platforms = {
@@ -711,186 +882,173 @@ function ShopDashboardContent() {
                     href={link.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className={`w-8 h-8 rounded-lg border border-zinc-200/80 dark:border-zinc-700/80 flex items-center justify-center transition-all shadow-sm bg-zinc-50 hover:border-zinc-300 dark:bg-zinc-800 ${config.color}`}
+                    className={`w-7 h-7 rounded-md border border-zinc-200/80 dark:border-zinc-700/80 flex items-center justify-center transition-all shadow-sm bg-zinc-50 hover:border-zinc-300 dark:bg-zinc-800 ${config.color}`}
                     title={link.platform ? link.platform.charAt(0).toUpperCase() + link.platform.slice(1) : "Website"}
                   >
-                    <Icon size={14} />
+                    <Icon size={12} />
                   </a>
                 );
               })}
             </div>
           )}
 
-          {/* Mobile/Tablet Tab Navigation */}
-          <div className="lg:hidden flex gap-1 bg-zinc-50 p-1 rounded-lg border border-zinc-200/80 shadow-sm overflow-x-auto dark:bg-zinc-800 dark:border-zinc-700">
-            {[
-              { id: "overview", label: "Overview", icon: LayoutDashboard },
-              { id: "catalog", label: "Catalog", icon: ListFilter },
-              { id: "gallery", label: "Gallery", icon: ImageIcon },
-              { id: "hours", label: "Hours", icon: CalendarDays },
-              { id: "reviews", label: "Reviews", icon: Star },
-              { id: "settings", label: "Settings", icon: Settings2 },
-            ].map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveView(tab.id)}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-bold transition-all whitespace-nowrap ${
-                  activeView === tab.id
-                    ? "bg-zinc-900 text-white shadow-sm dark:bg-zinc-100 dark:text-zinc-900"
-                    : "text-zinc-500 hover:bg-zinc-200/50 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-700 dark:hover:text-zinc-100"
-                }`}
-              >
-                <tab.icon size={14} />
-                <span className="hidden sm:inline">{tab.label}</span>
-              </button>
-            ))}
-          </div>
+          {/* Navigation Drawer Trigger – visible on all screen sizes */}
+          <button
+            id="nav-drawer-trigger"
+            onClick={() => setIsMobileDrawerOpen(true)}
+            aria-label="Open navigation menu"
+            className="flex items-center gap-2 h-9 px-3 rounded-md border border-zinc-200/80 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-700 hover:text-zinc-900 dark:hover:text-zinc-100 transition-all shadow-sm shrink-0"
+          >
+            <Menu size={15} />
+            <span className="text-xs font-semibold hidden sm:inline">{activeNavItem.shortLabel}</span>
+          </button>
         </div>
 
-        {/* Layout Grid: Sidebar + Content Area */}
-        <div className="lg:grid lg:grid-cols-12 lg:gap-6 items-start">
-          {/* Desktop Sidebar Navigation Menu */}
-          <div className="hidden lg:block lg:col-span-3 sticky top-6 space-y-4">
-            <div className="bg-white p-3 rounded-2xl border border-zinc-200/80 shadow-sm space-y-1 dark:bg-zinc-900 dark:border-zinc-800">
-              <div className="px-3 pt-2 pb-2.5 flex items-center justify-between border-b border-zinc-100 dark:border-zinc-800 mb-1">
-                <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">
-                  Command Center
-                </span>
-                <span className="text-[9px] font-bold text-[#FF6A00] bg-[#FF6A00]/10 px-2 py-0.5 rounded-full">
-                  Merchant
-                </span>
-              </div>
-              {[
-                {
-                  id: "overview",
-                  label: "Overview & Analytics",
-                  icon: LayoutDashboard,
-                  desc: "Views, leads & charts",
-                },
-                {
-                  id: "catalog",
-                  label: "Catalog Manager",
-                  icon: ListFilter,
-                  desc: "Categories & items",
-                },
-                {
-                  id: "gallery",
-                  label: "Photo Gallery",
-                  icon: ImageIcon,
-                  desc: "Storefront images",
-                },
-                {
-                  id: "hours",
-                  label: "Business Hours",
-                  icon: CalendarDays,
-                  desc: "Timings & holidays",
-                },
-                {
-                  id: "reviews",
-                  label: "Customer Reviews",
-                  icon: Star,
-                  desc: "Ratings & feedback",
-                },
-                {
-                  id: "settings",
-                  label: "Shop Settings",
-                  icon: Settings2,
-                  desc: "Configuration & SEO",
-                  subTabs: [
-                    { id: "identity", label: "Business Identity" },
-                    { id: "location", label: "Location & Address" },
-                    { id: "contact", label: "Contact Details" },
-                    { id: "social", label: "Social Media Links" },
-                    { id: "seo", label: "Discovery & SEO" },
-                  ],
-                },
-              ].map((tab) => (
-                <div key={tab.id} className="space-y-1">
-                  <button
-                    onClick={() => setActiveView(tab.id)}
-                    className={`w-full flex items-center gap-3 p-2.5 rounded-xl text-left transition-all group ${
-                      activeView === tab.id
-                        ? "bg-zinc-900 text-white shadow-sm dark:bg-zinc-100 dark:text-zinc-900"
-                        : "text-zinc-600 hover:bg-zinc-50 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800/50 dark:hover:text-zinc-100"
-                    }`}
-                  >
-                    <div
-                      className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-colors ${
-                        activeView === tab.id
-                          ? "bg-white/10 text-[#FF6A00] dark:bg-black/10"
-                          : "bg-zinc-100 text-zinc-500 group-hover:text-zinc-900 dark:bg-zinc-800 dark:text-zinc-400 dark:group-hover:text-zinc-100"
-                      }`}
-                    >
-                      <tab.icon size={16} />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="text-xs font-bold tracking-tight leading-none mb-1">
-                        {tab.label}
-                      </div>
-                      <div
-                        className={`text-[10px] font-medium truncate ${
-                          activeView === tab.id
-                            ? "text-zinc-300 dark:text-zinc-600"
-                            : "text-zinc-400 dark:text-zinc-500"
-                        }`}
-                      >
-                        {tab.desc}
-                      </div>
-                    </div>
-                    {activeView === tab.id && (
-                      <div className="w-1.5 h-1.5 rounded-full bg-[#FF6A00] shrink-0" />
-                    )}
-                  </button>
-
-                  {/* Sub-tabs for Settings */}
-                  {activeView === tab.id && tab.subTabs && (
-                    <div className="pl-11 pr-2 py-1 space-y-1 animate-in fade-in slide-in-from-top-1 duration-300 border-l-2 border-zinc-100 dark:border-zinc-800 ml-4">
-                      {tab.subTabs.map((sub) => (
-                        <button
-                          key={sub.id}
-                          onClick={() => scrollToSection(sub.id)}
-                          className="w-full text-left py-1.5 px-3 rounded-lg text-xs font-semibold text-zinc-500 hover:text-zinc-900 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:text-zinc-100 dark:hover:bg-zinc-800/50 transition-all flex items-center justify-between group"
-                        >
-                          <span>{sub.label}</span>
-                          <span className="text-[10px] opacity-0 group-hover:opacity-100 transition-opacity text-[#FF6A00]">→</span>
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              ))}
+        {/* ── Unified Navigation Drawer (all screen sizes) ── */}
+        <Drawer
+          isOpen={isMobileDrawerOpen}
+          onClose={() => setIsMobileDrawerOpen(false)}
+          title="Command Center"
+          subtitle={shop?.name || "Shop Dashboard"}
+          width="w-72"
+          footer={
+            <a
+              href="/help"
+              target="_blank"
+              className="flex items-center justify-center gap-2 w-full py-2 bg-[#FF6A00]/10 hover:bg-[#FF6A00]/20 text-[#FF6A00] text-[11px] font-bold rounded-md border border-[#FF6A00]/15 transition-all"
+            >
+              <Store size={13} />
+              Contact Support
+            </a>
+          }
+        >
+          <div className="px-3 py-3 space-y-0.5">
+            {/* Merchant badge */}
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-[8px] font-bold text-[#FF6A00] bg-[#FF6A00]/10 px-2 py-0.5 rounded-full uppercase tracking-wider">
+                Merchant
+              </span>
             </div>
 
-            {/* Support Assistance Card */}
-            <div className="bg-gradient-to-br from-[#FF6A00]/10 to-[#FF6A00]/5 border border-[#FF6A00]/10 p-4 rounded-2xl text-center space-y-2.5 dark:from-[#FF6A00]/20 dark:to-[#FF6A00]/10">
-              <div className="w-9 h-9 bg-white rounded-xl flex items-center justify-center mx-auto shadow-sm text-[#FF6A00] dark:bg-zinc-900">
-                <Store size={16} />
+            {navItems.map((tab) => (
+              <div key={tab.id}>
+                <button
+                  onClick={() => handleSelectView(tab.id)}
+                  className={`w-full flex items-center gap-2.5 p-2.5 rounded-md text-left transition-all group ${activeView === tab.id
+                    ? "bg-zinc-900 text-white shadow-sm dark:bg-zinc-100 dark:text-zinc-900"
+                    : "text-zinc-600 hover:bg-zinc-50 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800/60 dark:hover:text-zinc-100"
+                    }`}
+                >
+                  <div
+                    className={`w-8 h-8 rounded-md flex items-center justify-center shrink-0 transition-colors ${activeView === tab.id
+                      ? "bg-white/10 text-[#FF6A00] dark:bg-black/10"
+                      : "bg-zinc-100 text-zinc-500 group-hover:bg-zinc-200 group-hover:text-zinc-900 dark:bg-zinc-800 dark:text-zinc-400 dark:group-hover:bg-zinc-700 dark:group-hover:text-zinc-100"
+                      }`}
+                  >
+                    <tab.icon size={15} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-xs font-bold tracking-tight leading-tight">
+                      {tab.label}
+                    </div>
+                    <div
+                      className={`text-[10px] font-medium truncate mt-0.5 ${activeView === tab.id
+                        ? "text-zinc-400 dark:text-zinc-500"
+                        : "text-zinc-400 dark:text-zinc-500"
+                        }`}
+                    >
+                      {tab.desc}
+                    </div>
+                  </div>
+                  {activeView === tab.id && (
+                    <div className="w-1.5 h-1.5 rounded-full bg-[#FF6A00] shrink-0" />
+                  )}
+                </button>
+
+                {/* Sub-tabs */}
+                {activeView === tab.id && tab.subTabs && (
+                  <div className="mt-1 ml-11 space-y-0.5 border-l border-zinc-200 dark:border-zinc-800 pl-3">
+                    {tab.subTabs.map((sub) => (
+                      <button
+                        key={sub.id}
+                        onClick={() => handleSelectSubTab(sub.id)}
+                        className="w-full text-left py-1.5 px-2 rounded-md text-[11px] font-semibold text-zinc-500 hover:text-zinc-900 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:text-zinc-100 dark:hover:bg-zinc-800/50 transition-all flex items-center justify-between group"
+                      >
+                        <span>{sub.label}</span>
+                        <span className="text-[9px] opacity-0 group-hover:opacity-100 transition-opacity text-[#FF6A00]">→</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
-              <div>
-                <h4 className="text-xs font-bold text-zinc-900 dark:text-zinc-100 tracking-tight mb-0.5">
-                  Need Assistance?
-                </h4>
-                <p className="text-[11px] text-zinc-500 dark:text-zinc-400 font-medium leading-relaxed">
-                  Our merchant support team is available 24/7 to help you scale.
-                </p>
-              </div>
-              <a
-                href="/help"
-                target="_blank"
-                className="inline-block w-full py-1.5 bg-white hover:bg-zinc-50 text-[#FF6A00] text-xs font-bold rounded-lg border border-[#FF6A00]/20 shadow-sm transition-all dark:bg-zinc-900 dark:hover:bg-zinc-800"
+            ))}
+
+            {/* QR Ordering quick links */}
+            <div className="pt-2 mt-2 border-t border-zinc-200 dark:border-zinc-800 space-y-1">
+              <span className="px-3 text-[9px] font-black text-zinc-400 dark:text-zinc-500 uppercase tracking-widest block mb-1">
+                QR Ordering
+              </span>
+              <Link
+                href={`/dashboard/tables?id=${shopId}`}
+                className="w-full flex items-center gap-2.5 p-2 rounded-md text-left transition-all group text-zinc-600 hover:bg-zinc-50 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800/60 dark:hover:text-zinc-100"
               >
-                Contact Support
-              </a>
+                <div className="w-8 h-8 rounded-md flex items-center justify-center shrink-0 bg-zinc-100 text-zinc-500 group-hover:bg-zinc-200 group-hover:text-zinc-900 dark:bg-zinc-800 dark:text-zinc-400 dark:group-hover:bg-zinc-700 dark:group-hover:text-zinc-100">
+                  <QrCode size={15} />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-xs font-bold tracking-tight leading-tight">
+                    Tables & QR
+                  </div>
+                  <div className="text-[10px] font-medium text-zinc-400 dark:text-zinc-500 truncate mt-0.5">
+                    Manage table QR codes
+                  </div>
+                </div>
+              </Link>
+              <Link
+                href={`/dashboard/kitchen?id=${shopId}`}
+                className="w-full flex items-center gap-2.5 p-2 rounded-md text-left transition-all group text-zinc-600 hover:bg-zinc-50 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800/60 dark:hover:text-zinc-100"
+              >
+                <div className="w-8 h-8 rounded-md flex items-center justify-center shrink-0 bg-zinc-100 text-zinc-500 group-hover:bg-zinc-200 group-hover:text-zinc-900 dark:bg-zinc-800 dark:text-zinc-400 dark:group-hover:bg-zinc-700 dark:group-hover:text-zinc-100">
+                  <ChefHat size={15} />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-xs font-bold tracking-tight leading-tight">
+                    Kitchen View
+                  </div>
+                  <div className="text-[10px] font-medium text-zinc-400 dark:text-zinc-500 truncate mt-0.5">
+                    Live orders dashboard
+                  </div>
+                </div>
+              </Link>
+              <Link
+                href={`/dashboard/waiter?id=${shopId}`}
+                className="w-full flex items-center gap-2.5 p-2 rounded-md text-left transition-all group text-zinc-600 hover:bg-zinc-50 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800/60 dark:hover:text-zinc-100"
+              >
+                <div className="w-8 h-8 rounded-md flex items-center justify-center shrink-0 bg-zinc-100 text-zinc-500 group-hover:bg-zinc-200 group-hover:text-zinc-900 dark:bg-zinc-800 dark:text-zinc-400 dark:group-hover:bg-zinc-700 dark:group-hover:text-zinc-100">
+                  <Bell size={15} />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-xs font-bold tracking-tight leading-tight">
+                    Waiter Console
+                  </div>
+                  <div className="text-[10px] font-medium text-zinc-400 dark:text-zinc-500 truncate mt-0.5">
+                    Live service dashboard
+                  </div>
+                </div>
+              </Link>
             </div>
           </div>
+        </Drawer>
 
+        {/* ── Full-width Content Area (sidebar is now a drawer) ── */}
+        <div>
           {/* Content Area */}
-          <div className="lg:col-span-9 space-y-4">
+          <div className="space-y-4">
             {/* ── OVERVIEW TAB ── */}
             {activeView === "overview" && (
               <div className="space-y-4">
                 {/* Stats Grid */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                   {[
                     { label: "Total Views", value: shop?.views || 0, icon: Eye },
                     {
@@ -907,17 +1065,17 @@ function ShopDashboardContent() {
                   ].map((stat, i) => (
                     <div
                       key={i}
-                      className="bg-white p-4 rounded-2xl border border-zinc-200/80 shadow-sm dark:bg-zinc-900 dark:border-zinc-800"
+                      className="bg-white p-3 rounded-md border border-zinc-200/80 shadow-sm dark:bg-zinc-900 dark:border-zinc-800"
                     >
-                      <div className="flex items-center justify-between mb-2">
-                        <div className="w-8 h-8 rounded-lg bg-[#FF6A00]/10 flex items-center justify-center text-[#FF6A00]">
-                          <stat.icon size={16} />
+                      <div className="flex items-center justify-between mb-1.5">
+                        <div className="w-7 h-7 rounded-md bg-[#FF6A00]/10 flex items-center justify-center text-[#FF6A00]">
+                          <stat.icon size={14} />
                         </div>
                       </div>
-                      <div className="text-xl font-bold text-zinc-900 dark:text-zinc-100 mb-0.5 tracking-tight">
+                      <div className="text-lg font-bold text-zinc-900 dark:text-zinc-100 mb-0.5 tracking-tight">
                         {stat.value}
                       </div>
-                      <div className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">
+                      <div className="text-[9px] font-bold text-zinc-400 uppercase tracking-widest">
                         {stat.label}
                       </div>
                     </div>
@@ -925,23 +1083,23 @@ function ShopDashboardContent() {
                 </div>
 
                 {/* Performance & Discovery Grid */}
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
                   {/* Chart Card */}
-                  <div className="lg:col-span-2 bg-white rounded-2xl border border-zinc-200/80 shadow-sm p-5 dark:bg-zinc-900 dark:border-zinc-800 flex flex-col justify-between">
-                    <div className="flex items-center justify-between mb-4">
+                  <div className="lg:col-span-2 bg-white rounded-md border border-zinc-200/80 shadow-sm p-4 dark:bg-zinc-900 dark:border-zinc-800 flex flex-col justify-between">
+                    <div className="flex items-center justify-between mb-2">
                       <div>
-                        <h3 className="text-sm font-bold text-zinc-900 dark:text-zinc-100 tracking-tight">
+                        <h3 className="text-xs font-bold text-zinc-900 dark:text-zinc-100 tracking-tight">
                           Weekly Views
                         </h3>
-                        <p className="text-xs font-medium text-zinc-500 dark:text-zinc-400">
+                        <p className="text-[11px] font-medium text-zinc-500 dark:text-zinc-400">
                           Last 7 days performance
                         </p>
                       </div>
-                      <div className="px-2.5 py-1 bg-zinc-50 border border-zinc-200 rounded-lg text-[10px] font-bold text-zinc-500 uppercase tracking-widest dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-400">
-                        Last 7 Days
+                      <div className="px-2 py-0.5 bg-zinc-50 border border-zinc-200 rounded text-[9px] font-bold text-zinc-500 uppercase tracking-widest dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-400">
+                        7 Days
                       </div>
                     </div>
-                    <div className="h-36 flex items-end gap-2 pt-4">
+                    <div className="h-28 flex items-end gap-1.5 pt-2">
                       {(() => {
                         const stats = getWeeklyViewStats(shop);
                         const maxViews = Math.max(...stats.map((s) => s.views), 1);
@@ -951,11 +1109,10 @@ function ShopDashboardContent() {
                           return (
                             <div key={i} className="flex-1 relative group flex items-end h-full">
                               <div
-                                className={`w-full transition-all rounded-lg ${
-                                  isToday
-                                    ? "bg-[#FF6A00]"
-                                    : "bg-[#FF6A00]/20 hover:bg-[#FF6A00]/40 dark:bg-[#FF6A00]/30 dark:hover:bg-[#FF6A00]/50"
-                                }`}
+                                className={`w-full transition-all rounded-md ${isToday
+                                  ? "bg-[#FF6A00]"
+                                  : "bg-[#FF6A00]/20 hover:bg-[#FF6A00]/40 dark:bg-[#FF6A00]/30 dark:hover:bg-[#FF6A00]/50"
+                                  }`}
                                 style={{ height: `${heightPct}%` }}
                               />
                               <div className="absolute -top-7 left-1/2 -translate-x-1/2 bg-zinc-900 text-white text-[9px] px-2 py-0.5 rounded-md opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10 shadow-sm dark:bg-zinc-100 dark:text-zinc-900 font-bold">
@@ -966,7 +1123,7 @@ function ShopDashboardContent() {
                         });
                       })()}
                     </div>
-                    <div className="flex justify-between mt-3 text-[10px] font-bold text-zinc-400 uppercase tracking-wider border-t border-zinc-100 dark:border-zinc-800 pt-2">
+                    <div className="flex justify-between mt-2.5 text-[9px] font-bold text-zinc-400 uppercase tracking-wider border-t border-zinc-100 dark:border-zinc-800 pt-1.5">
                       {getWeeklyViewStats(shop).map((s, i) => (
                         <span key={i} className={i === 6 ? "text-[#FF6A00]" : ""}>
                           {s.day}
@@ -976,34 +1133,34 @@ function ShopDashboardContent() {
                   </div>
 
                   {/* QR Discovery Card */}
-                  <div className="bg-white rounded-2xl border border-zinc-200/80 shadow-sm p-5 text-center dark:bg-zinc-900 dark:border-zinc-800 flex flex-col justify-between">
+                  <div className="bg-white rounded-md border border-zinc-200/80 shadow-sm p-4 text-center dark:bg-zinc-900 dark:border-zinc-800 flex flex-col justify-between">
                     <div>
-                      <div className="w-9 h-9 bg-[#FF6A00]/10 rounded-lg flex items-center justify-center mx-auto mb-2.5">
-                        <QrCode size={16} className="text-[#FF6A00]" />
+                      <div className="w-8 h-8 bg-[#FF6A00]/10 rounded-md flex items-center justify-center mx-auto mb-2">
+                        <QrCode size={14} className="text-[#FF6A00]" />
                       </div>
-                      <h3 className="text-sm font-bold text-zinc-900 dark:text-zinc-100 tracking-tight mb-2">
+                      <h3 className="text-xs font-bold text-zinc-900 dark:text-zinc-100 tracking-tight mb-1.5">
                         Discovery Code
                       </h3>
-                      <div className="bg-zinc-50 border border-zinc-200/80 p-3 rounded-xl mb-4 flex items-center justify-center dark:bg-zinc-800 dark:border-zinc-700">
+                      <div className="bg-zinc-50 border border-zinc-200/80 p-2 rounded-md mb-3 flex items-center justify-center dark:bg-zinc-800 dark:border-zinc-700">
                         <img
-                          src={`https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=${encodeURIComponent(
-                            window.location.origin + "/shop/" + slugify(shop?.slug)
+                          src={`https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=${encodeURIComponent(
+                            typeof window !== 'undefined' ? window.location.origin + "/shop/" + slugify(shop?.slug) : ""
                           )}`}
                           alt="Store QR"
-                          className="w-28 h-28 object-contain"
+                          className="w-20 h-20 object-contain"
                         />
                       </div>
                     </div>
-                    <div className="flex gap-2">
+                    <div className="flex gap-1.5">
                       <button
                         onClick={handleDownloadQR}
                         disabled={downloadingQR}
-                        className="flex-1 h-9 bg-zinc-900 hover:bg-zinc-800 text-white text-xs font-bold rounded-lg flex items-center justify-center gap-1.5 transition-all disabled:opacity-50 shadow-sm dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
+                        className="flex-1 h-8 bg-zinc-900 hover:bg-zinc-800 text-white text-[11px] font-bold rounded-md flex items-center justify-center gap-1 transition-all disabled:opacity-50 shadow-sm dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
                       >
                         {downloadingQR ? (
-                          <RefreshCw size={12} className="animate-spin" />
+                          <RefreshCw size={11} className="animate-spin" />
                         ) : (
-                          <Download size={12} />
+                          <Download size={11} />
                         )}
                         Download
                       </button>
@@ -1018,49 +1175,49 @@ function ShopDashboardContent() {
                             type: "success",
                           });
                         }}
-                        className="flex-1 h-9 border border-zinc-200/80 text-xs font-bold rounded-lg flex items-center justify-center gap-1.5 text-zinc-600 hover:text-zinc-900 hover:bg-zinc-50 transition-all dark:border-zinc-700 dark:text-zinc-300 dark:hover:text-zinc-100 dark:hover:bg-zinc-800"
+                        className="flex-1 h-8 border border-zinc-200/80 text-[11px] font-bold rounded-md flex items-center justify-center gap-1 text-zinc-600 hover:text-zinc-900 hover:bg-zinc-50 transition-all dark:border-zinc-700 dark:text-zinc-300 dark:hover:text-zinc-100 dark:hover:bg-zinc-800"
                       >
-                        <Share2 size={12} /> Share
+                        <Share2 size={11} /> Share
                       </button>
                     </div>
                   </div>
                 </div>
 
                 {/* Quick Shortcuts */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   <button
                     onClick={() => setActiveView("catalog")}
-                    className="bg-white p-4 rounded-2xl border border-zinc-200/80 text-left hover:border-[#FF6A00]/40 hover:shadow-sm transition-all group dark:bg-zinc-900 dark:border-zinc-800 dark:hover:border-[#FF6A00]/50"
+                    className="bg-white p-3 rounded-md border border-zinc-200/80 text-left hover:border-[#FF6A00]/40 hover:shadow-sm transition-all group dark:bg-zinc-900 dark:border-zinc-800 dark:hover:border-[#FF6A00]/50"
                   >
-                    <div className="w-9 h-9 bg-[#FF6A00]/10 rounded-lg flex items-center justify-center mb-2.5">
-                      <ListFilter size={16} className="text-[#FF6A00]" />
+                    <div className="w-8 h-8 bg-[#FF6A00]/10 rounded-md flex items-center justify-center mb-2">
+                      <ListFilter size={14} className="text-[#FF6A00]" />
                     </div>
-                    <h3 className="text-sm font-bold text-zinc-900 dark:text-zinc-100 tracking-tight mb-1">
+                    <h3 className="text-xs font-bold text-zinc-900 dark:text-zinc-100 tracking-tight mb-0.5">
                       Catalog Manager
                     </h3>
-                    <p className="text-xs font-medium text-zinc-500 dark:text-zinc-400">
+                    <p className="text-[11px] font-medium text-zinc-500 dark:text-zinc-400 leading-relaxed">
                       Update your items, prices, and categories.
                     </p>
-                    <div className="mt-2 text-[#FF6A00] text-xs font-bold opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
-                      Manage Catalog <ChevronRight size={14} />
+                    <div className="mt-1.5 text-[#FF6A00] text-[11px] font-bold opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
+                      Manage Catalog <ChevronRight size={12} />
                     </div>
                   </button>
 
                   <button
                     onClick={() => setActiveView("gallery")}
-                    className="bg-white p-4 rounded-2xl border border-zinc-200/80 text-left hover:border-blue-500/40 hover:shadow-sm transition-all group dark:bg-zinc-900 dark:border-zinc-800 dark:hover:border-blue-500/50"
+                    className="bg-white p-3 rounded-md border border-zinc-200/80 text-left hover:border-blue-500/40 hover:shadow-sm transition-all group dark:bg-zinc-900 dark:border-zinc-800 dark:hover:border-blue-500/50"
                   >
-                    <div className="w-9 h-9 bg-blue-500/10 rounded-lg flex items-center justify-center mb-2.5">
-                      <ImageIcon size={16} className="text-blue-500" />
+                    <div className="w-8 h-8 bg-blue-500/10 rounded-md flex items-center justify-center mb-2">
+                      <ImageIcon size={14} className="text-blue-500" />
                     </div>
-                    <h3 className="text-sm font-bold text-zinc-900 dark:text-zinc-100 tracking-tight mb-1">
+                    <h3 className="text-xs font-bold text-zinc-900 dark:text-zinc-100 tracking-tight mb-0.5">
                       Photo Gallery
                     </h3>
-                    <p className="text-xs font-medium text-zinc-500 dark:text-zinc-400">
+                    <p className="text-[11px] font-medium text-zinc-500 dark:text-zinc-400 leading-relaxed">
                       Showcase your shop with high-quality photos.
                     </p>
-                    <div className="mt-2 text-blue-500 text-xs font-bold opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
-                      Upload Photos <ChevronRight size={14} />
+                    <div className="mt-1.5 text-blue-500 text-[11px] font-bold opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
+                      Upload Photos <ChevronRight size={12} />
                     </div>
                   </button>
                 </div>
@@ -1070,69 +1227,66 @@ function ShopDashboardContent() {
                   const { score, items } = getProfileCompletion(shop);
                   if (score === 100) return null;
                   return (
-                    <div className="bg-white rounded-2xl border border-zinc-200/80 overflow-hidden shadow-sm dark:bg-zinc-900 dark:border-zinc-800">
-                      <div className="p-4 border-b border-zinc-100 dark:border-zinc-800">
-                        <div className="flex items-center justify-between mb-2">
+                    <div className="bg-white rounded-md border border-zinc-200/80 overflow-hidden shadow-sm dark:bg-zinc-900 dark:border-zinc-800">
+                      <div className="p-3 border-b border-zinc-100 dark:border-zinc-800">
+                        <div className="flex items-center justify-between mb-1.5">
                           <div>
-                            <h3 className="text-sm font-bold text-zinc-900 dark:text-zinc-100 tracking-tight">
+                            <h3 className="text-xs font-bold text-zinc-900 dark:text-zinc-100 tracking-tight">
                               Complete Your Profile
                             </h3>
-                            <p className="text-xs text-zinc-500 dark:text-zinc-400 font-medium">
+                            <p className="text-[11px] text-zinc-500 dark:text-zinc-400 font-medium">
                               More complete = higher customer conversion
                             </p>
                           </div>
-                          <span className="text-lg font-black text-[#FF6A00]">
+                          <span className="text-base font-black text-[#FF6A00]">
                             {score}%
                           </span>
                         </div>
-                        <div className="h-1.5 bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden">
+                        <div className="h-1 bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden">
                           <div
                             className="h-full bg-gradient-to-r from-[#FF6A00] to-[#FF9A72] rounded-full transition-all duration-700"
                             style={{ width: `${score}%` }}
                           />
                         </div>
                       </div>
-                      <div className="p-3 space-y-1">
+                      <div className="p-2 space-y-0.5">
                         {items.map((item, i) => (
                           <button
                             key={i}
                             onClick={() => !item.done && setActiveView(item.tab)}
-                            className={`w-full flex items-center gap-3 p-2.5 rounded-xl text-left transition-all ${
-                              item.done
-                                ? "opacity-50 cursor-default"
-                                : "hover:bg-zinc-50 dark:hover:bg-zinc-800/50 group cursor-pointer"
-                            }`}
+                            className={`w-full flex items-center gap-2.5 p-2 rounded-md text-left transition-all ${item.done
+                              ? "opacity-50 cursor-default"
+                              : "hover:bg-zinc-50 dark:hover:bg-zinc-800/50 group cursor-pointer"
+                              }`}
                           >
                             <div
-                              className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 border-2 transition-all ${
-                                item.done
-                                  ? "bg-[#FF6A00] border-[#FF6A00]"
-                                  : "border-zinc-300 dark:border-zinc-700 group-hover:border-[#FF6A00]/50"
-                              }`}
+                              className={`w-4 h-4 rounded-full flex items-center justify-center shrink-0 border transition-all ${item.done
+                                ? "bg-[#FF6A00] border-[#FF6A00]"
+                                : "border-zinc-300 dark:border-zinc-700 group-hover:border-[#FF6A00]/50"
+                                }`}
                             >
                               {item.done && (
-                                <CircleCheckBig size={12} className="text-white" />
+                                <CircleCheckBig size={10} className="text-white" />
                               )}
                             </div>
                             <div className="flex-1 min-w-0">
                               <p
-                                className={`text-xs font-bold ${
-                                  item.done
-                                    ? "line-through text-zinc-400 dark:text-zinc-600"
-                                    : "text-zinc-900 dark:text-zinc-100"
-                                }`}
+                                className={`text-[11px] font-bold ${item.done
+                                  ? "line-through text-zinc-400 dark:text-zinc-600"
+                                  : "text-zinc-900 dark:text-zinc-100"
+                                  }`}
                               >
                                 {item.label}
                               </p>
                               {!item.done && (
-                                <p className="text-[10px] text-zinc-400 dark:text-zinc-500 truncate font-medium">
+                                <p className="text-[9.5px] text-zinc-400 dark:text-zinc-500 truncate font-medium">
                                   {item.hint}
                                 </p>
                               )}
                             </div>
                             {!item.done && (
                               <ChevronRight
-                                size={14}
+                                size={12}
                                 className="text-zinc-400 group-hover:text-[#FF6A00] transition-colors shrink-0"
                               />
                             )}
@@ -1144,16 +1298,16 @@ function ShopDashboardContent() {
                 })()}
 
                 {/* Growth Insight Banner */}
-                <div className="bg-gradient-to-r from-[#FF6A00]/10 to-transparent rounded-2xl p-4 border border-[#FF6A00]/20 dark:from-[#FF6A00]/20 dark:to-transparent">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 bg-[#FF6A00]/20 rounded-lg flex items-center justify-center shrink-0">
-                      <Zap size={16} className="text-[#FF6A00]" />
+                <div className="bg-gradient-to-r from-[#FF6A00]/10 to-transparent rounded-md p-3 border border-[#FF6A00]/20 dark:from-[#FF6A00]/20 dark:to-transparent">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-7 h-7 bg-[#FF6A00]/20 rounded-md flex items-center justify-center shrink-0">
+                      <Zap size={14} className="text-[#FF6A00]" />
                     </div>
                     <div>
                       <h4 className="text-xs font-bold text-zinc-900 dark:text-zinc-100 mb-0.5 tracking-tight">
                         Growth Insight
                       </h4>
-                      <p className="text-xs text-zinc-600 dark:text-zinc-300 font-medium">
+                      <p className="text-[11px] text-zinc-600 dark:text-zinc-300 font-medium">
                         Businesses with complete catalogs see{" "}
                         <span className="font-bold text-[#FF6A00]">2.4x higher</span>{" "}
                         customer conversion rates.
@@ -1163,27 +1317,27 @@ function ShopDashboardContent() {
                 </div>
 
                 {/* System Navigation Links */}
-                <div className="bg-white rounded-2xl border border-zinc-200/80 overflow-hidden shadow-sm dark:bg-zinc-900 dark:border-zinc-800">
+                <div className="bg-white rounded-md border border-zinc-200/80 overflow-hidden shadow-sm dark:bg-zinc-900 dark:border-zinc-800">
                   <button
                     onClick={() => setHistoryShop(shop)}
-                    className="w-full flex items-center justify-between p-4 hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-all text-xs font-bold text-zinc-600 dark:text-zinc-300"
+                    className="w-full flex items-center justify-between p-3 hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-all text-xs font-bold text-zinc-600 dark:text-zinc-300"
                   >
                     <div className="flex items-center gap-2">
-                      <History size={14} />
+                      <History size={12} />
                       <span>Audit History</span>
                     </div>
-                    <ChevronRight size={14} />
+                    <ChevronRight size={12} />
                   </button>
                   <Link
                     href={`/shop/${slugify(shop?.slug)}`}
                     target="_blank"
-                    className="w-full flex items-center justify-between p-4 border-t border-zinc-100 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-all text-xs font-bold text-zinc-600 dark:text-zinc-300"
+                    className="w-full flex items-center justify-between p-3 border-t border-zinc-100 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-all text-xs font-bold text-zinc-600 dark:text-zinc-300"
                   >
                     <div className="flex items-center gap-2">
-                      <ExternalLink size={14} />
+                      <ExternalLink size={12} />
                       <span>View Live Page</span>
                     </div>
-                    <ChevronRight size={14} />
+                    <ChevronRight size={12} />
                   </Link>
                 </div>
               </div>
@@ -1191,59 +1345,59 @@ function ShopDashboardContent() {
 
             {/* ── CATALOG TAB ── */}
             {activeView === "catalog" && (
-              <div className="bg-white rounded-2xl border border-zinc-200/80 overflow-hidden shadow-sm dark:bg-zinc-900 dark:border-zinc-800">
-                <div className="p-4 border-b border-zinc-200/80 dark:border-zinc-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div className="bg-white rounded-md border border-zinc-200/80 overflow-hidden shadow-sm dark:bg-zinc-900 dark:border-zinc-800">
+                <div className="p-3 border-b border-zinc-200/80 dark:border-zinc-800 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
                   <div>
-                    <h2 className="text-base font-bold text-zinc-900 dark:text-zinc-100 tracking-tight">
+                    <h2 className="text-sm font-bold text-zinc-900 dark:text-zinc-100 tracking-tight">
                       Catalog Management
                     </h2>
-                    <p className="text-xs text-zinc-500 dark:text-zinc-400 font-medium">
+                    <p className="text-[11px] text-zinc-500 dark:text-zinc-400 font-medium">
                       Manage your products and services
                     </p>
                   </div>
-                  <div className="flex flex-wrap items-center gap-2">
+                  <div className="flex flex-wrap items-center gap-1.5">
                     <div className="relative">
                       <Search
-                        size={14}
-                        className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400"
+                        size={12}
+                        className="absolute left-2.5 top-1/2 -translate-y-1/2 text-zinc-400"
                       />
                       <input
                         type="text"
                         placeholder="Search items..."
                         defaultValue={searchQuery}
                         onChange={(e) => handleCatalogSearch(e.target.value)}
-                        className="pl-8 pr-3 h-9 bg-zinc-50 border border-zinc-200/80 rounded-lg text-xs focus:bg-white focus:border-[#FF6A00]/40 outline-none transition-all w-36 sm:w-52 font-medium dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-100"
+                        className="pl-7 pr-2.5 h-8 bg-zinc-50 border border-zinc-200/80 rounded-md text-xs focus:bg-white focus:border-[#FF6A00]/40 outline-none transition-all w-32 sm:w-44 font-medium dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-100"
                       />
                     </div>
                     <button
                       onClick={handleExportCatalog}
                       disabled={isExporting}
-                      className="h-9 px-3 bg-zinc-50 border border-zinc-200/80 text-zinc-700 dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-300 text-xs font-bold rounded-lg flex items-center gap-1.5 hover:bg-zinc-100 dark:hover:bg-zinc-700 active:scale-95 transition-all shadow-sm whitespace-nowrap disabled:opacity-50"
+                      className="h-8 px-2.5 bg-zinc-50 border border-zinc-200/80 text-zinc-700 dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-300 text-xs font-bold rounded-md flex items-center gap-1 hover:bg-zinc-100 dark:hover:bg-zinc-700 active:scale-95 transition-all shadow-sm whitespace-nowrap disabled:opacity-50"
                       title="Download Catalog as Excel Spreadsheet"
                     >
                       {isExporting ? (
                         <>
-                          <Loader2 size={14} className="animate-spin text-[#FF6A00]" />{" "}
+                          <Loader2 size={12} className="animate-spin text-[#FF6A00]" />{" "}
                           Exporting...
                         </>
                       ) : (
                         <>
-                          <Download size={14} /> Export
+                          <Download size={12} /> Export
                         </>
                       )}
                     </button>
                     <label
-                      className="cursor-pointer h-9 px-3 bg-zinc-50 border border-zinc-200/80 text-zinc-700 dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-300 text-xs font-bold rounded-lg flex items-center gap-1.5 hover:bg-zinc-100 dark:hover:bg-zinc-700 active:scale-95 transition-all shadow-sm whitespace-nowrap mb-0"
+                      className="cursor-pointer h-8 px-2.5 bg-zinc-50 border border-zinc-200/80 text-zinc-700 dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-300 text-xs font-bold rounded-md flex items-center gap-1 hover:bg-zinc-100 dark:hover:bg-zinc-700 active:scale-95 transition-all shadow-sm whitespace-nowrap mb-0"
                       title="Upload Excel or CSV Catalog"
                     >
                       {isImporting ? (
                         <>
-                          <Loader2 size={14} className="animate-spin text-[#FF6A00]" />{" "}
+                          <Loader2 size={12} className="animate-spin text-[#FF6A00]" />{" "}
                           Importing...
                         </>
                       ) : (
                         <>
-                          <Upload size={14} /> Import
+                          <Upload size={12} /> Import
                           <input
                             type="file"
                             accept=".xlsx,.xls,.csv"
@@ -1254,16 +1408,40 @@ function ShopDashboardContent() {
                         </>
                       )}
                     </label>
+                    {/* View Toggle */}
+                    <div className="flex items-center h-8 rounded-md border border-zinc-200/80 dark:border-zinc-700 overflow-hidden bg-zinc-50 dark:bg-zinc-800">
+                      <button
+                        onClick={() => setCatalogView("grid")}
+                        title="Grid View"
+                        className={`h-full w-8 flex items-center justify-center transition-all ${catalogView === "grid"
+                          ? "bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900"
+                          : "text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200"
+                          }`}
+                      >
+                        <LayoutGrid size={13} />
+                      </button>
+                      <button
+                        onClick={() => setCatalogView("list")}
+                        title="List View"
+                        className={`h-full w-8 flex items-center justify-center transition-all ${catalogView === "list"
+                          ? "bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900"
+                          : "text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200"
+                          }`}
+                      >
+                        <LayoutList size={13} />
+                      </button>
+                    </div>
+
                     <button
                       onClick={() => setShowCategoryModal(true)}
-                      className="h-9 px-4 bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900 text-xs font-bold rounded-lg flex items-center gap-1 hover:bg-zinc-800 dark:hover:bg-zinc-200 active:scale-95 transition-all whitespace-nowrap shadow-sm"
+                      className="h-8 px-3 bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900 text-xs font-bold rounded-md flex items-center gap-1 hover:bg-zinc-800 dark:hover:bg-zinc-200 active:scale-95 transition-all whitespace-nowrap shadow-sm"
                     >
-                      <Plus size={14} /> Add Category
+                      <Plus size={12} /> Add Category
                     </button>
                   </div>
                 </div>
 
-                <div className="p-4 space-y-4">
+                <div className="p-3 space-y-3">
                   {(() => {
                     const filteredMenu = (shop?.menu || [])
                       .map((cat) => ({
@@ -1285,17 +1463,16 @@ function ShopDashboardContent() {
                         return (
                           <div
                             key={idx}
-                            className="border border-zinc-200/80 rounded-xl overflow-hidden dark:border-zinc-800"
+                            className="border border-zinc-200/80 rounded-md overflow-hidden dark:border-zinc-800"
                           >
-                            <div className="p-3.5 bg-zinc-50 dark:bg-zinc-800/50 flex justify-between items-center border-b border-zinc-200/80 dark:border-zinc-800">
+                            <div className="p-2.5 bg-zinc-50 dark:bg-zinc-800/50 flex justify-between items-center border-b border-zinc-200/80 dark:border-zinc-800">
                               <div
                                 className="flex items-center gap-2 cursor-pointer group"
                                 onClick={() => toggleCategory(idx)}
                               >
                                 <div
-                                  className={`transition-transform duration-200 ${
-                                    isCollapsed ? "-rotate-90" : ""
-                                  }`}
+                                  className={`transition-transform duration-200 ${isCollapsed ? "-rotate-90" : ""
+                                    }`}
                                 >
                                   <ChevronRight size={14} className="text-zinc-400" />
                                 </div>
@@ -1314,7 +1491,7 @@ function ShopDashboardContent() {
                                     setCategoryName(category.name);
                                     setShowEditCategoryModal(true);
                                   }}
-                                  className="h-7 w-7 hover:bg-zinc-200/50 dark:hover:bg-zinc-700 rounded-lg flex items-center justify-center transition-all text-zinc-500 dark:text-zinc-400"
+                                  className="h-7 w-7 hover:bg-zinc-200/50 dark:hover:bg-zinc-700 rounded-md flex items-center justify-center transition-all text-zinc-500 dark:text-zinc-400"
                                 >
                                   <Settings2 size={12} />
                                 </button>
@@ -1325,7 +1502,7 @@ function ShopDashboardContent() {
                                     setItemFeatured(false);
                                     setShowItemModal(true);
                                   }}
-                                  className="h-7 px-3 bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900 text-[10px] font-bold rounded-lg hover:bg-zinc-800 dark:hover:bg-zinc-200 active:scale-95 transition-all shadow-sm"
+                                  className="h-7 px-3 bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900 text-[10px] font-bold rounded-md hover:bg-zinc-800 dark:hover:bg-zinc-200 active:scale-95 transition-all shadow-sm"
                                 >
                                   + Add Item
                                 </button>
@@ -1333,84 +1510,223 @@ function ShopDashboardContent() {
                             </div>
 
                             {!isCollapsed && (
-                              <div className="p-3 grid grid-cols-1 sm:grid-cols-2 gap-3 animate-in slide-in-from-top-2 duration-200">
-                                {category.items?.map((item, iIdx) => (
-                                  <div
-                                    key={iIdx}
-                                    className="group bg-white border border-zinc-200/80 hover:border-zinc-300 hover:shadow-sm transition-all duration-300 rounded-xl relative overflow-hidden flex items-stretch dark:bg-zinc-900 dark:border-zinc-800 dark:hover:border-zinc-700"
-                                  >
-                                    <CatalogImage
-                                      src={item.image}
-                                      alt={item.name}
-                                      featured={item.featured}
-                                    />
-                                    <div className="flex-1 min-w-0 p-3 flex flex-col justify-between bg-white dark:bg-zinc-900 self-stretch">
-                                      <div>
-                                        <h4 className="text-xs font-bold text-zinc-900 dark:text-zinc-100 truncate tracking-tight mb-1">
-                                          {item.name}
-                                        </h4>
-                                        <p className="text-[11px] text-zinc-500 dark:text-zinc-400 font-medium mb-2 line-clamp-1 leading-snug">
-                                          {item.description || "No description provided."}
-                                        </p>
+                              catalogView === "grid" ? (
+                                /* ── GRID VIEW: compact 4-col vertical cards ── */
+                                <div className="p-3 grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-2 animate-in slide-in-from-top-2 duration-200">
+                                  {category.items?.map((item, iIdx) => (
+                                    <div
+                                      key={iIdx}
+                                      className="group bg-white border border-zinc-200/80 hover:border-zinc-300 hover:shadow-sm transition-all duration-200 rounded-md overflow-hidden flex flex-col dark:bg-zinc-900 dark:border-zinc-800 dark:hover:border-zinc-700"
+                                    >
+                                      {/* Square Image */}
+                                      <div className="relative w-full aspect-square bg-zinc-50 dark:bg-zinc-800 overflow-hidden">
+                                        <CatalogImage
+                                          src={item.image}
+                                          alt={item.name}
+                                          featured={item.featured}
+                                          isNew={item.isNew}
+                                        />
                                       </div>
-                                      <div className="flex items-center justify-between gap-2 pt-2 border-t border-zinc-100 dark:border-zinc-800/80">
-                                        <div className="min-w-0">
-                                          <span className="text-[9px] font-bold text-zinc-400 uppercase tracking-widest block mb-0.5">
-                                            Price
-                                          </span>
-                                          <span className="text-xs font-black text-[#FF6A00] truncate block">
-                                            {item.price !== "" && item.price != null
-                                              ? `₹${item.price}`
-                                              : "On Request"}
-                                          </span>
+                                      {/* Card Body */}
+                                      <div className="flex-1 flex flex-col p-2 gap-1.5">
+                                        <div className="flex-1 min-w-0">
+                                          <div className="flex items-center gap-1.5 min-w-0">
+                                            {item.diet === "veg" && (
+                                              <div className="w-3 h-3 border border-emerald-600 flex items-center justify-center bg-white rounded-[2px] shrink-0" title="Vegetarian">
+                                                <div className="w-1 h-1 rounded-full bg-emerald-600" />
+                                              </div>
+                                            )}
+                                            {item.diet === "nonveg" && (
+                                              <div className="w-3 h-3 border border-rose-600 flex items-center justify-center bg-white rounded-[2px] shrink-0" title="Non-Vegetarian">
+                                                <div className="w-1 h-1 rounded-full bg-rose-600" />
+                                              </div>
+                                            )}
+                                            <h4 className="text-[11px] font-bold text-zinc-900 dark:text-zinc-100 truncate tracking-tight leading-tight">
+                                              {item.name}
+                                            </h4>
+                                          </div>
+                                          <p className="text-[10px] text-zinc-400 dark:text-zinc-500 font-medium line-clamp-1 leading-snug mt-0.5">
+                                            {item.description || "—"}
+                                          </p>
                                         </div>
-                                        <div className="flex items-center gap-1 shrink-0">
+                                        <div className="flex items-center justify-between gap-1 flex-wrap">
+                                          <span className="text-[11px] font-black text-[#FF6A00] leading-none">
+                                            {item.price !== "" && item.price != null ? `₹${item.price}` : "On Request"}
+                                          </span>
+                                          {(() => {
+                                            const stockVal = item.stock;
+                                            if (stockVal === undefined || stockVal === null || stockVal === "") {
+                                              return null;
+                                            }
+                                            const stockNum = parseInt(stockVal, 10);
+                                            if (isNaN(stockNum) || stockNum <= 0) {
+                                              return (
+                                                <span className="text-[9px] font-bold text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/20 px-1.5 py-0.5 rounded border border-rose-100 dark:border-rose-900/30">
+                                                  Out of stock
+                                                </span>
+                                              );
+                                            }
+                                            if (stockNum <= 5) {
+                                              return (
+                                                <span className="text-[9px] font-bold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/20 px-1.5 py-0.5 rounded border border-amber-100 dark:border-amber-900/30 animate-pulse">
+                                                  {stockNum} left
+                                                </span>
+                                              );
+                                            }
+                                            return (
+                                              <span className="text-[9px] font-medium text-zinc-600 dark:text-zinc-300 bg-zinc-50 dark:bg-zinc-800/80 px-1.5 py-0.5 rounded border border-zinc-200 dark:border-zinc-700">
+                                                {stockNum} in stock
+                                              </span>
+                                            );
+                                          })()}
+                                        </div>
+                                        <div className="flex items-center gap-1 pt-1 border-t border-zinc-100 dark:border-zinc-800">
                                           <button
                                             onClick={() => {
-                                              const originalCatIdx = (
-                                                shop.menu || []
-                                              ).findIndex((c) => c.name === category.name);
-                                              const originalItemIdx = (
-                                                shop.menu[originalCatIdx].items || []
-                                              ).findIndex((it) => it.name === item.name);
-                                              setActiveCategoryIdx(originalCatIdx);
-                                              setActiveItemIdx(originalItemIdx);
-                                              setItemName(item.name);
-                                              setItemPrice(item.price.toString());
-                                              setItemDescription(item.description || "");
-                                              setItemImage(item.image || "");
-                                              setItemFeatured(!!item.featured);
+                                              const originalCatIdx = (shop.menu || []).findIndex((c) => c.name === category.name);
+                                              const originalItemIdx = (shop.menu[originalCatIdx].items || []).findIndex((it) => it.name === item.name);
+                                              setActiveCategoryIdx(originalCatIdx); setActiveItemIdx(originalItemIdx);
+                                              setItemName(item.name); setItemPrice(item.price.toString());
+                                              setItemDescription(item.description || ""); setItemImage(item.image || "");
+                                              setItemFeatured(!!item.featured); setItemIsNew(item.isNew !== false);
+                                              setItemDiet(item.diet || "");
+                                              const hasStock = item.stock !== undefined && item.stock !== null && item.stock !== "";
+                                              setTrackStock(hasStock);
+                                              setItemStock(hasStock ? item.stock.toString() : "");
                                               setShowEditItemModal(true);
                                             }}
-                                            className="h-7 px-2.5 bg-zinc-50 hover:bg-zinc-100 active:bg-zinc-200 rounded-lg text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700 transition-all flex items-center gap-1 text-[10px] font-bold border border-zinc-200/80 dark:border-zinc-700"
-                                            title="Edit Item"
+                                            className="flex-1 h-6 bg-zinc-50 hover:bg-zinc-100 rounded-md text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700 transition-all flex items-center justify-center gap-1 text-[9px] font-bold border border-zinc-200/80 dark:border-zinc-700"
                                           >
-                                            <Settings2 size={12} />
-                                            <span className="hidden md:inline">Edit</span>
+                                            <Settings2 size={10} /> Edit
                                           </button>
                                           <button
                                             onClick={() => {
-                                              const originalCatIdx = (
-                                                shop.menu || []
-                                              ).findIndex((c) => c.name === category.name);
-                                              const originalItemIdx = (
-                                                shop.menu[originalCatIdx].items || []
-                                              ).findIndex((it) => it.name === item.name);
-                                              setActiveCategoryIdx(originalCatIdx);
-                                              setActiveItemIdx(originalItemIdx);
+                                              const originalCatIdx = (shop.menu || []).findIndex((c) => c.name === category.name);
+                                              const originalItemIdx = (shop.menu[originalCatIdx].items || []).findIndex((it) => it.name === item.name);
+                                              setActiveCategoryIdx(originalCatIdx); setActiveItemIdx(originalItemIdx);
                                               setShowDeleteModal(true);
                                             }}
-                                            className="h-7 w-7 bg-red-500/10 hover:bg-red-500/20 active:bg-red-500/30 rounded-lg text-red-500 transition-all flex items-center justify-center border border-red-500/20"
-                                            title="Delete Item"
+                                            className="h-6 w-6 bg-red-500/10 hover:bg-red-500/20 rounded-md text-red-500 transition-all flex items-center justify-center border border-red-500/20 shrink-0"
                                           >
-                                            <X size={13} />
+                                            <X size={10} />
                                           </button>
                                         </div>
                                       </div>
                                     </div>
-                                  </div>
-                                ))}
-                              </div>
+                                  ))}
+                                </div>
+                              ) : (
+                                /* ── LIST VIEW: compact horizontal cards ── */
+                                <div className="p-3 grid grid-cols-2 lg:grid-cols-4 gap-2 animate-in slide-in-from-top-2 duration-200">
+                                  {category.items?.map((item, iIdx) => (
+                                    <div
+                                      key={iIdx}
+                                      className="group flex items-center gap-3 p-2.5 bg-white border border-zinc-200/80 hover:border-zinc-300 hover:shadow-sm dark:bg-zinc-900 dark:border-zinc-800 dark:hover:border-zinc-700 rounded-md transition-all"
+                                    >
+                                      {/* Thumbnail — full card height */}
+                                      <div className="relative self-stretch w-16 shrink-0 rounded-l-md overflow-hidden bg-zinc-100 dark:bg-zinc-800 -m-2.5 mr-0">
+                                        <CatalogImage
+                                          src={item.image}
+                                          alt={item.name}
+                                          featured={item.featured}
+                                          isNew={item.isNew}
+                                        />
+                                      </div>
+                                      {/* Info */}
+                                      <div className="flex-1 min-w-0">
+                                        <div className="flex items-center gap-1.5 mb-0.5">
+                                          {item.diet === "veg" && (
+                                            <div className="w-3 h-3 border border-emerald-600 flex items-center justify-center bg-white rounded-[2px] shrink-0" title="Vegetarian">
+                                              <div className="w-1 h-1 rounded-full bg-emerald-600" />
+                                            </div>
+                                          )}
+                                          {item.diet === "nonveg" && (
+                                            <div className="w-3 h-3 border border-rose-600 flex items-center justify-center bg-white rounded-[2px] shrink-0" title="Non-Vegetarian">
+                                              <div className="w-1 h-1 rounded-full bg-rose-600" />
+                                            </div>
+                                          )}
+                                          <h4 className="text-xs font-bold text-zinc-900 dark:text-zinc-100 truncate tracking-tight leading-tight">
+                                            {item.name}
+                                          </h4>
+                                          {item.featured && (
+                                            <span className="text-[7px] font-black bg-[#FF6A00] text-white px-1 py-0.5 rounded uppercase tracking-wider shrink-0">
+                                              ★
+                                            </span>
+                                          )}
+                                        </div>
+                                        <p className="text-[10px] text-zinc-400 dark:text-zinc-500 font-medium truncate leading-snug mb-1">
+                                          {item.description || "—"}
+                                        </p>
+                                        <div className="flex items-center gap-2 flex-wrap">
+                                          <span className="text-[11px] font-black text-[#FF6A00] leading-none">
+                                            {item.price !== "" && item.price != null ? `₹${item.price}` : "On Request"}
+                                          </span>
+                                          {(() => {
+                                            const stockVal = item.stock;
+                                            if (stockVal === undefined || stockVal === null || stockVal === "") {
+                                              return null;
+                                            }
+                                            const stockNum = parseInt(stockVal, 10);
+                                            if (isNaN(stockNum) || stockNum <= 0) {
+                                              return (
+                                                <span className="text-[9px] font-bold text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/20 px-1.5 py-0.5 rounded border border-rose-100 dark:border-rose-900/30">
+                                                  Out of stock
+                                                </span>
+                                              );
+                                            }
+                                            if (stockNum <= 5) {
+                                              return (
+                                                <span className="text-[9px] font-bold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/20 px-1.5 py-0.5 rounded border border-amber-100 dark:border-amber-900/30 animate-pulse">
+                                                  {stockNum} left
+                                                </span>
+                                              );
+                                            }
+                                            return (
+                                              <span className="text-[9px] font-medium text-zinc-600 dark:text-zinc-300 bg-zinc-50 dark:bg-zinc-800/80 px-1.5 py-0.5 rounded border border-zinc-200 dark:border-zinc-700">
+                                                {stockNum} in stock
+                                              </span>
+                                            );
+                                          })()}
+                                        </div>
+                                      </div>
+                                      {/* Actions — hover reveal */}
+                                      <div className="flex flex-col gap-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <button
+                                          onClick={() => {
+                                            const originalCatIdx = (shop.menu || []).findIndex((c) => c.name === category.name);
+                                            const originalItemIdx = (shop.menu[originalCatIdx].items || []).findIndex((it) => it.name === item.name);
+                                            setActiveCategoryIdx(originalCatIdx); setActiveItemIdx(originalItemIdx);
+                                            setItemName(item.name); setItemPrice(item.price.toString());
+                                            setItemDescription(item.description || ""); setItemImage(item.image || "");
+                                            setItemFeatured(!!item.featured); setItemIsNew(item.isNew !== false);
+                                            setItemDiet(item.diet || "");
+                                            const hasStock = item.stock !== undefined && item.stock !== null && item.stock !== "";
+                                            setTrackStock(hasStock);
+                                            setItemStock(hasStock ? item.stock.toString() : "");
+                                            setShowEditItemModal(true);
+                                          }}
+                                          className="h-5 w-5 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-700 dark:hover:bg-zinc-600 rounded-md text-zinc-600 dark:text-zinc-300 transition-all flex items-center justify-center"
+                                          title="Edit"
+                                        >
+                                          <Settings2 size={10} />
+                                        </button>
+                                        <button
+                                          onClick={() => {
+                                            const originalCatIdx = (shop.menu || []).findIndex((c) => c.name === category.name);
+                                            const originalItemIdx = (shop.menu[originalCatIdx].items || []).findIndex((it) => it.name === item.name);
+                                            setActiveCategoryIdx(originalCatIdx); setActiveItemIdx(originalItemIdx);
+                                            setShowDeleteModal(true);
+                                          }}
+                                          className="h-5 w-5 bg-red-500/10 hover:bg-red-500/20 rounded-md text-red-500 transition-all flex items-center justify-center"
+                                          title="Delete"
+                                        >
+                                          <X size={10} />
+                                        </button>
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              )
                             )}
                           </div>
                         );
@@ -1418,7 +1734,7 @@ function ShopDashboardContent() {
                     } else {
                       return (
                         <div className="text-center py-12">
-                          <div className="w-14 h-14 bg-zinc-100 dark:bg-zinc-800 rounded-2xl flex items-center justify-center mx-auto mb-3 border border-zinc-200/80 dark:border-zinc-700">
+                          <div className="w-14 h-14 bg-zinc-100 dark:bg-zinc-800 rounded-md flex items-center justify-center mx-auto mb-3 border border-zinc-200/80 dark:border-zinc-700">
                             <ShoppingBag size={28} className="text-zinc-400" />
                           </div>
                           <h3 className="text-sm font-bold text-zinc-900 dark:text-zinc-100 mb-1 tracking-tight">
@@ -1435,7 +1751,7 @@ function ShopDashboardContent() {
                                 resetItemForm();
                                 setShowCategoryModal(true);
                               }}
-                              className="h-9 px-5 bg-[#FF6A00] text-white text-xs font-bold rounded-lg shadow-sm active:scale-95 transition-all"
+                              className="h-9 px-5 bg-[#FF6A00] text-white text-xs font-bold rounded-md shadow-sm active:scale-95 transition-all"
                             >
                               Add First Category
                             </button>
@@ -1450,8 +1766,8 @@ function ShopDashboardContent() {
 
             {/* ── HOURS TAB ── */}
             {activeView === "hours" && (
-              <div className="space-y-4">
-                <div className="bg-white rounded-2xl border border-zinc-200/80 overflow-hidden shadow-sm dark:bg-zinc-900 dark:border-zinc-800">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 items-start">
+                <div className="bg-white rounded-md border border-zinc-200/80 overflow-hidden shadow-sm dark:bg-zinc-900 dark:border-zinc-800">
                   <div className="p-4 border-b border-zinc-200/80 dark:border-zinc-800 flex items-center justify-between">
                     <div>
                       <h2 className="text-base font-bold text-zinc-900 dark:text-zinc-100 tracking-tight">
@@ -1469,13 +1785,12 @@ function ShopDashboardContent() {
                     {Object.keys(openingHours).map((day) => (
                       <div
                         key={day}
-                        className="flex flex-col sm:flex-row sm:items-center justify-between p-3 rounded-xl bg-zinc-50 border border-zinc-200/80 gap-3 dark:bg-zinc-800/50 dark:border-zinc-700/80"
+                        className="flex flex-col sm:flex-row sm:items-center justify-between p-3 rounded-md bg-zinc-50 border border-zinc-200/80 gap-3 dark:bg-zinc-800/50 dark:border-zinc-700/80"
                       >
                         <div className="flex items-center gap-3 w-32 shrink-0">
                           <div
-                            className={`w-2 h-2 rounded-full ${
-                              openingHours[day].isClosed ? "bg-red-400" : "bg-emerald-400"
-                            }`}
+                            className={`w-2 h-2 rounded-full ${openingHours[day].isClosed ? "bg-red-400" : "bg-emerald-400"
+                              }`}
                           />
                           <span className="text-xs font-bold text-zinc-900 dark:text-zinc-100 capitalize tracking-tight">
                             {day}
@@ -1495,7 +1810,7 @@ function ShopDashboardContent() {
                                   })
                                 )
                               }
-                              className="h-8 px-2.5 bg-white border border-zinc-200/80 rounded-lg text-xs outline-none disabled:opacity-50 font-medium dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-100 shadow-sm"
+                              className="h-8 px-2.5 bg-white border border-zinc-200/80 rounded-md text-xs outline-none disabled:opacity-50 font-medium dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-100 shadow-sm"
                             />
                             <span className="text-[10px] font-bold text-zinc-400 uppercase">
                               to
@@ -1512,7 +1827,7 @@ function ShopDashboardContent() {
                                   })
                                 )
                               }
-                              className="h-8 px-2.5 bg-white border border-zinc-200/80 rounded-lg text-xs outline-none disabled:opacity-50 font-medium dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-100 shadow-sm"
+                              className="h-8 px-2.5 bg-white border border-zinc-200/80 rounded-md text-xs outline-none disabled:opacity-50 font-medium dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-100 shadow-sm"
                             />
                           </div>
                           <label className="flex items-center gap-2 cursor-pointer shrink-0">
@@ -1542,7 +1857,7 @@ function ShopDashboardContent() {
                   </div>
                 </div>
 
-                <div className="bg-white rounded-2xl border border-zinc-200/80 overflow-hidden shadow-sm dark:bg-zinc-900 dark:border-zinc-800">
+                <div className="bg-white rounded-md border border-zinc-200/80 overflow-hidden shadow-sm dark:bg-zinc-900 dark:border-zinc-800">
                   <div className="p-4 border-b border-zinc-200/80 dark:border-zinc-800">
                     <h2 className="text-base font-bold text-zinc-900 dark:text-zinc-100 tracking-tight">
                       Upcoming Holidays
@@ -1560,7 +1875,7 @@ function ShopDashboardContent() {
                           onChange={(e) =>
                             setNewHoliday({ ...newHoliday, date: e.target.value })
                           }
-                          className="w-full h-9 px-3 bg-zinc-50 border border-zinc-200/80 rounded-lg text-xs outline-none focus:bg-white transition-all font-medium dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-100 shadow-sm"
+                          className="w-full h-9 px-3 bg-zinc-50 border border-zinc-200/80 rounded-md text-xs outline-none focus:bg-white transition-all font-medium dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-100 shadow-sm"
                         />
                       </div>
                       <div className="flex-[2]">
@@ -1571,7 +1886,7 @@ function ShopDashboardContent() {
                           onChange={(e) =>
                             setNewHoliday({ ...newHoliday, title: e.target.value })
                           }
-                          className="w-full h-9 px-3 bg-zinc-50 border border-zinc-200/80 rounded-lg text-xs outline-none focus:bg-white transition-all font-medium dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-100 shadow-sm"
+                          className="w-full h-9 px-3 bg-zinc-50 border border-zinc-200/80 rounded-md text-xs outline-none focus:bg-white transition-all font-medium dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-100 shadow-sm"
                         />
                       </div>
                       <Button
@@ -1590,10 +1905,10 @@ function ShopDashboardContent() {
                         holidays.map((holiday, idx) => (
                           <div
                             key={idx}
-                            className="flex items-center justify-between p-3.5 bg-zinc-50 rounded-xl border border-zinc-200/80 dark:bg-zinc-800/50 dark:border-zinc-700 shadow-sm"
+                            className="flex items-center justify-between p-3.5 bg-zinc-50 rounded-md border border-zinc-200/80 dark:bg-zinc-800/50 dark:border-zinc-700 shadow-sm"
                           >
                             <div className="flex items-center gap-3">
-                              <div className="px-2.5 py-1 bg-white border border-zinc-200/80 rounded-lg text-[10px] font-bold text-[#FF6A00] dark:bg-zinc-800 dark:border-zinc-700 shadow-sm">
+                              <div className="px-2.5 py-1 bg-white border border-zinc-200/80 rounded-md text-[10px] font-bold text-[#FF6A00] dark:bg-zinc-800 dark:border-zinc-700 shadow-sm">
                                 {new Date(holiday.date).toLocaleDateString("en-US", {
                                   month: "short",
                                   day: "numeric",
@@ -1605,14 +1920,14 @@ function ShopDashboardContent() {
                             </div>
                             <button
                               onClick={() => handleDeleteHoliday(idx)}
-                              className="p-1.5 hover:bg-red-50 rounded-lg text-zinc-400 hover:text-red-500 transition-all dark:hover:bg-red-500/10"
+                              className="p-1.5 hover:bg-red-50 rounded-md text-zinc-400 hover:text-red-500 transition-all dark:hover:bg-red-500/10"
                             >
                               <X size={14} />
                             </button>
                           </div>
                         ))
                       ) : (
-                        <div className="text-center py-6 bg-zinc-50 rounded-xl border border-dashed border-zinc-200 dark:bg-zinc-800/30 dark:border-zinc-800">
+                        <div className="text-center py-6 bg-zinc-50 rounded-md border border-dashed border-zinc-200 dark:bg-zinc-800/30 dark:border-zinc-800">
                           <p className="text-xs text-zinc-400 font-medium">
                             No holidays scheduled
                           </p>
@@ -1626,7 +1941,7 @@ function ShopDashboardContent() {
 
             {/* ── GALLERY TAB ── */}
             {activeView === "gallery" && (
-              <div className="bg-white rounded-2xl border border-zinc-200/80 shadow-sm p-5 dark:bg-zinc-900 dark:border-zinc-800 space-y-4">
+              <div className="bg-white rounded-md border border-zinc-200/80 shadow-sm p-5 dark:bg-zinc-900 dark:border-zinc-800 space-y-4">
                 <div className="flex justify-between items-center border-b border-zinc-100 dark:border-zinc-800 pb-4">
                   <div>
                     <h2 className="text-base font-bold text-zinc-900 dark:text-zinc-100 tracking-tight">
@@ -1636,7 +1951,7 @@ function ShopDashboardContent() {
                       Visual showcase of your business
                     </p>
                   </div>
-                  <div className="px-3 py-1 bg-zinc-50 border border-zinc-200/80 rounded-lg text-[10px] font-bold text-zinc-500 uppercase tracking-widest dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-400 shadow-sm">
+                  <div className="px-3 py-1 bg-zinc-50 border border-zinc-200/80 rounded-md text-[10px] font-bold text-zinc-500 uppercase tracking-widest dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-400 shadow-sm">
                     {(shop?.gallery || []).length} / 5
                   </div>
                 </div>
@@ -1645,7 +1960,7 @@ function ShopDashboardContent() {
                   {shop?.gallery?.map((url, i) => (
                     <div
                       key={i}
-                      className="aspect-square relative group rounded-xl overflow-hidden border border-zinc-200/80 shadow-sm bg-white dark:border-zinc-700 dark:bg-zinc-800"
+                      className="aspect-square relative group rounded-md overflow-hidden border border-zinc-200/80 shadow-sm bg-white dark:border-zinc-700 dark:bg-zinc-800"
                     >
                       <Image
                         src={url.includes(" ") ? url.replace(/\s/g, "%20") : url}
@@ -1657,7 +1972,7 @@ function ShopDashboardContent() {
                       />
                       <button
                         onClick={() => handleDeletePhoto(i)}
-                        className="absolute top-2 right-2 w-7 h-7 bg-black/70 rounded-lg flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-all hover:bg-red-500 shadow-sm active:scale-95"
+                        className="absolute top-2 right-2 w-7 h-7 bg-black/70 rounded-md flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-all hover:bg-red-50 shadow-sm active:scale-95"
                       >
                         <X size={14} />
                       </button>
@@ -1675,7 +1990,7 @@ function ShopDashboardContent() {
                   )}
                 </div>
 
-                <div className="bg-blue-500/5 p-4 rounded-xl border border-blue-500/10 flex items-center gap-3">
+                <div className="bg-blue-500/5 p-4 rounded-md border border-blue-500/10 flex items-center gap-3">
                   <ImageIcon size={16} className="text-blue-500 shrink-0" />
                   <p className="text-xs font-medium text-blue-700 dark:text-blue-400">
                     Tip: Upload high-quality photos to attract more customers. Tap an image
@@ -1699,7 +2014,7 @@ function ShopDashboardContent() {
 
             {/* ── REVIEWS TAB ── */}
             {activeView === "reviews" && (
-              <div className="bg-white rounded-2xl border border-zinc-200/80 shadow-sm p-5 dark:bg-zinc-900 dark:border-zinc-800 space-y-4">
+              <div className="bg-white rounded-md border border-zinc-200/80 shadow-sm p-5 dark:bg-zinc-900 dark:border-zinc-800 space-y-4">
                 <div className="flex items-center justify-between border-b border-zinc-100 dark:border-zinc-800 pb-4">
                   <div>
                     <h3 className="text-base font-bold text-zinc-900 dark:text-zinc-100 tracking-tight">
@@ -1709,7 +2024,7 @@ function ShopDashboardContent() {
                       Manage what customers are saying
                     </p>
                   </div>
-                  <div className="px-3 py-1 bg-[#FF6A00]/10 border border-[#FF6A00]/20 rounded-lg text-xs font-bold text-[#FF6A00] shadow-sm">
+                  <div className="px-3 py-1 bg-[#FF6A00]/10 border border-[#FF6A00]/20 rounded-md text-xs font-bold text-[#FF6A00] shadow-sm">
                     ⭐ {shop?.avgRating || "5.0"}
                   </div>
                 </div>
@@ -1726,7 +2041,7 @@ function ShopDashboardContent() {
                     {reviews.map((review) => (
                       <div
                         key={review.id}
-                        className="p-4 rounded-xl bg-zinc-50 border border-zinc-200/80 group hover:border-[#FF6A00]/30 transition-all dark:bg-zinc-800/50 dark:border-zinc-700 shadow-sm"
+                        className="p-4 rounded-md bg-zinc-50 border border-zinc-200/80 group hover:border-[#FF6A00]/30 transition-all dark:bg-zinc-800/50 dark:border-zinc-700 shadow-sm"
                       >
                         <div className="flex items-start justify-between gap-4">
                           <div className="flex gap-3.5 min-w-0">
@@ -1763,7 +2078,7 @@ function ShopDashboardContent() {
                           </div>
                           <button
                             onClick={() => handleDeleteReview(review.id)}
-                            className="h-8 w-8 bg-white border border-red-100 text-red-500 rounded-lg opacity-0 group-hover:opacity-100 transition-all hover:bg-red-50 flex items-center justify-center shrink-0 dark:bg-zinc-800 dark:border-red-500/20 dark:hover:bg-red-500/10 shadow-sm active:scale-95"
+                            className="h-8 w-8 bg-white border border-red-100 text-red-500 rounded-md opacity-0 group-hover:opacity-100 transition-all hover:bg-red-50 flex items-center justify-center shrink-0 dark:bg-zinc-800 dark:border-red-500/20 dark:hover:bg-red-500/10 shadow-sm active:scale-95"
                             title="Delete Review"
                           >
                             <Trash2 size={14} />
@@ -1774,7 +2089,7 @@ function ShopDashboardContent() {
                   </div>
                 ) : (
                   <div className="text-center py-16">
-                    <div className="w-14 h-14 bg-zinc-100 dark:bg-zinc-800 rounded-2xl flex items-center justify-center mx-auto mb-3 border border-zinc-200/80 dark:border-zinc-700">
+                    <div className="w-14 h-14 bg-zinc-100 dark:bg-zinc-800 rounded-md flex items-center justify-center mx-auto mb-3 border border-zinc-200/80 dark:border-zinc-700">
                       <ThumbsUpIcon size={28} className="text-zinc-400" />
                     </div>
                     <h3 className="text-sm font-bold text-zinc-900 dark:text-zinc-100 mb-1 tracking-tight">
@@ -1785,6 +2100,25 @@ function ShopDashboardContent() {
                     </p>
                   </div>
                 )}
+              </div>
+            )}
+
+            {/* ── PAID FEATURES TAB ── */}
+            {activeView === "features" && (
+              <div className="w-full space-y-6 pb-12">
+                <PaidFeaturesTab shop={shop} />
+              </div>
+            )}
+            {activeView === "billing" && (
+              <div className="w-full space-y-6 pb-12">
+                <BillingPosTab shop={shop} />
+              </div>
+            )}
+
+            {/* ── CUSTOMER INQUIRIES TAB ── */}
+            {activeView === "inquiries" && (
+              <div className="w-full space-y-6 pb-12">
+                <InquiriesTab shop={shop} />
               </div>
             )}
           </div>
@@ -1800,15 +2134,17 @@ function ShopDashboardContent() {
             { id: "gallery", label: "Gallery", icon: ImageIcon },
             { id: "hours", label: "Hours", icon: CalendarDays },
             { id: "settings", label: "Settings", icon: Settings2 },
+            { id: "features", label: "Features", icon: Sparkles },
+            { id: "billing", label: "Billing", icon: Calculator },
+            { id: "inquiries", label: "Inquiries", icon: MessageSquare },
           ].map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveView(tab.id)}
-              className={`flex-1 flex flex-col items-center justify-center py-2.5 gap-1 text-[9px] font-bold uppercase tracking-wider transition-all ${
-                activeView === tab.id
-                  ? "text-[#FF6A00]"
-                  : "text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300"
-              }`}
+              className={`flex-1 flex flex-col items-center justify-center py-2.5 gap-1 text-[9px] font-bold uppercase tracking-wider transition-all ${activeView === tab.id
+                ? "text-[#FF6A00]"
+                : "text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300"
+                }`}
             >
               <tab.icon
                 size={16}
@@ -1877,15 +2213,36 @@ function ShopDashboardContent() {
                 value={itemName}
                 onChange={(e) => setItemName(e.target.value)}
               />
-              <Input
-                label="Price ₹ (Optional)"
-                type="number"
-                placeholder="Leave blank if not applicable"
-                value={itemPrice}
-                onChange={(e) => setItemPrice(e.target.value)}
-              />
+              <div className={`grid ${trackStock ? 'grid-cols-2' : 'grid-cols-1'} gap-2 transition-all duration-200`}>
+                <Input
+                  label="Price ₹ (Optional)"
+                  type="number"
+                  placeholder="Leave blank"
+                  value={itemPrice}
+                  onChange={(e) => setItemPrice(e.target.value)}
+                />
+                {trackStock && (
+                  <Input
+                    label="Stock Count"
+                    type="number"
+                    placeholder="Enter stock quantity"
+                    value={itemStock}
+                    onChange={(e) => setItemStock(e.target.value)}
+                  />
+                )}
+              </div>
             </div>
           </div>
+          <Select
+            label="Dietary Preference (Veg / Non-Veg)"
+            value={itemDiet}
+            onChange={(e) => setItemDiet(e.target.value)}
+            options={[
+              { value: "", label: "Not Selected (None)" },
+              { value: "veg", label: "Vegetarian (Veg)" },
+              { value: "nonveg", label: "Non-Vegetarian (Non-Veg)" },
+            ]}
+          />
           <Textarea
             label="Short Description"
             placeholder="e.g. Include details about what's included or features..."
@@ -1893,20 +2250,57 @@ function ShopDashboardContent() {
             onChange={(e) => setItemDescription(e.target.value)}
             rows={2}
           />
-          <div className="pt-1">
-            <label className="flex items-center gap-2.5 p-2.5 bg-zinc-50 border border-zinc-200/80 rounded-xl cursor-pointer hover:bg-zinc-100 transition-all dark:bg-zinc-800/50 dark:border-zinc-700 dark:hover:bg-zinc-800 shadow-sm">
+          <div className="pt-1 grid grid-cols-3 gap-2">
+            <label className="flex items-center gap-2 p-2 bg-zinc-50 border border-zinc-200/80 rounded-md cursor-pointer hover:bg-zinc-100 transition-all dark:bg-zinc-800/50 dark:border-zinc-700 dark:hover:bg-zinc-800 shadow-sm">
+              <input
+                type="checkbox"
+                checked={trackStock}
+                onChange={(e) => {
+                  setTrackStock(e.target.checked);
+                  if (!e.target.checked) {
+                    setItemStock("");
+                  }
+                }}
+                className="w-4 h-4 rounded border-zinc-300 text-[#FF6A00] focus:ring-[#FF6A00] dark:border-zinc-600 dark:bg-zinc-800"
+              />
+              <div className="min-w-0 flex-1">
+                <span className="text-[11px] font-bold text-zinc-900 dark:text-zinc-100 block tracking-tight truncate">
+                  Track Stock
+                </span>
+                <span className="text-[9px] text-zinc-500 dark:text-zinc-400 block font-medium truncate">
+                  Manage inventory
+                </span>
+              </div>
+            </label>
+            <label className="flex items-center gap-2 p-2 bg-zinc-50 border border-zinc-200/80 rounded-md cursor-pointer hover:bg-zinc-100 transition-all dark:bg-zinc-800/50 dark:border-zinc-700 dark:hover:bg-zinc-800 shadow-sm">
               <input
                 type="checkbox"
                 checked={itemFeatured}
                 onChange={(e) => setItemFeatured(e.target.checked)}
                 className="w-4 h-4 rounded border-zinc-300 text-[#FF6A00] focus:ring-[#FF6A00] dark:border-zinc-600 dark:bg-zinc-800"
               />
-              <div>
-                <span className="text-xs font-bold text-zinc-900 dark:text-zinc-100 block tracking-tight">
-                  Featured Item
+              <div className="min-w-0 flex-1">
+                <span className="text-[11px] font-bold text-zinc-900 dark:text-zinc-100 block tracking-tight truncate">
+                  Featured
                 </span>
-                <span className="text-[10px] text-zinc-500 dark:text-zinc-400 block font-medium">
-                  Highlight at the top of catalog.
+                <span className="text-[9px] text-zinc-500 dark:text-zinc-400 block font-medium truncate">
+                  Highlight at top
+                </span>
+              </div>
+            </label>
+            <label className="flex items-center gap-2 p-2 bg-zinc-50 border border-zinc-200/80 rounded-md cursor-pointer hover:bg-zinc-100 transition-all dark:bg-zinc-800/50 dark:border-zinc-700 dark:hover:bg-zinc-800 shadow-sm">
+              <input
+                type="checkbox"
+                checked={itemIsNew}
+                onChange={(e) => setItemIsNew(e.target.checked)}
+                className="w-4 h-4 rounded border-zinc-300 text-[#FF6A00] focus:ring-[#FF6A00] dark:border-zinc-600 dark:bg-zinc-800"
+              />
+              <div className="min-w-0 flex-1">
+                <span className="text-[11px] font-bold text-zinc-900 dark:text-zinc-100 block tracking-tight truncate">
+                  New Tag
+                </span>
+                <span className="text-[9px] text-zinc-500 dark:text-zinc-400 block font-medium truncate">
+                  Show "New" badge
                 </span>
               </div>
             </label>
@@ -1945,15 +2339,36 @@ function ShopDashboardContent() {
                 value={itemName}
                 onChange={(e) => setItemName(e.target.value)}
               />
-              <Input
-                label="Price (₹)"
-                type="number"
-                placeholder="0.00"
-                value={itemPrice}
-                onChange={(e) => setItemPrice(e.target.value)}
-              />
+              <div className={`grid ${trackStock ? 'grid-cols-2' : 'grid-cols-1'} gap-2 transition-all duration-200`}>
+                <Input
+                  label="Price ₹ (Optional)"
+                  type="number"
+                  placeholder="Leave blank"
+                  value={itemPrice}
+                  onChange={(e) => setItemPrice(e.target.value)}
+                />
+                {trackStock && (
+                  <Input
+                    label="Stock Count"
+                    type="number"
+                    placeholder="Enter stock quantity"
+                    value={itemStock}
+                    onChange={(e) => setItemStock(e.target.value)}
+                  />
+                )}
+              </div>
             </div>
           </div>
+          <Select
+            label="Dietary Preference (Veg / Non-Veg)"
+            value={itemDiet}
+            onChange={(e) => setItemDiet(e.target.value)}
+            options={[
+              { value: "", label: "Not Selected (None)" },
+              { value: "veg", label: "Vegetarian (Veg)" },
+              { value: "nonveg", label: "Non-Vegetarian (Non-Veg)" },
+            ]}
+          />
           <Textarea
             label="Short Description"
             placeholder="e.g. Include details about what's included or features..."
@@ -1961,20 +2376,57 @@ function ShopDashboardContent() {
             onChange={(e) => setItemDescription(e.target.value)}
             rows={2}
           />
-          <div className="pt-1">
-            <label className="flex items-center gap-2.5 p-2.5 bg-zinc-50 border border-zinc-200/80 rounded-xl cursor-pointer hover:bg-zinc-100 transition-all dark:bg-zinc-800/50 dark:border-zinc-700 dark:hover:bg-zinc-800 shadow-sm">
+          <div className="pt-1 grid grid-cols-3 gap-2">
+            <label className="flex items-center gap-2 p-2 bg-zinc-50 border border-zinc-200/80 rounded-md cursor-pointer hover:bg-zinc-100 transition-all dark:bg-zinc-800/50 dark:border-zinc-700 dark:hover:bg-zinc-800 shadow-sm">
+              <input
+                type="checkbox"
+                checked={trackStock}
+                onChange={(e) => {
+                  setTrackStock(e.target.checked);
+                  if (!e.target.checked) {
+                    setItemStock("");
+                  }
+                }}
+                className="w-4 h-4 rounded border-zinc-300 text-[#FF6A00] focus:ring-[#FF6A00] dark:border-zinc-600 dark:bg-zinc-800"
+              />
+              <div className="min-w-0 flex-1">
+                <span className="text-[11px] font-bold text-zinc-900 dark:text-zinc-100 block tracking-tight truncate">
+                  Track Stock
+                </span>
+                <span className="text-[9px] text-zinc-500 dark:text-zinc-400 block font-medium truncate">
+                  Manage inventory
+                </span>
+              </div>
+            </label>
+            <label className="flex items-center gap-2 p-2 bg-zinc-50 border border-zinc-200/80 rounded-md cursor-pointer hover:bg-zinc-100 transition-all dark:bg-zinc-800/50 dark:border-zinc-700 dark:hover:bg-zinc-800 shadow-sm">
               <input
                 type="checkbox"
                 checked={itemFeatured}
                 onChange={(e) => setItemFeatured(e.target.checked)}
                 className="w-4 h-4 rounded border-zinc-300 text-[#FF6A00] focus:ring-[#FF6A00] dark:border-zinc-600 dark:bg-zinc-800"
               />
-              <div>
-                <span className="text-xs font-bold text-zinc-900 dark:text-zinc-100 block tracking-tight">
-                  Featured Item
+              <div className="min-w-0 flex-1">
+                <span className="text-[11px] font-bold text-zinc-900 dark:text-zinc-100 block tracking-tight truncate">
+                  Featured
                 </span>
-                <span className="text-[10px] text-zinc-500 dark:text-zinc-400 block font-medium">
-                  Highlight at the top of catalog.
+                <span className="text-[9px] text-zinc-500 dark:text-zinc-400 block font-medium truncate">
+                  Highlight at top
+                </span>
+              </div>
+            </label>
+            <label className="flex items-center gap-2 p-2 bg-zinc-50 border border-zinc-200/80 rounded-md cursor-pointer hover:bg-zinc-100 transition-all dark:bg-zinc-800/50 dark:border-zinc-700 dark:hover:bg-zinc-800 shadow-sm">
+              <input
+                type="checkbox"
+                checked={itemIsNew}
+                onChange={(e) => setItemIsNew(e.target.checked)}
+                className="w-4 h-4 rounded border-zinc-300 text-[#FF6A00] focus:ring-[#FF6A00] dark:border-zinc-600 dark:bg-zinc-800"
+              />
+              <div className="min-w-0 flex-1">
+                <span className="text-[11px] font-bold text-zinc-900 dark:text-zinc-100 block tracking-tight truncate">
+                  New Tag
+                </span>
+                <span className="text-[9px] text-zinc-500 dark:text-zinc-400 block font-medium truncate">
+                  Show "New" badge
                 </span>
               </div>
             </label>
@@ -2026,7 +2478,7 @@ function ShopDashboardContent() {
         icon={CircleAlert}
       >
         <div className="space-y-4">
-          <div className="p-3.5 bg-zinc-50 rounded-xl border border-zinc-200/80 dark:bg-zinc-800/50 dark:border-zinc-700 shadow-sm">
+          <div className="p-3.5 bg-zinc-50 rounded-md border border-zinc-200/80 dark:bg-zinc-800/50 dark:border-zinc-700 shadow-sm">
             <p className="text-xs font-bold text-zinc-900 dark:text-zinc-100 tracking-tight mb-0.5">
               {shop?.menu?.[activeCategoryIdx]?.items?.[activeItemIdx]?.name}
             </p>
@@ -2059,7 +2511,7 @@ function ShopDashboardContent() {
           ref={qrRef}
           className="w-[400px] bg-white rounded-[32px] p-8 flex flex-col items-center text-center border shadow-sm"
         >
-          <div className="w-20 h-20 bg-[#FF6A00]/10 rounded-2xl flex items-center justify-center mb-5 overflow-hidden shadow-inner">
+          <div className="w-20 h-20 bg-[#FF6A00]/10 rounded-md flex items-center justify-center mb-5 overflow-hidden shadow-inner">
             {shop?.logo ? (
               <img
                 src={`https://images.weserv.nl/?url=${encodeURIComponent(

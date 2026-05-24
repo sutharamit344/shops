@@ -194,7 +194,7 @@ const DiscoveryClient = ({ slug, parsed: initialParsed }) => {
 
   useEffect(() => {
     if (!initialParsed || hasSyncedRef.current) return;
-    
+
     let finalCategory = initialParsed.category || "";
     let finalArea = initialParsed.area || "";
     let clusterType = "";
@@ -213,7 +213,7 @@ const DiscoveryClient = ({ slug, parsed: initialParsed }) => {
 
     // 2. Distinguish between Area and Cluster
     if (finalArea && clusters.length > 0) {
-      const clusterMatch = clusters.find(c => 
+      const clusterMatch = clusters.find(c =>
         slugify(c.name) === slugify(finalArea) ||
         c.name.toLowerCase().includes(finalArea.toLowerCase())
       );
@@ -225,7 +225,7 @@ const DiscoveryClient = ({ slug, parsed: initialParsed }) => {
 
     dispatch(setParsed({ ...initialParsed, category: finalCategory, area: finalArea, clusterType }));
     dispatch(setCategory(finalCategory));
-    
+
     hasSyncedRef.current = true;
     setHasSynced(true);
   }, [initialParsed, categories, clusters, dispatch]);
@@ -270,8 +270,8 @@ const DiscoveryClient = ({ slug, parsed: initialParsed }) => {
   // FETCH RESULTS WHEN PARAMS CHANGE — only after initial sync is complete
   useEffect(() => {
     if (!hasSynced) return;
-    dispatch(fetchSearchResults({ 
-      ...initialParsed, 
+    dispatch(fetchSearchResults({
+      ...initialParsed,
       area: localArea || initialParsed.area,
       // Pass GPS-detected area name into thunk so it can use it for filtering
       detectedAreaName: userLocationName || "",
@@ -287,7 +287,7 @@ const DiscoveryClient = ({ slug, parsed: initialParsed }) => {
     localStorage.setItem('last_city', cleanCity);
     localStorage.setItem('last_area', cleanArea);
     localStorage.setItem('location_mode', isCurrent ? 'current' : 'manual');
-    
+
     const locationName = cleanArea ? `${cleanArea}, ${cleanCity}${pincode ? ', ' + pincode : ''}` : cleanCity;
 
     dispatch(setUserCoords({ coords: { lat, lng }, name: locationName }));
@@ -358,11 +358,10 @@ const DiscoveryClient = ({ slug, parsed: initialParsed }) => {
             {!isSearchFocused && (
               <button
                 onClick={() => setIsFilterOpen(true)}
-                className={`relative h-9 w-9 rounded-lg flex items-center justify-center border transition-all flex-shrink-0 ${
-                  activeFilterCount > 0
+                className={`relative h-9 w-9 rounded-md flex items-center justify-center border transition-all flex-shrink-0 ${activeFilterCount > 0
                     ? "bg-[#FF6A00] border-[#FF6A00] text-white"
                     : "bg-white border-black/[0.07] text-[#0A0A0F]/50 hover:border-black/[0.15]"
-                }`}
+                  }`}
               >
                 <SlidersHorizontal size={15} />
                 {activeFilterCount > 0 && (
@@ -405,20 +404,18 @@ const DiscoveryClient = ({ slug, parsed: initialParsed }) => {
             </div>
 
             {/* Right: View toggle */}
-            <div className="hidden md:flex items-center gap-0.5 p-0.5 bg-white border border-black/[0.07] rounded-lg shadow-sm flex-shrink-0">
+            <div className="hidden md:flex items-center gap-0.5 p-0.5 bg-white border border-black/[0.07] rounded-md shadow-sm flex-shrink-0">
               <button
                 onClick={() => setViewMode("grid")}
-                className={`w-8 h-8 rounded-md flex items-center justify-center transition-all ${
-                  viewMode === "grid" ? "bg-[#0A0A0F] text-white" : "text-[#0A0A0F]/35 hover:text-[#0A0A0F]"
-                }`}
+                className={`w-8 h-8 rounded-md flex items-center justify-center transition-all ${viewMode === "grid" ? "bg-[#0A0A0F] text-white" : "text-[#0A0A0F]/35 hover:text-[#0A0A0F]"
+                  }`}
               >
                 <LayoutGrid size={15} />
               </button>
               <button
                 onClick={() => setViewMode("list")}
-                className={`w-8 h-8 rounded-md flex items-center justify-center transition-all ${
-                  viewMode === "list" ? "bg-[#0A0A0F] text-white" : "text-[#0A0A0F]/35 hover:text-[#0A0A0F]"
-                }`}
+                className={`w-8 h-8 rounded-md flex items-center justify-center transition-all ${viewMode === "list" ? "bg-[#0A0A0F] text-white" : "text-[#0A0A0F]/35 hover:text-[#0A0A0F]"
+                  }`}
               >
                 <List size={15} />
               </button>

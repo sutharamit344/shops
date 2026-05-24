@@ -95,7 +95,7 @@ const ImageUpload = ({
   };
 
   const heightClass = className.includes('h-') || className.includes('w-') ? "" : (compact ? "h-16 w-16" : "h-24 w-24");
-  const containerClass = "rounded-lg";
+  const containerClass = "rounded-md";
 
   return (
     <div className="space-y-1.5">
@@ -111,7 +111,7 @@ const ImageUpload = ({
             <img
               src={preview}
               alt="Preview"
-              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+              className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-110"
             />
             <button
               type="button"

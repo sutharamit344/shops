@@ -45,10 +45,10 @@ const Toast = () => {
 
   return (
     <div className="fixed bottom-10 left-1/2 -translate-x-1/2 z-[9999] px-4 w-full max-w-md animate-in slide-in-from-bottom-5 duration-500">
-      <div className={`flex items-center gap-4 p-4 ${current.bg} border ${current.border} rounded-2xl shadow-2xl backdrop-blur-md`}>
+      <div className={`flex items-center gap-4 p-4 ${current.bg} border ${current.border} rounded-md shadow-2xl backdrop-blur-md`}>
         <div className="shrink-0">{current.icon}</div>
         <p className={`flex-1 text-[13px] font-bold ${current.text} leading-tight`}>{message}</p>
-        <button 
+        <button
           onClick={() => dispatch(hideToast())}
           className={`${current.text} opacity-40 hover:opacity-100 transition-opacity p-1`}
         >

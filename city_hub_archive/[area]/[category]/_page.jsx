@@ -53,8 +53,8 @@ export default async function AreaCategoryPage({ params }) {
             ))}
           </div>
         ) : (
-          <div className="bg-white rounded-3xl border border-black/[0.05] p-20 flex flex-col items-center text-center gap-4">
-            <div className="w-16 h-16 rounded-2xl bg-gray-50 flex items-center justify-center text-gray-300">
+          <div className="bg-white rounded-md border border-black/[0.05] p-20 flex flex-col items-center text-center gap-4">
+            <div className="w-16 h-16 rounded-md bg-gray-50 flex items-center justify-center text-gray-300">
               <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>

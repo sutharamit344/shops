@@ -29,7 +29,7 @@ import { hydrateDraft, updateDraft, clearDraft as clearReduxDraft } from "@/redu
 const MapComponent = dynamic(() => import("@/components/UI/MapComponent"), {
   ssr: false,
   loading: () => (
-    <div className="w-full h-[250px] bg-zinc-100 animate-pulse rounded-2xl flex items-center justify-center text-zinc-400 font-medium dark:bg-zinc-800">
+    <div className="w-full h-[250px] bg-zinc-100 animate-pulse rounded-md flex items-center justify-center text-zinc-400 font-medium dark:bg-zinc-800">
       Loading Map...
     </div>
   ),
@@ -575,11 +575,9 @@ const ShopForm = ({
       if (!lat || !lng) {
         try {
           setUploadStatus("Geocoding address...");
-          const addressStr = `${formData.shopNo || ""}, ${formData.building || ""}, ${
-            formData.zone || ""
-          }, ${formData.village || ""}, ${formData.area || ""}, ${formData.city}, ${
-            formData.state
-          }, India`;
+          const addressStr = `${formData.shopNo || ""}, ${formData.building || ""}, ${formData.zone || ""
+            }, ${formData.village || ""}, ${formData.area || ""}, ${formData.city}, ${formData.state
+            }, India`;
           const geoRes = await fetch(
             `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
               addressStr
@@ -624,12 +622,12 @@ const ShopForm = ({
   const displayError = externalError || localError;
 
   return (
-    <div className={isEdit ? "w-full" : "w-full p-4 md:p-8 bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200/80 dark:border-zinc-800 shadow-sm"}>
+    <div className={isEdit ? "w-full" : "w-full p-4 md:p-8 bg-white dark:bg-zinc-900 rounded-md border border-zinc-200/80 dark:border-zinc-800 shadow-sm"}>
       {/* ── DRAFT NOTICE ── */}
       {draftLoadedAtMount && currentStep === 1 && (
-        <div className="max-w-3xl mx-auto mb-6 bg-amber-50 border border-amber-200 rounded-2xl p-4 flex items-center justify-between gap-4 animate-in fade-in slide-in-from-top-2 duration-500 dark:bg-amber-500/10 dark:border-amber-500/20">
+        <div className="max-w-3xl mx-auto mb-6 bg-amber-50 border border-amber-200 rounded-md p-4 flex items-center justify-between gap-4 animate-in fade-in slide-in-from-top-2 duration-500 dark:bg-amber-500/10 dark:border-amber-500/20">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-amber-100 flex items-center justify-center text-amber-600 shrink-0 dark:bg-amber-500/20 dark:text-amber-400">
+            <div className="w-8 h-8 rounded-md bg-amber-100 flex items-center justify-center text-amber-600 shrink-0 dark:bg-amber-500/20 dark:text-amber-400">
               <Sparkles size={16} />
             </div>
             <p className="text-xs font-medium text-amber-900 dark:text-amber-200">
@@ -658,23 +656,21 @@ const ShopForm = ({
           {steps.map((step, i) => (
             <div key={i} className="flex flex-col items-center">
               <div
-                className={`w-9 h-9 rounded-lg flex items-center justify-center font-bold text-xs transition-all duration-500 ${
-                  currentStep > i + 1
-                    ? "bg-[#FF6A00] text-white"
-                    : currentStep === i + 1
+                className={`w-9 h-9 rounded-md flex items-center justify-center font-bold text-xs transition-all duration-500 ${currentStep > i + 1
+                  ? "bg-[#FF6A00] text-white"
+                  : currentStep === i + 1
                     ? "bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900 shadow-lg scale-110"
                     : "bg-white text-zinc-400 border border-zinc-200 dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-500"
-                }`}
+                  }`}
               >
                 {currentStep > i + 1 ? <CircleCheckBig size={16} /> : i + 1}
               </div>
               <div className="absolute top-10 flex flex-col items-center whitespace-nowrap">
                 <span
-                  className={`text-[10px] font-bold uppercase tracking-widest transition-colors duration-300 ${
-                    currentStep === i + 1
-                      ? "text-zinc-900 dark:text-zinc-100"
-                      : "text-zinc-400 dark:text-zinc-600"
-                  }`}
+                  className={`text-[10px] font-bold uppercase tracking-widest transition-colors duration-300 ${currentStep === i + 1
+                    ? "text-zinc-900 dark:text-zinc-100"
+                    : "text-zinc-400 dark:text-zinc-600"
+                    }`}
                 >
                   {step.title}
                 </span>
@@ -687,8 +683,8 @@ const ShopForm = ({
       <form onSubmit={(e) => e.preventDefault()} className="space-y-6">
         {/* ── ERROR DISPLAY ── */}
         {displayError && (
-          <div className="bg-red-50 rounded-2xl p-4 flex items-start gap-4 border border-red-100 animate-in shake duration-300 dark:bg-red-500/10 dark:border-red-500/20">
-            <div className="w-10 h-10 rounded-lg bg-red-100 flex items-center justify-center text-red-500 shrink-0 dark:bg-red-500/20">
+          <div className="bg-red-50 rounded-md p-4 flex items-start gap-4 border border-red-100 animate-in shake duration-300 dark:bg-red-500/10 dark:border-red-500/20">
+            <div className="w-10 h-10 rounded-md bg-red-100 flex items-center justify-center text-red-500 shrink-0 dark:bg-red-500/20">
               <CircleAlert size={20} />
             </div>
             <div>
@@ -815,7 +811,7 @@ const ShopForm = ({
             {/* 📍 SECTION: LOCATION */}
             <div className="space-y-4">
               <div className="flex items-center gap-3 border-b border-zinc-100 dark:border-zinc-800 pb-4">
-                <div className="w-10 h-10 rounded-lg bg-[#FF6A00]/10 flex items-center justify-center text-[#FF6A00]">
+                <div className="w-10 h-10 rounded-md bg-[#FF6A00]/10 flex items-center justify-center text-[#FF6A00]">
                   <MapIcon size={20} />
                 </div>
                 <div>
@@ -828,7 +824,7 @@ const ShopForm = ({
                 </div>
               </div>
 
-              <div className="bg-zinc-50 dark:bg-zinc-800/50 rounded-2xl border border-zinc-200/80 dark:border-zinc-800 overflow-hidden relative shadow-sm">
+              <div className="bg-zinc-50 dark:bg-zinc-800/50 rounded-md border border-zinc-200/80 dark:border-zinc-800 overflow-hidden relative shadow-sm">
                 {/* Map Search Overlay */}
                 <div className="absolute top-4 left-4 right-4 z-[400] flex gap-2">
                   <div className="flex-1 relative group">
@@ -841,13 +837,13 @@ const ShopForm = ({
                       value={mapSearchQuery}
                       onChange={(e) => setMapSearchQuery(e.target.value)}
                       onKeyDown={(e) => e.key === "Enter" && handleMapSearch(e)}
-                      className="w-full h-9 pl-9 pr-4 bg-white/90 dark:bg-zinc-900/90 backdrop-blur-md border border-zinc-200/80 dark:border-zinc-700 rounded-lg text-xs font-medium shadow-lg focus:outline-none focus:ring-1 focus:ring-[#FF6A00]/40 transition-all dark:text-zinc-100"
+                      className="w-full h-9 pl-9 pr-4 bg-white/90 dark:bg-zinc-900/90 backdrop-blur-md border border-zinc-200/80 dark:border-zinc-700 rounded-md text-xs font-medium shadow-lg focus:outline-none focus:ring-1 focus:ring-[#FF6A00]/40 transition-all dark:text-zinc-100"
                     />
                   </div>
                   <button
                     type="button"
                     onClick={handleMapSearch}
-                    className="h-9 px-4 bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900 rounded-lg font-bold text-xs shadow-lg hover:bg-[#FF6A00] dark:hover:bg-[#FF6A00] dark:hover:text-white transition-all active:scale-95 flex items-center gap-2"
+                    className="h-9 px-4 bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900 rounded-md font-bold text-xs shadow-lg hover:bg-[#FF6A00] dark:hover:bg-[#FF6A00] dark:hover:text-white transition-all active:scale-95 flex items-center gap-2"
                   >
                     Find
                   </button>
@@ -879,14 +875,14 @@ const ShopForm = ({
                         () => setIsGeocoding(false)
                       );
                     }}
-                    className="pointer-events-auto flex items-center gap-2 px-4 py-2 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 rounded-xl text-xs font-bold shadow-lg hover:text-[#FF6A00] dark:hover:text-[#FF6A00] transition-all active:scale-95 border border-zinc-200/80 dark:border-zinc-700"
+                    className="pointer-events-auto flex items-center gap-2 px-4 py-2 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 rounded-md text-xs font-bold shadow-lg hover:text-[#FF6A00] dark:hover:text-[#FF6A00] transition-all active:scale-95 border border-zinc-200/80 dark:border-zinc-700"
                   >
                     <Navigation size={14} className="text-[#FF6A00]" />
                     Use Current Location
                   </button>
 
                   {isGeocoding && (
-                    <div className="pointer-events-auto bg-white/90 dark:bg-zinc-900/90 backdrop-blur-md px-3 py-2 rounded-lg shadow-lg flex items-center gap-2 border border-zinc-200/80 dark:border-zinc-700">
+                    <div className="pointer-events-auto bg-white/90 dark:bg-zinc-900/90 backdrop-blur-md px-3 py-2 rounded-md shadow-lg flex items-center gap-2 border border-zinc-200/80 dark:border-zinc-700">
                       <Loader2 size={14} className="animate-spin text-[#FF6A00]" />
                       <span className="text-[11px] font-bold text-zinc-900 dark:text-zinc-100">
                         Smart Locating...
@@ -900,7 +896,7 @@ const ShopForm = ({
             {/* 🏢 SECTION: ADDRESS DETAILS */}
             <div className="space-y-4">
               <div className="flex items-center gap-3 border-b border-zinc-100 dark:border-zinc-800 pb-4">
-                <div className="w-10 h-10 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-500">
+                <div className="w-10 h-10 rounded-md bg-blue-500/10 flex items-center justify-center text-blue-500">
                   <Building2 size={20} />
                 </div>
                 <div>
@@ -990,9 +986,8 @@ const ShopForm = ({
                 >
                   <Plus
                     size={14}
-                    className={`transition-transform duration-300 ${
-                      showMoreAddress ? "rotate-45" : ""
-                    }`}
+                    className={`transition-transform duration-300 ${showMoreAddress ? "rotate-45" : ""
+                      }`}
                   />
                   {showMoreAddress
                     ? "Hide additional details"
@@ -1063,7 +1058,7 @@ const ShopForm = ({
             {/* 🌐 SECTION: DISCOVERY & SEO */}
             <div className="space-y-4 pt-4 border-t border-zinc-100 dark:border-zinc-800">
               <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 rounded-lg bg-purple-500/10 flex items-center justify-center text-purple-500">
+                <div className="w-10 h-10 rounded-md bg-purple-500/10 flex items-center justify-center text-purple-500">
                   <Globe size={20} />
                 </div>
                 <div>
@@ -1077,7 +1072,7 @@ const ShopForm = ({
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch">
-                <div className="p-4 bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200/80 dark:border-zinc-700/80 rounded-2xl space-y-3 shadow-sm flex flex-col justify-center">
+                <div className="p-4 bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200/80 dark:border-zinc-700/80 rounded-md space-y-3 shadow-sm flex flex-col justify-center">
                   <div className="flex items-center gap-2 text-[11px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">
                     <LinkIcon size={12} />
                     Live SEO URL Preview
@@ -1092,7 +1087,7 @@ const ShopForm = ({
                   </div>
                 </div>
 
-                <div className="p-4 bg-zinc-900 dark:bg-zinc-100 rounded-2xl space-y-3 shadow-sm flex flex-col justify-center">
+                <div className="p-4 bg-zinc-900 dark:bg-zinc-100 rounded-md space-y-3 shadow-sm flex flex-col justify-center">
                   <div className="flex items-center gap-2 text-[11px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">
                     <Eye size={12} />
                     Marketplace Discovery
@@ -1112,7 +1107,7 @@ const ShopForm = ({
             </div>
 
             {/* Agreement Card */}
-            <div className="p-6 bg-gradient-to-br from-zinc-900 to-zinc-800 dark:from-zinc-800 dark:to-zinc-700 rounded-2xl text-white relative overflow-hidden shadow-sm w-full">
+            <div className="p-6 bg-gradient-to-br from-zinc-900 to-zinc-800 dark:from-zinc-800 dark:to-zinc-700 rounded-md text-white relative overflow-hidden shadow-sm w-full">
               <div className="absolute top-0 right-0 p-6 opacity-10">
                 <ShieldCheck size={100} />
               </div>

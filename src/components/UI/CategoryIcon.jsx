@@ -194,8 +194,8 @@ const getIconByName = (name = "") => {
 };
 
 const CategoryIcon = ({ name, size = 24, className = "", strokeWidth = 2 }) => {
-  const Icon = getIconByName(name);
-  return <Icon size={size} className={className} strokeWidth={strokeWidth} />;
+  const icon = getIconByName(name);
+  return React.createElement(icon, { size, className, strokeWidth });
 };
 
 export default CategoryIcon;
